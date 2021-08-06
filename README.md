@@ -1,37 +1,51 @@
-## Welcome to GitHub Pages
+## 🔊 auph 🎧
 
-You can use the [editor on GitHub](https://github.com/eliasku/auph/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+Simple audio mixer for native and web
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+### API
 
-### Markdown
+#### Context Management
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+`void init()`
 
-```markdown
-Syntax highlighted code block
+`void resume()`
 
-# Header 1
-## Header 2
-### Header 3
+`void pause()`
 
-- Bulleted
-- List
+`void shutdown()`
 
-1. Numbered
-2. List
+##### private / debug
 
-**Bold** and _Italic_ and `Code` text
+`int getInteger(Var param)`
 
-[Link](url) and ![Image](src)
+`dynamic _getAudioContext()`
+
+#### Loading / unloading
+
+`AudioSource loadAudioSource(string filepath, bool streaming)`
+
+`void destroyAudioSource(AudioSource source)`
+
+#### Control Voices
+```
+Voice play(AudioSource source,
+  volume = 1.0,
+  pan = 0.0,
+  pitch = 1.0,
+  paused = false,
+  loop = false
+  Bus bus = 0)
 ```
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+`void stopAudioSource(AudioSource source)`
 
-### Jekyll Themes
+`void stop(Voice voice)`
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/eliasku/auph/settings/pages). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+`void setPan(Void voice, float value)`
 
-### Support or Contact
+`void setVolume(Void voice, float value)`
 
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+`void setPitch(Void voice, float value)`
+
+`void setPause(Void voice, bool paused)`
+
