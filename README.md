@@ -1,23 +1,11 @@
 ## 🔊 auph 🎧
 
-Simple audio mixer for native and web
+Trivial audio mixer API for native and web targets.
 
-### Web Example
+### Packages
 
-Load library:
-```html
-<script src="https://eliasku.github.io/auph/auph.js" type="text/javascript"></script>
-```
-
-Write some JavaScript
-```javascript
-Auph.init();
-Auph.resume();
-var source = Auph.loadAudioSource("https://eliasku.github.io/auph/assets/wav/HiHat_Closed.wav", false);
-setInterval(()=>{
-    Auph.play(source);
-}, 200);
-```
+- [JavaScript Browser](./packages/webaudio) JavaScript implementation for Web Browsers (also used in C++ library for Emscripten/WebAssembly build)
+- [C++](./packages/native) library supports macOS, iOS, Android and WebAssembly targets
 
 ### API
 
@@ -66,3 +54,7 @@ Voice play(AudioSource source,
 
 `void setPause(Void voice, bool paused)`
 
+## Roadmap
+
+- native: Play sounds with NodeJS! Require native bindings and JS wrapper interface
+- native: Support for Windows (WASAPI) and Linux (ALSA)

@@ -73,7 +73,7 @@ export function shutdown(): void {
 /*** Context State ***/
 export function getInteger(param: number): number {
     switch (param) {
-        case VOICES_IN_USE: {
+        case Var.VoicesInUse: {
             let count = 0;
             for (let i = 1; i < voicePool.length; ++i) {
                 if (voicePool[i]!.buffer) {
@@ -82,20 +82,20 @@ export function getInteger(param: number): number {
             }
             return count;
         }
-        case STREAMS_IN_USE: {
+        case Var.StreamsInUse: {
             return getStreamPlayersCount();
         }
-        case BUFFERS_LOADED: {
+        case Var.BuffersLoaded: {
             return 0;
         }
-        case STREAMS_LOADED: {
+        case Var.StreamsLoaded: {
             return 0;
         }
-        case DEVICE_SAMPLE_RATE: {
+        case Var.Device_SampleRate: {
             const ctx = getContext();
             return ctx ? ctx.sampleRate : 0;
         }
-        case DEVICE_STATE: {
+        case Var.Device_State: {
             return getContextState();
         }
     }

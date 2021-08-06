@@ -23,5 +23,10 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com/eliasku/auph.git",
+    "directory": "packages/auph"
   }
 }
