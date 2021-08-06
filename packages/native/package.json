@@ -1,0 +1,7 @@
+{
+  "name": "cauph",
+  "version": "0.0.1",
+  "dependencies": {
+    "auph": "0.0.1"
+  }
+}

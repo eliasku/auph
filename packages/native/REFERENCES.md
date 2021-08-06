@@ -1,0 +1,15 @@
+
+- [CuteSound](https://github.com/RandyGaul/cute_headers/blob/master/cute_sound.h)
+- [cmixer](https://github.com/rxi/cmixer) ⭐ simple integer based mixer
+- [LabSound](https://github.com/LabSound/LabSound) graph-based sound engine, similar to WebAudio specs
+- [libsamplerate](https://github.com/libsndfile/libsamplerate) audio data sample-rate HiRes converters
+- [sts-mixer](https://github.com/kieselsteini/sts/blob/master/sts_mixer.h)
+- [dr-libs](https://github.com/mackron/dr_libs) ⭐ single header libraries for decoding FLAC / WAV / MP3
+- collection of single header libraries [audio section](https://github.com/nothings/single_file_libs#audio)
+- [minimp3](https://github.com/lieff/minimp3)
+- [stb](https://github.com/nothings/stb) ⭐ `stb_vorbis.h` single header library for OGG decoding
+- [SoLoud](https://github.com/jarikomppa/soloud) ⭐
+- [halley-audio](https://github.com/amzeratul/halley/tree/develop/src/engine/audio) ref
+- [YoAudio](https://github.com/fuzzblob/YoAudio)
+- [sokol-audio](https://github.com/floooh/sokol) `sokol_audio.h` single header library for audio device abstraction
+- [libsoundio](https://github.com/andrewrk/libsoundio)

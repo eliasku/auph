@@ -43,7 +43,7 @@ $("#play-stream").addEventListener("click", (ev) => {
             $("#volume").value,
             $("#pan").value,
             $("#pitch").value,
-            false, false, BUS_MUSIC);
+            false, false, Auph.BUS_MUSIC);
     } else {
         const paused = !Auph.getPause(streamVoice);
         Auph.setPause(streamVoice, paused);
@@ -236,8 +236,8 @@ $("#play-large-buffer").addEventListener("click", (ev) => {
             $("#lb-volume").value,
             $("#lb-pan").value,
             $("#lb-pitch").value,
-            false, 0,
-            BUS_MUSIC
+            false, false,
+            Auph.BUS_MUSIC
         );
     } else {
         const paused = !Auph.getPause(largeBufferVoice);
