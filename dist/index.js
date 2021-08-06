@@ -421,7 +421,7 @@ function shutdown() {
 /*** Context State ***/
 function getInteger(param) {
     switch (param) {
-        case VOICES_IN_USE: {
+        case 0 /* VoicesInUse */: {
             var count = 0;
             for (var i = 1; i < voicePool.length; ++i) {
                 if (voicePool[i].buffer) {
@@ -430,20 +430,20 @@ function getInteger(param) {
             }
             return count;
         }
-        case STREAMS_IN_USE: {
+        case 1 /* StreamsInUse */: {
             return getStreamPlayersCount();
         }
-        case BUFFERS_LOADED: {
+        case 2 /* BuffersLoaded */: {
             return 0;
         }
-        case STREAMS_LOADED: {
+        case 3 /* StreamsLoaded */: {
             return 0;
         }
-        case DEVICE_SAMPLE_RATE: {
+        case 4 /* Device_SampleRate */: {
             var ctx = getContext();
             return ctx ? ctx.sampleRate : 0;
         }
-        case DEVICE_STATE: {
+        case 5 /* Device_State */: {
             return getContextState();
         }
     }
@@ -678,13 +678,11 @@ function getVoicePosition(voice) {
 /** Export Constants only for pre-bundled usage **/
 var VOICES_IN_USE = 0 /* VoicesInUse */;
 var STREAMS_IN_USE = 1 /* StreamsInUse */;
-var BUFFERS_LOADED = 2 /* BuffersLoaded */;
-var STREAMS_LOADED = 3 /* StreamsLoaded */;
 var DEVICE_SAMPLE_RATE = 4 /* Device_SampleRate */;
 var DEVICE_STATE = 5 /* Device_State */;
 var BUS_MASTER = 0;
 var BUS_SFX = 1;
-var BUS_MUSIC$1 = 2;
+var BUS_MUSIC = 2;
 var BUS_SPEECH = 2;
 function getDeviceStateString(state) {
     var _a;
@@ -925,7 +923,7 @@ $("#play-large-buffer").addEventListener("click", (ev) => {
             $("#lb-volume").value,
             $("#lb-pan").value,
             $("#lb-pitch").value,
-            false, 0,
+            false, false,
             BUS_MUSIC
         );
     } else {
@@ -967,7 +965,7 @@ $("#sfx-volume").addEventListener("input", (ev) => {
 });
 
 $("#music-volume").addEventListener("input", (ev) => {
-    setBusVolume(BUS_MUSIC$1, ev.target.value);
+    setBusVolume(BUS_MUSIC, ev.target.value);
 });
 
 $("#speech-volume").addEventListener("input", (ev) => {
@@ -983,7 +981,7 @@ $("#sfx-enabled").addEventListener("input", (ev) => {
 });
 
 $("#music-enabled").addEventListener("input", (ev) => {
-    setBusEnabled(BUS_MUSIC$1, ev.target.checked);
+    setBusEnabled(BUS_MUSIC, ev.target.checked);
 });
 
 $("#speech-enabled").addEventListener("input", (ev) => {
