@@ -12,6 +12,7 @@ fs.copyFileSync("packages/tester/index.html", "pages/index.html");
 
 fs.copyFileSync("packages/webaudio/dist/browser/auph.js", "pages/auph.js");
 fs.copyFileSync("packages/webaudio/dist/browser/auph.js.map", "pages/auph.js.map");
+fs.copyFileSync("packages/webaudio/dist/types/index.d.ts", "pages/auph.d.ts");
 
 function copyFileSync( source, target ) {
 
