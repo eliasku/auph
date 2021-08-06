@@ -1,0 +1,20 @@
+{
+  "name": "auph",
+  "private": true,
+  "version": "0.0.0",
+  "scripts": {
+    "build": "wsrun -m -e -t build",
+    "pages": "node build-pages"
+  },
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.16.0",
+    "wsrun": "^5.2.4"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  }
+}

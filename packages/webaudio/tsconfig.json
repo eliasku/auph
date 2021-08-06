@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "module": "esnext",
+    "target": "es5",
+    "moduleResolution": "node",
+    "sourceMap": true,
+    "strict": true,
+    "outDir": "./dist/module",
+    "declarationDir": "./dist/types",
+    "declaration": true,
+    "noEmitOnError": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "downlevelIteration": true,
+    "skipLibCheck": true,
+    "lib": [
+      "DOM",
+      "ESNext"
+    ]
+  },
+  "include": [
+    "./src/**/*.ts"
+  ]
+}
