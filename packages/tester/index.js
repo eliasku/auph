@@ -1,9 +1,5 @@
 import * as Auph from "auph";
 
-const BUS_MASTER = 0;
-const BUS_SFX = 1;
-const BUS_MUSIC = 2;
-
 let streamSource = null;
 let streamVoice = undefined;
 
@@ -132,13 +128,14 @@ $("#stop-multi").addEventListener("click", () => {
 
 setInterval(() => {
     $("#info").innerHTML = `<table>
+<tr><td>Device State</td><td>${Auph.getDeviceStateString(Auph.getInteger(Auph.DEVICE_STATE))}</td></tr>
+<tr><td>Sample Rate</td><td>${Auph.getInteger(Auph.DEVICE_SAMPLE_RATE)}</td></tr>
+
 <tr><td>Voices</td><td>${Auph.getInteger(Auph.VOICES_IN_USE)}</td></tr>
 <tr><td>Streams</td><td>${Auph.getInteger(Auph.STREAMS_IN_USE)}</td></tr>
-<tr><td>Source Buffers</td><td>${Auph.getInteger(Auph.BUFFERS_LOADED)}</td></tr>
-<tr><td>Sample Rate</td><td>${Auph.getInteger(Auph.SAMPLE_RATE)}</td></tr>
 </table>`;
 
-    if(Auph.getVoiceState(streamVoice) & 1) {
+    if (Auph.getVoiceState(streamVoice) & 1) {
         const len = Auph.getVoiceLength(streamVoice);
         const pos = Auph.getVoicePosition(streamVoice);
         $("#stream-playback-info").innerText = pos + " / " + len;
@@ -273,25 +270,33 @@ $("#lb-pitch").addEventListener("input", (ev) => {
  */
 
 $("#master-volume").addEventListener("input", (ev) => {
-    Auph.setBusVolume(BUS_MASTER, ev.target.value);
+    Auph.setBusVolume(Auph.BUS_MASTER, ev.target.value);
 });
 
 $("#sfx-volume").addEventListener("input", (ev) => {
-    Auph.setBusVolume(BUS_SFX, ev.target.value);
+    Auph.setBusVolume(Auph.BUS_SFX, ev.target.value);
 });
 
 $("#music-volume").addEventListener("input", (ev) => {
-    Auph.setBusVolume(BUS_MUSIC, ev.target.value);
+    Auph.setBusVolume(Auph.BUS_MUSIC, ev.target.value);
+});
+
+$("#speech-volume").addEventListener("input", (ev) => {
+    Auph.setBusVolume(Auph.BUS_SPEECH, ev.target.value);
 });
 
 $("#master-enabled").addEventListener("input", (ev) => {
-    Auph.setBusEnabled(BUS_MASTER, ev.target.checked);
+    Auph.setBusEnabled(Auph.BUS_MASTER, ev.target.checked);
 });
 
 $("#sfx-enabled").addEventListener("input", (ev) => {
-    Auph.setBusEnabled(BUS_SFX, ev.target.checked);
+    Auph.setBusEnabled(Auph.BUS_SFX, ev.target.checked);
 });
 
 $("#music-enabled").addEventListener("input", (ev) => {
-    Auph.setBusEnabled(BUS_MUSIC, ev.target.checked);
+    Auph.setBusEnabled(Auph.BUS_MUSIC, ev.target.checked);
+});
+
+$("#speech-enabled").addEventListener("input", (ev) => {
+    Auph.setBusEnabled(Auph.BUS_SPEECH, ev.target.checked);
 });
