@@ -4,6 +4,12 @@ let ctx: AudioContext | null = null;
 const unlockEvents = ["mousedown", "pointerdown", "touchstart"];
 let unlocked = false;
 
+export const enum DeviceState {
+    Invalid = 0,
+    Running = 1,
+    Paused = 2
+}
+
 export function getContext(): AudioContext | null {
     if (!ctx) {
         warn("not initialized");
@@ -14,6 +20,18 @@ export function getContext(): AudioContext | null {
         return null;
     }
     return ctx;
+}
+
+export function getContextState(): DeviceState {
+    let state = DeviceState.Invalid;
+    if (ctx) {
+        if (ctx.state === "suspended") {
+            state = DeviceState.Paused;
+        } else if (ctx.state === "running") {
+            state = DeviceState.Running;
+        }
+    }
+    return state;
 }
 
 export function resumeAudioContext(ctx: AudioContext) {

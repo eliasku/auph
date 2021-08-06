@@ -4,7 +4,7 @@ import {
     getStreamPlayersCount,
     StreamPlayer_resume
 } from "./impl/StreamPlayer";
-import {closeContext, getContext, initContext, resumeAudioContext} from "./impl/Context";
+import {closeContext, DeviceState, getContext, getContextState, initContext, resumeAudioContext} from "./impl/Context";
 import {
     _checkVoiceHandle,
     _getVoiceObj,
@@ -29,7 +29,8 @@ export const enum Var {
     StreamsInUse = 1,
     BuffersLoaded = 2,
     StreamsLoaded = 3,
-    SampleRate = 4,
+    Device_SampleRate = 4,
+    Device_State = 5
 }
 
 export function init(): void {
@@ -90,12 +91,15 @@ export function getInteger(param: number): number {
         case STREAMS_LOADED: {
             return 0;
         }
-        case SAMPLE_RATE: {
+        case DEVICE_SAMPLE_RATE: {
             const ctx = getContext();
             return ctx ? ctx.sampleRate : 0;
         }
+        case DEVICE_STATE: {
+            return getContextState();
+        }
     }
-    return -1;
+    return 0;
 }
 
 /**
@@ -400,12 +404,20 @@ export function getVoicePosition(voice: Voice): number {
     return d;
 }
 
-
 /** Export Constants only for pre-bundled usage **/
 
 export const VOICES_IN_USE = Var.VoicesInUse;
 export const STREAMS_IN_USE = Var.StreamsInUse;
 export const BUFFERS_LOADED = Var.BuffersLoaded;
 export const STREAMS_LOADED = Var.StreamsLoaded;
-export const SAMPLE_RATE = Var.SampleRate;
+export const DEVICE_SAMPLE_RATE = Var.Device_SampleRate;
+export const DEVICE_STATE = Var.Device_State;
 
+export const BUS_MASTER = 0;
+export const BUS_SFX = 1;
+export const BUS_MUSIC = 2;
+export const BUS_SPEECH = 2;
+
+export function getDeviceStateString(state: DeviceState): string {
+    return ["invalid", "running", "paused"][state] ?? "undefined";
+}
