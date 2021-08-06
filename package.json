@@ -4,7 +4,10 @@
   "version": "0.0.0",
   "scripts": {
     "build": "wsrun -m -e -t build",
-    "pages": "node build-pages"
+    "pages": "node build-pages",
+    "release": "changeset publish",
+    "version": "changeset version && yarn run update-lock",
+    "update-lock": "yarn && git add yarn.lock"
   },
   "dependencies": {
   },
