@@ -25,6 +25,18 @@ function getContext() {
     }
     return ctx;
 }
+function getContextState() {
+    var state = 0 /* Invalid */;
+    if (ctx) {
+        if (ctx.state === "suspended") {
+            state = 2 /* Paused */;
+        }
+        else if (ctx.state === "running") {
+            state = 1 /* Running */;
+        }
+    }
+    return state;
+}
 function resumeAudioContext(ctx) {
     log("resuming...");
     ctx.resume().then(function () {
@@ -427,12 +439,15 @@ function getInteger(param) {
         case STREAMS_LOADED: {
             return 0;
         }
-        case SAMPLE_RATE: {
+        case DEVICE_SAMPLE_RATE: {
             var ctx = getContext();
             return ctx ? ctx.sampleRate : 0;
         }
+        case DEVICE_STATE: {
+            return getContextState();
+        }
     }
-    return -1;
+    return 0;
 }
 /***/
 function loadAudioSource(filepath, streaming) {
@@ -665,11 +680,16 @@ var VOICES_IN_USE = 0 /* VoicesInUse */;
 var STREAMS_IN_USE = 1 /* StreamsInUse */;
 var BUFFERS_LOADED = 2 /* BuffersLoaded */;
 var STREAMS_LOADED = 3 /* StreamsLoaded */;
-var SAMPLE_RATE = 4 /* SampleRate */;const BUS_MASTER = 0;
-const BUS_SFX = 1;
-const BUS_MUSIC = 2;
-
-let streamSource = null;
+var DEVICE_SAMPLE_RATE = 4 /* Device_SampleRate */;
+var DEVICE_STATE = 5 /* Device_State */;
+var BUS_MASTER = 0;
+var BUS_SFX = 1;
+var BUS_MUSIC$1 = 2;
+var BUS_SPEECH = 2;
+function getDeviceStateString(state) {
+    var _a;
+    return (_a = ["invalid", "running", "paused"][state]) !== null && _a !== void 0 ? _a : "undefined";
+}let streamSource = null;
 let streamVoice = undefined;
 
 let bufferSource = null;
@@ -797,13 +817,14 @@ $("#stop-multi").addEventListener("click", () => {
 
 setInterval(() => {
     $("#info").innerHTML = `<table>
+<tr><td>Device State</td><td>${getDeviceStateString(getInteger(DEVICE_STATE))}</td></tr>
+<tr><td>Sample Rate</td><td>${getInteger(DEVICE_SAMPLE_RATE)}</td></tr>
+
 <tr><td>Voices</td><td>${getInteger(VOICES_IN_USE)}</td></tr>
 <tr><td>Streams</td><td>${getInteger(STREAMS_IN_USE)}</td></tr>
-<tr><td>Source Buffers</td><td>${getInteger(BUFFERS_LOADED)}</td></tr>
-<tr><td>Sample Rate</td><td>${getInteger(SAMPLE_RATE)}</td></tr>
 </table>`;
 
-    if(getVoiceState(streamVoice) & 1) {
+    if (getVoiceState(streamVoice) & 1) {
         const len = getVoiceLength(streamVoice);
         const pos = getVoicePosition(streamVoice);
         $("#stream-playback-info").innerText = pos + " / " + len;
@@ -946,7 +967,11 @@ $("#sfx-volume").addEventListener("input", (ev) => {
 });
 
 $("#music-volume").addEventListener("input", (ev) => {
-    setBusVolume(BUS_MUSIC, ev.target.value);
+    setBusVolume(BUS_MUSIC$1, ev.target.value);
+});
+
+$("#speech-volume").addEventListener("input", (ev) => {
+    setBusVolume(BUS_SPEECH, ev.target.value);
 });
 
 $("#master-enabled").addEventListener("input", (ev) => {
@@ -958,5 +983,9 @@ $("#sfx-enabled").addEventListener("input", (ev) => {
 });
 
 $("#music-enabled").addEventListener("input", (ev) => {
-    setBusEnabled(BUS_MUSIC, ev.target.checked);
+    setBusEnabled(BUS_MUSIC$1, ev.target.checked);
+});
+
+$("#speech-enabled").addEventListener("input", (ev) => {
+    setBusEnabled(BUS_SPEECH, ev.target.checked);
 });}());//# sourceMappingURL=index.js.map
