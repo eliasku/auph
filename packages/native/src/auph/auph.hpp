@@ -8,11 +8,16 @@ struct Bus {
     uint32_t id;
 };
 
-struct AudioSourceHandle {
+inline Bus Bus_Master = {0};
+inline Bus Bus_Sound = {1};
+inline Bus Bus_Music = {2};
+inline Bus Bus_Speech = {3};
+
+struct AudioData {
     uint32_t id;
 };
 
-struct VoiceHandle {
+struct Voice {
     uint32_t id;
 };
 
@@ -41,6 +46,22 @@ void shutdown();
 
 int getInteger(Var param);
 
+AudioData load(const char* filepath, bool streaming);
+
+void unload(AudioData data);
+
+Voice play(AudioData data,
+           float gain = 1.0f,
+           float pan = 0.0f,
+           float pitch = 1.0f,
+           bool loop = false,
+           bool paused = false,
+           Bus bus = Bus_Sound);
+
+void stop(Voice voice);
+
+void stopAudioData(AudioData data);
+
 // private
 void* _getAudioContext();
 
@@ -49,11 +70,14 @@ static const char* getDeviceStateString(DeviceState state) {
     return names[static_cast<uint32_t>(state) % 3];
 }
 
-AudioSourceHandle loadAudioSource(const char* filepath, bool streaming);
 
+/** Bus controls **/
+void setBusVolume(Bus bus, float gain);
 
-///
+float getBusVolume(Bus bus);
 
-VoiceHandle play(AudioSourceHandle source, float gain = 1.0f, float pan = 0.0f, float pitch = 1.0f, bool loop = false, bool paused = false, Bus bus = {0});
+void setBusEnabled(Bus bus, bool enabled);
+
+bool getBusEnabled(Bus bus);
 
 }

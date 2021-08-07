@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Decoders.hpp"
+#include "AudioData.hpp"
 
 #define DR_WAV_IMPLEMENTATION
 
@@ -14,17 +14,17 @@
 
 namespace auph {
 
-SoundResource::~SoundResource() {
+AudioDataObj::~AudioDataObj() {
     unload();
 }
 
-void SoundResource::unload() {
+void AudioDataObj::unload() {
     free(source.data.buffer);
     free(source.streamData);
     source = {};
 }
 
-bool SoundResource::loadFile_MP3(const char* filepath) {
+bool AudioDataObj::loadFile_MP3(const char* filepath) {
     drmp3_config config{};
     drmp3_uint64 totalFrames{};
     int16_t* data = drmp3_open_file_and_read_pcm_frames_s16(filepath, &config, &totalFrames, nullptr);
@@ -40,7 +40,7 @@ bool SoundResource::loadFile_MP3(const char* filepath) {
     return false;
 }
 
-bool SoundResource::loadFile_WAV(const char* filepath) {
+bool AudioDataObj::loadFile_WAV(const char* filepath) {
     drwav_uint64 totalFrameCount{};
     unsigned int channels;
     unsigned int sampleRate;
@@ -58,7 +58,7 @@ bool SoundResource::loadFile_WAV(const char* filepath) {
     return false;
 }
 
-bool SoundResource::loadFile_OGG(const char* filepath) {
+bool AudioDataObj::loadFile_OGG(const char* filepath) {
     int error = 0;
     auto* ogg = stb_vorbis_open_filename(filepath, &error, nullptr);
     if (error != 0 || ogg == nullptr) {
@@ -80,7 +80,7 @@ bool SoundResource::loadFile_OGG(const char* filepath) {
     source.format = SampleFormat_F32;
     source.channels = info.channels;
     source.sampleRate = info.sample_rate;
-    source.length = samples;
+    source.length = numFrames;
     source.reader = selectSourceReader(source.format, source.channels, true);
     return true;
 }
@@ -95,17 +95,16 @@ static void oggStreamReader(MixSample* mix,
                             const double begin,
                             const double end,
                             const double advance,
-                            const AudioSource* audioSource,
+                            const AudioDataSource* dataSource,
                             MixSample gain) {
-    auto* stream = (OggStream*) audioSource->streamData;
-    const auto channels = audioSource->channels;
+    auto* stream = (OggStream*) dataSource->streamData;
+    const auto channels = dataSource->channels;
     static constexpr int BufferFloatsMax = 4096;
     float buffer[BufferFloatsMax];
-    // TODO: hackish
-    ((AudioSource*) audioSource)->data.buffer = buffer;
+    dataSource->data.buffer = buffer;
     auto p = begin;
     while (p < end) {
-        auto nextFloatsCount = (int) ((int)(end) - (int)(p) + 1) * (int) channels;
+        auto nextFloatsCount = (int) ((int) (end) - (int) (p) + 1) * (int) channels;
         //stb_vorbis_seek_frame(stream->f, (uint32_t) p);
         if (nextFloatsCount > BufferFloatsMax) {
             nextFloatsCount = BufferFloatsMax;
@@ -117,13 +116,13 @@ static void oggStreamReader(MixSample* mix,
         if (framesReady == 0) {
             break;
         }
-        stream->parentReader(mix, 0, framesReady, advance, audioSource, gain);
+        stream->parentReader(mix, 0, framesReady, advance, dataSource, gain);
         p += framesReady;
     }
-    ((AudioSource*) audioSource)->data.buffer = nullptr;
+    dataSource->data.buffer = nullptr;
 }
 
-bool SoundResource::streamFile_OGG(const char* filepath) {
+bool AudioDataObj::streamFile_OGG(const char* filepath) {
     int error = 0;
     auto* ogg = stb_vorbis_open_filename(filepath, &error, nullptr);
     if (error != 0 || ogg == nullptr) {
@@ -144,6 +143,33 @@ bool SoundResource::streamFile_OGG(const char* filepath) {
     streamData->parentReader = selectSourceReader(source.format, source.channels, true);
     source.reader = oggStreamReader;
     return true;
+}
+
+const char* getExtension(const char* filepath) {
+    const char* lastDot = filepath;
+    while (*filepath != '\0') {
+        if (*filepath == '.') {
+            lastDot = filepath;
+        }
+        filepath++;
+    }
+    return lastDot;
+}
+
+bool AudioDataObj::load(const char* filepath, bool streaming) {
+    const char* e = getExtension(filepath);
+    if (e[1] == 'm' && e[2] == 'p' && e[3] == '3') {
+        return loadFile_MP3(filepath);
+    } else if (e[1] == 'o' && e[2] == 'g' && e[3] == 'g') {
+        if (streaming) {
+            return streamFile_OGG(filepath);
+        } else {
+            return loadFile_OGG(filepath);
+        }
+    } else if (e[1] == 'w' && e[2] == 'a' && e[3] == 'v') {
+        return loadFile_WAV(filepath);
+    }
+    return false;
 }
 
 }

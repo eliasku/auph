@@ -1,81 +1,97 @@
 #pragma once
 
 #include "device/AudioDevice_impl.hpp"
-#include "engine/SoundEngine.hpp"
-#include "engine/Decoders_impl.hpp"
+#include "engine/Mixer.hpp"
+#include "engine/AudioData_impl.hpp"
 #include "auph.hpp"
 
 namespace auph {
 
 constexpr uint32_t AudioSourcesMaxCount = 128;
 
-
 struct Context {
-    AudioDevice* device = nullptr;
-    SoundEngine* engine = nullptr;
-    DeviceState state = DeviceState::Invalid;
+    AudioDevice device{};
+    Mixer mixer{};
+    DeviceState state = DeviceState::Paused;
+    AudioDataObj dataPool[AudioSourcesMaxCount];
+    VoiceObj voicePool[Mixer::VoicesMaxCount];
+    BusObj busLine[4]{};
 
-    SoundResource sources[AudioSourcesMaxCount];
+    Context() {
+        mixer.voices = voicePool;
+        mixer.busLine = busLine;
+        device.onPlayback = Mixer::playback;
+        device.userData = &mixer;
+        state = DeviceState::Paused;
+    }
+
+    VoiceObj* getVoiceObj(Voice voice) {
+        const auto index = voice.id & iMask;
+        if (index > 0 && index < Mixer::VoicesMaxCount) {
+            auto* obj = voicePool + index;
+            if (obj->v == (voice.id & vMask)) {
+                return obj;
+            }
+        }
+        return nullptr;
+    }
+
+    [[nodiscard]]
+    Voice getNextVoice() const {
+        for (uint32_t i = 1; i < Mixer::VoicesMaxCount; ++i) {
+            const auto* obj = voicePool + i;
+            if (obj->data == nullptr) {
+                return {i | obj->v};
+            }
+        }
+        return {0};
+    }
 };
 
-Context ctx{};
+Context* ctx = nullptr;
 
 void init() {
-    ctx.device = new AudioDevice();
-    ctx.engine = new SoundEngine();
-    ctx.device->onPlayback = SoundEngine::playback;
-    ctx.device->userData = ctx.engine;
-    ctx.state = DeviceState::Paused;
+    if (!ctx) {
+        ctx = new Context();
+    }
 }
 
 void resume() {
-    ctx.device->start();
-    ctx.state = DeviceState::Running;
+    if (ctx) {
+        ctx->device.start();
+        ctx->state = DeviceState::Running;
+    }
 }
 
 void pause() {
-    ctx.device->stop();
-    ctx.state = DeviceState::Paused;
+    if (ctx) {
+        ctx->device.stop();
+        ctx->state = DeviceState::Paused;
+    }
 }
 
 void shutdown() {
-    delete ctx.engine;
-    delete ctx.device;
-    ctx = {};
-    ctx.state = DeviceState::Invalid;
+    delete ctx;
+    ctx = nullptr;
 }
 
-const char* ext(const char* filepath) {
-    const char* lastDot = filepath;
-    while (*filepath != '\0') {
-        if (*filepath == '.') {
-            lastDot = filepath;
-        }
-        filepath++;
-    }
-    return lastDot;
-}
-
-AudioSourceHandle loadAudioSource(const char* filepath, bool streaming) {
+AudioData load(const char* filepath, bool streaming) {
     for (uint32_t i = 0; i < AudioSourcesMaxCount; ++i) {
-        auto* src = &ctx.sources[i];
+        auto* src = &ctx->dataPool[i];
+        // data slot is free
         if (src->source.reader == nullptr) {
-            const char* e = ext(filepath);
-            if (e[1] == 'm' && e[2] == 'p' && e[3] == '3') {
-                src->loadFile_MP3(filepath);
-            } else if (e[1] == 'o' && e[2] == 'g' && e[3] == 'g') {
-                if (streaming) {
-                    src->streamFile_OGG(filepath);
-                } else {
-                    src->loadFile_OGG(filepath);
-                }
-            } else if (e[1] == 'w' && e[2] == 'a' && e[3] == 'v') {
-                src->loadFile_WAV(filepath);
+            // data slot is loading
+            if (src->load(filepath, streaming)) {
+                return {i};
             }
-            return {i};
         }
     }
     return {0};
+}
+
+void unload(AudioData data) {
+    auto* obj = &ctx->dataPool[data.id];
+    obj->unload();
 }
 
 void* _getAudioContext() {
@@ -86,6 +102,11 @@ int getInteger(Var param) {
     switch (param) {
         case Var::VoicesInUse: {
             uint32_t count = 0;
+            for (uint32_t i = 0; i < Mixer::VoicesMaxCount; ++i) {
+                if (ctx->voicePool[i].controlFlags & Voice_Running) {
+                    ++count;
+                }
+            }
             return count;
         }
         case Var::StreamsInUse: {
@@ -102,33 +123,66 @@ int getInteger(Var param) {
             return 44100;
         }
         case Var::Device_State: {
-            return static_cast<int>(ctx.state);
+            return static_cast<int>(ctx->state);
         }
     }
     return 0;
 }
 
-VoiceHandle play(AudioSourceHandle source, float gain, float pan, float pitch, bool loop, bool paused, Bus bus) {
-    auto* voices = ctx.engine->voices;
-    for (uint32_t i = 0; i < SoundEngine::VoicesMaxCount; ++i) {
-        auto* voice = &voices[i];
-        if ((voice->controlFlags & Voice_Running) == 0) {
-            voice->controlFlags = Voice_Running;
-            if (loop) {
-                voice->controlFlags |= Voice_Loop;
-            }
-            if (paused) {
-                voice->controlFlags |= Voice_Paused;
-            }
-            voice->source = &ctx.sources[source.id].source;
-            voice->gain = gain;
-            voice->pan = pan;
-            voice->pitch = pitch;
-            voice->position = 0.0;
-            return {i};
+Voice play(AudioData data, float gain, float pan, float pitch, bool loop, bool paused, Bus bus) {
+    auto voice = ctx->getNextVoice();
+    if (voice.id) {
+        auto* obj = &ctx->voicePool[voice.id & iMask];
+        obj->controlFlags = Voice_Running;
+        if (loop) {
+            obj->controlFlags |= Voice_Loop;
+        }
+        if (paused) {
+            obj->controlFlags |= Voice_Paused;
+        }
+        obj->data = &ctx->dataPool[data.id].source;
+        obj->gain = gain;
+        obj->pan = pan;
+        obj->pitch = pitch;
+        obj->position = 0.0;
+        obj->bus = bus.id;
+    }
+    return voice;
+}
+
+void stop(Voice voice) {
+    auto* obj = ctx->getVoiceObj(voice);
+    if (obj) {
+        obj->stop();
+    }
+}
+
+void stopAudioData(AudioData data) {
+    const auto* dataSourcePtr = &ctx->dataPool[data.id].source;
+    for (uint32_t i = 1; i < Mixer::VoicesMaxCount; ++i) {
+        auto* voiceObj = &ctx->voicePool[i];
+        if (voiceObj->data == dataSourcePtr) {
+            voiceObj->stop();
         }
     }
-    return {0};
+}
+
+
+/** Bus controls **/
+void setBusVolume(Bus bus, float gain) {
+    ctx->busLine[bus.id].gain = gain;
+}
+
+float getBusVolume(Bus bus) {
+    return ctx->busLine[bus.id].gain;
+}
+
+void setBusEnabled(Bus bus, bool enabled) {
+    ctx->busLine[bus.id].enabled = enabled;
+}
+
+bool getBusEnabled(Bus bus) {
+    return ctx->busLine[bus.id].enabled;
 }
 
 }

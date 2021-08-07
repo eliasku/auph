@@ -1,14 +1,9 @@
 import {StreamPlayer, StreamPlayer_resume, StreamPlayer_stop} from "./StreamPlayer";
-import {AudioSource} from "./AudioSource";
-import {getContext} from "./Context";
+import {getContext} from "./Device";
+import {AudioData} from "./AudioData";
+import {VoiceStateFlag} from "./Constants";
 
 export type Voice = number;
-
-export const enum VoiceStateFlag {
-    Running = 1,
-    Paused = 2,
-    Loop = 4
-}
 
 const vMask = 0xFFFF00;
 const vIncr = 0x000100;
@@ -30,7 +25,7 @@ export class VoiceObj {
 
     target: AudioNode | null = null;
 
-    src: AudioSource = 0;
+    data: AudioData = 0;
 
     // handle version (maybe will add index as well)
     v = 0;
@@ -85,7 +80,7 @@ export function Voice_stop(v: VoiceObj) {
     }
 
     Voice_resetDestination(v);
-    v.src = 0;
+    v.data = 0;
     v.cf = 0;
     v.v = (v.v + vIncr) & vMask;
 }
@@ -183,7 +178,7 @@ export function _getVoiceObj(handle: Voice): VoiceObj | null {
 export function getNextVoice(): Voice {
     for (let i = 1; i < voicePool.length; ++i) {
         const v = voicePool[i]!;
-        if (v.src === 0) {
+        if (v.data === 0) {
             return i | v.v;
         }
     }

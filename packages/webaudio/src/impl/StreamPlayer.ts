@@ -1,4 +1,4 @@
-import {getContext} from "./Context";
+import {getContext} from "./Device";
 import {error, log} from "./debug";
 
 const emptyWaveData = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAVFYAAFRWAAABAAgAZGF0YQAAAAA=";
@@ -13,7 +13,7 @@ export class StreamPlayer {
 
 export function StreamPlayer_create(ctx: AudioContext, url: string): StreamPlayer {
     const el = new Audio(url);
-    el.preload = "auto";
+    el.preload = "metadata";
     (el as any)["preservesPitch"] = false;
     return new StreamPlayer(el, ctx.createMediaElementSource(el));
 }

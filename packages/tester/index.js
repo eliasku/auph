@@ -1,4 +1,5 @@
 import * as Auph from "auph";
+import {getAudioDataStateString} from "auph";
 
 let streamSource = null;
 let streamVoice = undefined;
@@ -33,7 +34,7 @@ $("#shutdown").addEventListener("click", () => {
 });
 
 $("#load-stream").addEventListener("click", () => {
-    streamSource = Auph.loadAudioSource("assets/mp3/Kalimba.mp3", true);
+    streamSource = Auph.load("assets/mp3/Kalimba.mp3", true);
     $("#play-stream").innerText = "Play";
 });
 
@@ -70,7 +71,7 @@ $("#pitch").addEventListener("input", (ev) => {
 });
 
 $("#load-buffer").addEventListener("click", () => {
-    bufferSource = Auph.loadAudioSource("assets/mp3/FUNKY_HOUSE.mp3", false);
+    bufferSource = Auph.load("assets/mp3/FUNKY_HOUSE.mp3", false);
 });
 
 $("#play-buffer").addEventListener("click", (ev) => {
@@ -107,7 +108,7 @@ $("#load-multi").addEventListener("click", () => {
         "assets/wav/RideCymbal.wav",
         "assets/wav/SnareDrum.wav",
     ];
-    multiSources = sources.map((src) => Auph.loadAudioSource(src, false));
+    multiSources = sources.map((src) => Auph.load(src, false));
 });
 
 $("#play-multi").addEventListener("click", () => {
@@ -139,6 +140,9 @@ setInterval(() => {
         const len = Auph.getVoiceLength(streamVoice);
         const pos = Auph.getVoicePosition(streamVoice);
         $("#stream-playback-info").innerText = pos + " / " + len;
+    } else if (streamSource) {
+        const st = Auph.getAudioDataState(streamSource);
+        $("#stream-playback-info").innerText = getAudioDataStateString(st);
     }
 
 }, 300);
@@ -146,7 +150,7 @@ setInterval(() => {
 let clapSource = null;
 $("#load-clap").addEventListener("click", () => {
     if (!clapSource) {
-        clapSource = Auph.loadAudioSource("assets/mp3/CLAP.mp3", false);
+        clapSource = Auph.load("assets/mp3/CLAP.mp3", false);
     }
 });
 
@@ -222,11 +226,11 @@ let largeBufferSource = 0;
 let largeBufferVoice = 0;
 
 $("#load-large-buffer").addEventListener("click", () => {
-    largeBufferSource = Auph.loadAudioSource("assets/ogg/sample1.ogg", false);
+    largeBufferSource = Auph.load("assets/ogg/sample1.ogg", false);
 });
 
 $("#unload-large-buffer").addEventListener("click", () => {
-    Auph.destroyAudioSource(largeBufferSource);
+    Auph.unload(largeBufferSource);
     largeBufferSource = 0;
 });
 

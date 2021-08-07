@@ -1,4 +1,4 @@
-## 🔊 auph 🎧
+# 🔊 auph 🎧
 
 Trivial audio mixer API for native and web targets.
 
@@ -7,31 +7,50 @@ Trivial audio mixer API for native and web targets.
 - [JavaScript Browser](./packages/webaudio) JavaScript implementation for Web Browsers (also used in C++ library for Emscripten/WebAssembly build)
 - [C++](./packages/native) library supports macOS, iOS, Android and WebAssembly targets
 
-### API
+## Core Concepts
 
-#### Context Management
+### Objects
 
-`void init()`
+- **Device**: single global engine or mixer object, could be initialized and terminated, paused and resumed.
+- **AudioData**: data that can be loaded and unloaded. We are playing audio from Data objects.
+- **Voice**: instance of Audio Player used to control sound playback.
+- **Bus**: simple hierarchy object for mixing, Master Bus is connected to Audio Device. All another bus objects are connected to the Master Bus. Bus splits game track audio voices by groups Music, Sound, Speech. Enable controlling of Gain and Muting for each audio group.
 
-`void resume()`
+### Parameters
 
-`void pause()`
+- **Volume**: volume of Bus or Voice (gain).
+  - alt: **Gain**
+- **Pan**: control stereo-panning of Voice, by default is `0` (center balance), full left channel is `-1`, full Right channel is `1`.
+- **Pitch**: control playback rate of Voice, by default is `1` (100% speed of playback)
+  - alt: **Rate**, **Speed**
 
-`void shutdown()`
+### Voice Flags
 
-##### private / debug
+- **Loop Mode**: voice could be in the loop mode or not.
+- **Paused Flag**: played voice is active until it's stopped, either we are able to *pause* or *resume* playback by setting **Paused** flag on and off.
 
-`int getInteger(Var param)`
+### Voice lifecycle
 
-`dynamic _getAudioContext()`
+- **Play**: open voice object, associate it with *Audio Data* and start playback. If **Paused** flag is set on **Play**, voice is alive, but will being on pause.
+- **Stop**: stop and close voice object.
 
-#### Loading / unloading
+## API
 
-`AudioSource loadAudioSource(string filepath, bool streaming)`
+### Device
 
-`void destroyAudioSource(AudioSource source)`
+- **init**
+- **resume**
+- **pause**
+- **shutdown**
 
-#### Control Voices
+### Audio Data
+
+- **load**
+  - `(filepath: string, streaming: boolean) => AudioData`
+- **unload**
+  - `(data: AudioData) => void`
+
+### Control Voices
 ```
 Voice play(AudioSource source,
   volume = 1.0,
@@ -53,6 +72,13 @@ Voice play(AudioSource source,
 `void setPitch(Void voice, float value)`
 
 `void setPause(Void voice, bool paused)`
+
+### Extra
+
+- **getInteger**: get global parameter value (sample rate, voices count, etc)
+  - `(param:Var) => integer`
+- **_getAudioContext()**: internal device's context
+  - `() => any`
 
 ## Roadmap
 

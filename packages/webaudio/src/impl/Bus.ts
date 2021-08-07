@@ -1,4 +1,4 @@
-import {getContext} from "./Context";
+import {getContext} from "./Device";
 
 export class BusObj {
     constructor(readonly gain: GainNode,
@@ -36,7 +36,8 @@ export function _getBus(handle: Bus): BusObj | undefined {
 }
 
 export function _getBusGain(handle: Bus): GainNode | undefined {
-    return _getBus(handle)?.gain;
+    const obj = _getBus(handle);
+    return obj ? obj.gain : undefined;
 }
 
 export function Bus_enable(bus: BusObj, enabled: boolean): void {
