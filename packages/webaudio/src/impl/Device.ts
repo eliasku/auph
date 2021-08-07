@@ -1,14 +1,9 @@
 import {error, log, warn} from "./debug";
+import {DeviceState} from "./Constants";
 
 let ctx: AudioContext | null = null;
 const unlockEvents = ["mousedown", "pointerdown", "touchstart"];
 let unlocked = false;
-
-export const enum DeviceState {
-    Invalid = 0,
-    Running = 1,
-    Paused = 2
-}
 
 export function getContext(): AudioContext | null {
     if (!ctx) {

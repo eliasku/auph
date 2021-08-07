@@ -4,7 +4,7 @@ import {
     getStreamPlayersCount,
     StreamPlayer_resume
 } from "./impl/StreamPlayer";
-import {closeContext, DeviceState, getContext, getContextState, initContext, resumeAudioContext} from "./impl/Context";
+import {closeContext, getContext, getContextState, initContext, resumeAudioContext} from "./impl/Device";
 import {
     _checkVoiceHandle,
     _getVoiceObj,
@@ -17,21 +17,12 @@ import {
     Voice_prepareBuffer,
     Voice_startBuffer,
     Voice_stop,
-    voicePool,
-    VoiceStateFlag
+    voicePool
 } from "./impl/Voice";
-import {AudioSource, AudioSourceObj, audioSources} from "./impl/AudioSource";
+import {AudioData, audioDataPool, getNextAudioData} from "./impl/AudioData";
 import {_getBus, _getBusGain, Bus, Bus_enable, initBusPool, termBusPool} from "./impl/Bus";
 import {error, log, measure, warn} from "./impl/debug";
-
-export const enum Var {
-    VoicesInUse = 0,
-    StreamsInUse = 1,
-    BuffersLoaded = 2,
-    StreamsLoaded = 3,
-    Device_SampleRate = 4,
-    Device_State = 5
-}
+import {AudioDataFlag, Param, VoiceStateFlag} from "./impl/Constants";
 
 export function init(): void {
     const ctx = initContext();
@@ -64,7 +55,7 @@ export function shutdown(): void {
     if (ctx) {
         termBusPool();
         voicePool.length = 1;
-        audioSources.length = 1;
+        audioDataPool.length = 1;
         destroyStreamPlayersPool();
         closeContext(ctx);
     }
@@ -73,7 +64,7 @@ export function shutdown(): void {
 /*** Context State ***/
 export function getInteger(param: number): number {
     switch (param) {
-        case Var.VoicesInUse: {
+        case Param.VoicesInUse: {
             let count = 0;
             for (let i = 1; i < voicePool.length; ++i) {
                 if (voicePool[i]!.buffer) {
@@ -82,20 +73,20 @@ export function getInteger(param: number): number {
             }
             return count;
         }
-        case Var.StreamsInUse: {
+        case Param.StreamsInUse: {
             return getStreamPlayersCount();
         }
-        case Var.BuffersLoaded: {
+        case Param.BuffersLoaded: {
             return 0;
         }
-        case Var.StreamsLoaded: {
+        case Param.StreamsLoaded: {
             return 0;
         }
-        case Var.Device_SampleRate: {
+        case Param.Device_SampleRate: {
             const ctx = getContext();
             return ctx ? ctx.sampleRate : 0;
         }
-        case Var.Device_State: {
+        case Param.Device_State: {
             return getContextState();
         }
     }
@@ -110,24 +101,21 @@ export function _getAudioContext(): AudioContext | null {
 }
 
 /***/
-export function loadAudioSource(filepath: string, streaming: boolean): AudioSource {
-    if (!getContext()) {
+export function load(filepath: string, streaming: boolean): AudioData {
+    let handle = getNextAudioData();
+    if (handle === 0) {
         return 0;
     }
-    let handle = 0;
-    for (let i = 1; i < audioSources.length; ++i) {
-        if (audioSources[i]!.isFree) {
-            handle = i;
-        }
-    }
-    if (handle === 0) {
-        audioSources.push(new AudioSourceObj());
-        handle = audioSources.length - 1;
-    }
-    const obj = audioSources[handle]!;
-    obj.isFree = false;
+    const obj = audioDataPool[handle]!;
+    obj.cf |= AudioDataFlag.Empty;
     if (streaming) {
-        obj.url = filepath;
+        obj.cf |= AudioDataFlag.Stream;
+        fetch(new Request(filepath)).then((response) => {
+            return response.blob();
+        }).then((blob) => {
+            obj.data = URL.createObjectURL(blob);
+            obj.cf |= AudioDataFlag.Loaded;
+        });
     } else {
         let timeDecoding = 0;
         fetch(new Request(filepath)).then((response) => {
@@ -140,9 +128,10 @@ export function loadAudioSource(filepath: string, streaming: boolean): AudioSour
             }
             return null;
         }).then((buffer) => {
-            obj.buffer = buffer;
+            obj.data = buffer;
             if (buffer) {
                 log("decoding time: " + (measure(timeDecoding) | 0) + " ms.");
+                obj.cf |= AudioDataFlag.Loaded;
             }
         }).catch((reason) => {
             error("can't load audio buffer from " + filepath, reason);
@@ -151,24 +140,24 @@ export function loadAudioSource(filepath: string, streaming: boolean): AudioSour
     return handle;
 }
 
-export function destroyAudioSource(source: AudioSource): void {
-    if (source === 0) {
+export function unload(data: AudioData): void {
+    if (data === 0) {
         return;
     }
-    stopAudioSource(source);
-    const sourceObj = audioSources[source]!;
+    stopAudioData(data);
+    const sourceObj = audioDataPool[data]!;
     if (sourceObj) {
-        sourceObj.buffer = null;
-        sourceObj.url = null;
-        sourceObj.isFree = true;
+        if ((sourceObj.cf & AudioDataFlag.Stream) !== 0 && sourceObj.data) {
+            URL.revokeObjectURL(sourceObj.data as string);
+        }
+        sourceObj.cf = 0;
+        sourceObj.data = null;
     }
 }
 
-export const INFINITE_LOOPING = 0x40000000; // for SMI optimization we use 31-th bit
-
 /***
  *
- * @param source
+ * @param data
  * @param volume
  * @param pan
  * @param pitch
@@ -176,27 +165,31 @@ export const INFINITE_LOOPING = 0x40000000; // for SMI optimization we use 31-th
  * @param loop
  * @param bus
  */
-export function play(source: AudioSource,
+export function play(data: AudioData,
                      volume = 1.0,
                      pan = 0.0,
                      pitch = 1.0,
                      paused = false,
                      loop = false,
                      bus: Bus = 1): Voice {
-    if (source === 0) {
+    if (data === 0) {
         return 0;
     }
     const ctx = getContext();
     if (!ctx) {
         return 0;
     }
-    const sourceObj = audioSources[source];
-    if (!sourceObj || sourceObj.isFree) {
+    const dataObj = audioDataPool[data];
+    if (!dataObj) {
         warn("audio source not found");
         return 0;
     }
-    if (!sourceObj.url && !sourceObj.buffer) {
-        warn("nothing to play, audio source is empty!");
+    if ((dataObj.cf & AudioDataFlag.Loaded) === 0) {
+        warn("audio source is not loaded yet");
+        return 0;
+    }
+    if (dataObj.data === null) {
+        warn("nothing to play, no audio data");
         return 0;
     }
     const targetNode = _getBusGain(bus);
@@ -217,12 +210,12 @@ export function play(source: AudioSource,
         voiceObj.cf |= VoiceStateFlag.Paused;
     }
     voiceObj.rate = 1.0;
-    voiceObj.src = source;
+    voiceObj.data = data;
     voiceObj.gain.gain.value = volume;
     voiceObj.pan.pan.value = pan;
 
-    if (sourceObj.url) {
-        const mes = getNextStreamPlayer(sourceObj.url);
+    if (dataObj.cf & AudioDataFlag.Stream) {
+        const mes = getNextStreamPlayer(dataObj.data as string);
         if (!mes) {
             warn("no more free media stream elements!");
             return 0;
@@ -234,8 +227,8 @@ export function play(source: AudioSource,
             StreamPlayer_resume(mes);
             voiceObj.cf |= VoiceStateFlag.Running;
         }
-    } else if (sourceObj.buffer) {
-        Voice_prepareBuffer(voiceObj, ctx, sourceObj.buffer);
+    } else {
+        Voice_prepareBuffer(voiceObj, ctx, dataObj.data as AudioBuffer);
         if (!paused) {
             Voice_startBuffer(voiceObj);
         }
@@ -323,14 +316,14 @@ export function getLoop(voice: Voice): boolean {
     return !!obj && (obj.cf & VoiceStateFlag.Loop) !== 0;
 }
 
-export function stopAudioSource(source: AudioSource): void {
-    if (source === 0) {
+export function stopAudioData(data: AudioData): void {
+    if (data === 0) {
         console.warn("invalid source");
         return;
     }
     for (let i = 1; i < voicePool.length; ++i) {
         const v = voicePool[i]!;
-        if (v.src === source) {
+        if (v.data === data) {
             Voice_stop(v);
         }
     }
@@ -363,15 +356,25 @@ export function getBusEnabled(bus: Bus): boolean {
 }
 
 /** length / position **/
-export function getAudioSourceLength(source: AudioSource): number {
-    let d = 0.0;
-    if (source !== 0) {
-        const obj = audioSources[source];
+export function getAudioDataState(data: AudioData): number {
+    if (data !== 0) {
+        const obj = audioDataPool[data];
         if (obj) {
-            if (obj.buffer) {
-                obj.buffer.duration
-            } else if (obj.url) {
+            return obj.cf;
+        }
+    }
+    return AudioDataFlag.Invalid
+}
+
+export function getAudioSourceLength(data: AudioData): number {
+    let d = 0.0;
+    if (data !== 0) {
+        const obj = audioDataPool[data];
+        if (obj && obj.data) {
+            if (obj.cf & AudioDataFlag.Stream) {
                 // TODO: :(
+            } else {
+                d = (obj.data as AudioBuffer).duration;
             }
         }
     }
@@ -402,22 +405,4 @@ export function getVoicePosition(voice: Voice): number {
         }
     }
     return d;
-}
-
-/** Export Constants only for pre-bundled usage **/
-
-export const VOICES_IN_USE = Var.VoicesInUse;
-export const STREAMS_IN_USE = Var.StreamsInUse;
-export const BUFFERS_LOADED = Var.BuffersLoaded;
-export const STREAMS_LOADED = Var.StreamsLoaded;
-export const DEVICE_SAMPLE_RATE = Var.Device_SampleRate;
-export const DEVICE_STATE = Var.Device_State;
-
-export const BUS_MASTER = 0;
-export const BUS_SFX = 1;
-export const BUS_MUSIC = 2;
-export const BUS_SPEECH = 2;
-
-export function getDeviceStateString(state: DeviceState): string {
-    return ["invalid", "running", "paused"][state] ?? "undefined";
 }

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Stress test</title>
+    <script src="dist/auph.js"></script>
+</head>
+<body>
+<script>
+    Auph.init();
+    Auph.resume();
+
+    document.onclick = () => {
+        Auph.loadAudioSource("assets/ogg/sample1.ogg", true);
+    };
+</script>
+</body>
+</html>

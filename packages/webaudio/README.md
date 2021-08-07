@@ -13,12 +13,9 @@ Write some JavaScript
 ```javascript
 Auph.init();
 Auph.resume();
-var source = Auph.loadAudioSource("https://eliasku.github.io/auph/assets/wav/HiHat_Closed.wav", false);
+var data = Auph.load("https://eliasku.github.io/auph/assets/wav/HiHat_Closed.wav", false);
 setInterval(()=>{
-    Auph.play(source);
+    Auph.play(data);
 }, 200);
 ```
 
-### TODO
-
-- Get AudioSource state: invalid, empty, loading, ready

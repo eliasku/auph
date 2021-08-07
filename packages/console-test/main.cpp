@@ -6,7 +6,7 @@ int main() {
     printf("AUPH!\nAUPH!\n\n\n");
 
     auph::init();
-    const auto source = auph::loadAudioSource("../../tester/assets/ogg/file_example_1mb.ogg", false);
+    const auto source = auph::load("../../tester/assets/ogg/file_example_1mb.ogg", false);
 
     printf("Press any key to resume...\n\n");
     getc(stdin);

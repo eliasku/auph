@@ -1,65 +1,11 @@
 #pragma once
 
 #include "../device/AudioDevice.hpp"
+#include "AudioData.hpp"
+#include "Voice.hpp"
+#include "Bus.hpp"
 
 namespace auph {
-
-enum VoiceStateFlags : uint8_t {
-    Voice_Running = 1,
-    Voice_Paused = 2,
-    Voice_Loop = 4
-};
-
-constexpr uint32_t vMask = 0xFFFF00;
-constexpr uint32_t vIncr = 0x000100;
-constexpr uint32_t iMask = 0x0000FF;
-
-union SamplesData {
-    void* buffer;
-    float* f32;
-    int16_t* i16;
-};
-
-struct AudioSource;
-
-struct MixSample {
-    float L;
-    float R;
-};
-
-/**
- * stream reader function
- * reads num of frames and return number of read frames
- */
-typedef void (* SourceReader)(MixSample*, const double, const double, const double, const AudioSource*, MixSample gain);
-
-struct AudioSource {
-    void* streamData = nullptr;
-    SamplesData data = {nullptr};
-    // length in frames (samples / channels)
-    uint32_t length = 0;
-
-    SampleFormat format = SampleFormat_I16;
-    uint32_t sampleRate = 0;
-    uint32_t channels = 0;
-    SourceReader reader = nullptr;
-};
-
-struct Voice;
-
-
-struct Voice {
-    uint8_t controlFlags = 0;
-
-    float gain = 1.0f;
-    float pan = 0.0f;
-    // playback speed
-    float pitch = 1.0f;
-    // playback position in frames :(
-    double position = 0.0;
-
-    const AudioSource* source = nullptr;
-};
 
 void clear(float* dest, uint32_t size) {
     for (uint32_t i = 0; i < size; ++i) {
@@ -83,7 +29,7 @@ static inline void mixSamples(MixSample* mix,
                               const double begin,
                               const double end,
                               const double advance,
-                              const AudioSource* audioSource,
+                              const AudioDataSource* audioSource,
                               MixSample gain) {
     const float gainL = gain.L / Divisor;
     const float gainR = gain.R / Divisor;
@@ -157,53 +103,62 @@ SourceReader selectSourceReader(SampleFormat format, uint32_t channels, bool int
     return nullptr;
 }
 
-void renderVoices(Voice* voices, uint32_t voicesCount, MixSample* dest, uint32_t frames, uint32_t sampleRate) {
+void renderVoices(VoiceObj* voices, BusObj* busline, uint32_t voicesCount, MixSample* dest, uint32_t frames,
+                  uint32_t sampleRate) {
+    const float masterGain = busline[0].get();
     for (uint32_t voiceIndex = 0; voiceIndex < voicesCount; ++voiceIndex) {
         auto& voice = voices[voiceIndex];
-
         if (voice.controlFlags & Voice_Running) {
+            const float busGain = busline[voice.bus].get() * masterGain;
+
             auto p = voice.position;
-            const double pitch = voice.pitch * (double) voice.source->sampleRate / sampleRate;
-            voice.position += frames * pitch;
+            const double pitch = voice.pitch * (double) voice.data->sampleRate / sampleRate;
             double playNext = 0.0;
-            if (voice.position >= voice.source->length) {
+            double playTo = voice.position + frames * pitch;
+            const double len = (double) voice.data->length;
+            if (playTo >= len) {
                 if (voice.controlFlags & Voice_Loop) {
-                    voice.position = 0;
-                    playNext = voice.position - (double) voice.source->length;
+                    playNext = playTo - len;
                 } else {
                     voice.controlFlags ^= Voice_Running;
                 }
-                voice.position = voice.source->length;
+                playTo = len;
             }
+            voice.position = playTo;
             const MixSample gain{
-                    voice.gain * (1.0f - voice.pan),
-                    voice.gain * (1.0f + voice.pan)
+                    busGain * voice.gain * (1.0f - voice.pan),
+                    busGain * voice.gain * (1.0f + voice.pan)
             };
-            voice.source->reader(dest, p, voice.position, pitch, voice.source, gain);
+            voice.data->reader(dest, p, playTo, pitch, voice.data, gain);
             if (playNext > 0.0) {
                 voice.position = playNext;
-                voice.source->reader(dest, 0.0, playNext, pitch, voice.source, gain);
+                voice.data->reader(dest, 0.0, playNext, pitch, voice.data, gain);
+            }
+
+            if (!(voice.controlFlags & Voice_Running)) {
+                voice.stop();
             }
         }
     }
 }
 
-class SoundEngine {
+class Mixer {
 public:
     static inline constexpr uint32_t VoicesMaxCount = 64;
     static inline constexpr uint32_t ScratchBufferSize = 2048;
-    Voice voices[VoicesMaxCount]{};
+    VoiceObj* voices = nullptr;
+    BusObj* busLine = nullptr;
     MixSample scratch[ScratchBufferSize]{};
 
     void mix(MixSample* dest, uint32_t frames, uint32_t sampleRate) {
         const uint32_t samples = frames << 1;
         clear((float*) dest, samples);
-        renderVoices(voices, VoicesMaxCount, dest, frames, sampleRate);
+        renderVoices(voices, busLine, VoicesMaxCount, dest, frames, sampleRate);
         clip((float*) dest, samples);
     }
 
     static void playback(AudioDeviceCallbackData* data) {
-        auto* engine = (SoundEngine*) data->userData;
+        auto* engine = (Mixer*) data->userData;
         const auto sampleRate = (uint32_t) data->stream.sampleRate;
         // TODO: support F32 output
         auto* src = engine->scratch;

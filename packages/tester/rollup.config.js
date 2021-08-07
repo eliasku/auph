@@ -7,10 +7,16 @@ export default {
             file: "dist/index.js",
             format: "iife",
             compact: true,
-            sourcemap: true
+            sourcemap: true,
+            globals: {
+                auph: "Auph"
+            }
         }
     ],
+   external: ["auph"],
     plugins:[
-        nodeResolve()
+       nodeResolve({
+           skip: ["auph"]
+       })
     ]
 };
