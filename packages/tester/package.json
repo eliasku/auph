@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "serve": "http-server . -o",
-    "build": "node prepare.js && rollup -c",
+    "build": "node prepare && rollup -c",
     "watch": "rollup -w -c"
   },
   "dependencies": {

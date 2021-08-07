@@ -1,4 +1,18 @@
 const fs = require("fs");
+const path = require("path");
 
-fs.copyFileSync(require.resolve("auph/dist/browser/auph.js"), "dist/auph.js");
-fs.copyFileSync(require.resolve("auph/dist/browser/auph.js.map"), "dist/auph.js.map");
+try {
+    fs.mkdirSync("dist");
+} catch {
+}
+
+const files = [
+    "auph.js",
+    "auph.js.map"
+];
+
+const srcPath = path.resolve(__dirname, "../webaudio/dist/browser");
+const dstPath = "dist";
+for (const file of files) {
+    fs.copyFileSync(path.join(srcPath, file), path.join(dstPath, file));
+}
