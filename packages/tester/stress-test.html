@@ -6,12 +6,18 @@
     <script src="dist/auph.js"></script>
 </head>
 <body>
+<button id="start">Start</button>
 <script>
     Auph.init();
     Auph.resume();
+    const data = Auph.load("assets/mp3/CLAP.mp3", false);
 
-    document.onclick = () => {
-        Auph.loadAudioSource("assets/ogg/sample1.ogg", true);
+    document.querySelector("#start").onclick = () => {
+        setInterval(() => {
+            //for (let i = 0; i < 128; ++i) {
+            Auph.play(data, 0.2, 0, 3, false, false, Auph.BUS_SFX);
+            //}
+        }, 10);
     };
 </script>
 </body>

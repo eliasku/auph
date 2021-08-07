@@ -1,7 +1,9 @@
 const TAG = "[AUPH]";
 
 export function log(message: string) {
-    console.log(TAG, message);
+    if (process.env.NODE_ENV !== "production") {
+        console.log(TAG, message);
+    }
 }
 
 export function warn(message: string) {
@@ -13,5 +15,9 @@ export function error(message: string, reason?: any) {
 }
 
 export function measure(ts: number = 0): number {
-    return performance.now() - ts;
+    if (process.env.NODE_ENV !== "production") {
+        return performance.now() - ts;
+    } else {
+        return 0;
+    }
 }
