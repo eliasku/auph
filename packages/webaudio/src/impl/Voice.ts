@@ -30,6 +30,13 @@ export class VoiceObj {
     // handle version (maybe will add index as well)
     v = 0;
 
+    _e = (e: Event) => {
+        // maybe check is useless
+        if (this.buffer === e.target) {
+            Voice_stop(this);
+        }
+    }
+
     constructor(readonly gain: GainNode,
                 readonly pan: StereoPannerNode) {
     }
@@ -89,12 +96,8 @@ export function Voice_startBuffer(v: VoiceObj) {
     if ((v.cf & VoiceStateFlag.Running) === 0) {
         const source = v.buffer;
         if (source) {
-            source.addEventListener("ended", (e) => {
-                // maybe check is useless
-                if (v.buffer === e.target) {
-                    Voice_stop(v);
-                }
-            });
+            //source.addEventListener("ended", v._e, {once: true});
+            source.onended = v._e;
             source.loop = (v.cf & VoiceStateFlag.Loop) !== 0;
             source.start();
             v.cf |= VoiceStateFlag.Running;
@@ -166,7 +169,7 @@ export function _checkVoiceHandle(handle: Voice): boolean {
     return !!obj && obj.v === (handle & vMask);
 }
 
-export function _getVoiceObjAt(index:number): VoiceObj | null {
+export function _getVoiceObjAt(index: number): VoiceObj | null {
     return voicePool[index];
 }
 

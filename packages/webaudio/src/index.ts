@@ -100,6 +100,12 @@ export function _getAudioContext(): AudioContext | null {
     return getContext();
 }
 
+// TODO: move
+
+function fetchURL<T>(filepath: string, cb: (response: Response) => Promise<T>): Promise<T> {
+    return fetch(new Request(filepath)).then(cb);
+}
+
 /***/
 export function load(filepath: string, streaming: boolean): AudioData {
     let handle = getNextAudioData();
@@ -110,17 +116,15 @@ export function load(filepath: string, streaming: boolean): AudioData {
     obj.cf |= AudioDataFlag.Empty;
     if (streaming) {
         obj.cf |= AudioDataFlag.Stream;
-        fetch(new Request(filepath)).then((response) => {
-            return response.blob();
-        }).then((blob) => {
+        fetchURL(filepath, (response) => response.blob()).then((blob) => {
             obj.data = URL.createObjectURL(blob);
             obj.cf |= AudioDataFlag.Loaded;
+        }).catch((reason) => {
+            error("can't load audio stream data " + filepath, reason);
         });
     } else {
         let timeDecoding = 0;
-        fetch(new Request(filepath)).then((response) => {
-            return response.arrayBuffer();
-        }).then((buffer) => {
+        fetchURL(filepath, (response) => response.arrayBuffer()).then((buffer) => {
             const ctx = getContext();
             if (ctx) {
                 timeDecoding = measure();
@@ -199,7 +203,7 @@ export function play(data: AudioData,
     }
     const voice = getNextVoice();
     if (!voice) {
-        warn("no more free simple voices!");
+        log("no more free simple voices!");
         return 0;
     }
     const voiceObj = _getVoiceObj(voice)!;
@@ -217,7 +221,7 @@ export function play(data: AudioData,
     if (dataObj.cf & AudioDataFlag.Stream) {
         const mes = getNextStreamPlayer(dataObj.data as string);
         if (!mes) {
-            warn("no more free media stream elements!");
+            log("no more free media stream elements!");
             return 0;
         }
         voiceObj.stream = mes;
