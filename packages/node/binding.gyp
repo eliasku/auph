@@ -11,10 +11,18 @@
         "<!@(node -p \"require('./dep.js').includes[1]\")"
       ],
       'defines': [ 'NAPI_DISABLE_CPP_EXCEPTIONS' ],
-      "libraries": [
-        "-framework CoreAudio",
-        "-framework AudioToolbox"
-      ]
+      "conditions":[
+            ["OS=='linux'", {
+              }],
+            ["OS=='mac'", {
+              "libraries": [
+                      "-framework CoreAudio",
+                      "-framework AudioToolbox"
+                    ]
+            }],
+          ["OS=='win'", {
+            }]
+        ]
     }
   ]
 }
