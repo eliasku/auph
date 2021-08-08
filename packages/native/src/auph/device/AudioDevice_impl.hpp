@@ -1,10 +1,10 @@
 #pragma once
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
 
 #include "CoreAudio.hpp"
 
-#elifdef __ANDROID__
+#elif defined(__ANDROID__)
 
 #include "Oboe.hpp"
 
