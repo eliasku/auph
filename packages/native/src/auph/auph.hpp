@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstdint>
+#include <auph/engine/AudioData.hpp>
+#include <auph/engine/Voice.hpp>
 
 namespace auph {
 
@@ -62,15 +64,6 @@ void stop(Voice voice);
 
 void stopAudioData(AudioData data);
 
-// private
-void* _getAudioContext();
-
-static const char* getDeviceStateString(DeviceState state) {
-    static const char* names[3] = {"invalid", "running", "paused"};
-    return names[static_cast<uint32_t>(state) % 3];
-}
-
-
 /** Bus controls **/
 void setBusVolume(Bus bus, float gain);
 
@@ -79,5 +72,48 @@ float getBusVolume(Bus bus);
 void setBusEnabled(Bus bus, bool enabled);
 
 bool getBusEnabled(Bus bus);
+
+/** Audio Data object's state **/
+AudioDataState getAudioDataState(AudioData data);
+
+double getAudioSourceLength(AudioData data);
+
+double getVoiceLength(Voice voice);
+
+double getVoicePosition(Voice voice);
+
+/** Voice parameters control **/
+
+bool isVoiceValid(Voice voice);
+
+uint32_t getVoiceState(Voice voice);
+
+void setPan(Voice voice, float pan);
+
+void setVolume(Voice voice, float gain);
+
+void setPitch(Voice voice, float rate);
+
+void setPause(Voice voice, bool paused);
+
+void setLoop(Voice voice, bool loopMode);
+
+float getPan(Voice voice);
+
+float getVolume(Voice voice);
+
+float getPitch(Voice voice);
+
+bool getPause(Voice voice);
+
+bool getLoop(Voice voice);
+
+// private
+void* _getAudioContext();
+
+static const char* getDeviceStateString(DeviceState state) {
+    static const char* names[3] = {"invalid", "running", "paused"};
+    return names[static_cast<uint32_t>(state) % 3];
+}
 
 }

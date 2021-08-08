@@ -28,11 +28,11 @@ export default [
         output: {
             file: "dist/browser/_auph.js",
             format: "iife",
-            name: "auph",
+            name: "Auph",
             compact: true,
             plugins: [terser()],
             sourcemap: true
         },
         plugins
-    },
+    }
 ];

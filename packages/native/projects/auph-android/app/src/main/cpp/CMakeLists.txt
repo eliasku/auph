@@ -5,14 +5,14 @@ add_library(${PROJECT_NAME} SHARED
         native-lib.cpp
 
         ../../../../../../src/auph-all.cpp
-        ../../../../../../external/oboe/src/oboe_all.cpp
+        ../../../../../../android/oboe/src/oboe_all.cpp
         )
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC ../../../../../../src
         PUBLIC ../../../../../../external
-        PUBLIC ../../../../../../external/oboe/include
-        PRIVATE ../../../../../../external/oboe/src
+        PUBLIC ../../../../../../android/oboe/include
+        PRIVATE ../../../../../../android/oboe/src
         )
 
 find_library(log-lib log)

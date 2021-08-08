@@ -12,15 +12,6 @@ public class Auph {
     static class PluginBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-//            mPlugCount++;
-//            context.runOnUiThread(new Runnable() {
-//                @Override
-//                public void run() {
-//                    String message = "Intent.HEADSET_PLUG #" + mPlugCount;
-//                    mPlugTextView.setText(message);
-//                }
-//            });
-
             stopPlayback();
             startPlayback();
         }

@@ -24,5 +24,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 endif ()
 
 if (EMSCRIPTEN)
-
+    target_link_options(${PROJECT_NAME} PUBLIC
+            --js-library ${CMAKE_CURRENT_SOURCE_DIR}/../webaudio/dist/browser/_auph.js
+            )
 endif ()
