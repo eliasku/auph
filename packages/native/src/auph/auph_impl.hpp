@@ -76,7 +76,7 @@ void shutdown() {
 }
 
 AudioData load(const char* filepath, bool streaming) {
-    for (uint32_t i = 0; i < AudioSourcesMaxCount; ++i) {
+    for (uint32_t i = 1; i < AudioSourcesMaxCount; ++i) {
         auto* src = &ctx->dataPool[i];
         // data slot is free
         if (src->source.reader == nullptr) {

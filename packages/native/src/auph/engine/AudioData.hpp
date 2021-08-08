@@ -4,6 +4,13 @@
 
 namespace auph {
 
+enum AudioDataState : uint8_t {
+    AudioData_Invalid = 0,
+    AudioData_Empty = 1,
+    AudioData_Loaded = 2,
+    AudioData_Stream = 4
+};
+
 union SamplesData {
     // hackish const
     mutable void* buffer;
@@ -38,18 +45,10 @@ struct AudioDataSource {
 };
 
 struct AudioDataObj {
-
+    uint8_t state = AudioData_Empty;
     AudioDataSource source{};
 
     ~AudioDataObj();
-
-    bool loadFile_MP3(const char* filepath);
-
-    bool loadFile_WAV(const char* filepath);
-
-    bool loadFile_OGG(const char* filepath);
-
-    bool streamFile_OGG(const char* filepath);
 
     bool load(const char* filepath, bool streaming);
 
