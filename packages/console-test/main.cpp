@@ -6,7 +6,7 @@ int main() {
     printf("AUPH!\nAUPH!\n\n\n");
 
     auph::init();
-    const auto source = auph::load("../../tester/assets/ogg/file_example_1mb.ogg", false);
+    const auto source = auph::load("../../tester/assets/ogg/sample2.ogg", false);
 
     printf("Press any key to resume...\n\n");
     getc(stdin);
@@ -15,7 +15,7 @@ int main() {
     printf("Press any key to PLAY...\n\n");
     getc(stdin);
 
-    auph::play(source, 0.5f, -1.0f, 2.0f, true);
+    auph::play(source, 1.0f, 0.0f, 1.0f, true);
 
     printf("Press any key to pause...\n\n");
     getc(stdin);

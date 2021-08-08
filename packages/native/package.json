@@ -1,7 +1,22 @@
 {
-  "name": "cauph",
-  "version": "0.0.1",
+  "name": "auph-cpp",
+  "version": "0.0.2",
   "dependencies": {
-    "auph": "0.0.1"
+    "auph": "0.0.2"
+  },
+  "files": [
+    "external",
+    "src",
+    "README.md",
+    "REFERENCES.md",
+    "CMakeLists.txt"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com/eliasku/auph.git",
+    "directory": "packages/native"
   }
 }

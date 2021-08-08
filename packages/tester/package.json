@@ -5,10 +5,11 @@
   "scripts": {
     "serve": "http-server . -o",
     "build": "node prepare && rollup -c",
-    "watch": "rollup -w -c"
+    "watch": "rollup -w -c",
+    "test-node": "node test-node.js"
   },
   "dependencies": {
-    "auph": "0.0.1"
+    "auph": "0.0.2"
   },
   "devDependencies": {
     "http-server": "^0.12.3",
