@@ -61,7 +61,7 @@ Voice play(AudioSource source,
   Bus bus = 0)
 ```
 
-`void stopAudioSource(AudioSource source)`
+`void stopAudioData(audioData)`
 
 `void stop(Voice voice)`
 
