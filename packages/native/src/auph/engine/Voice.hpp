@@ -15,8 +15,6 @@ constexpr uint32_t vIncr = 0x000100;
 constexpr uint32_t iMask = 0x0000FF;
 
 struct VoiceObj {
-    uint8_t controlFlags = 0;
-
     uint32_t v = 0;
     float gain = 1.0f;
     float pan = 0.0f;
@@ -25,21 +23,20 @@ struct VoiceObj {
     // playback position in frames :(
     double position = 0.0;
     uint32_t bus = 0;
+    uint8_t controlFlags = 0;
 
     const AudioDataSource* data = nullptr;
 
     void stop() {
-        if (controlFlags & Voice_Running) {
-            controlFlags = 0;
-            data = nullptr;
+        controlFlags = 0;
+        data = nullptr;
 
-            position = 0.0;
-            gain = 1.0f;
-            pan = 0.0f;
-            pitch = 1.0f;
+        position = 0.0;
+        gain = 1.0f;
+        pan = 0.0f;
+        pitch = 1.0f;
 
-            v = (v + vIncr) & vMask;
-        }
+        v = (v + vIncr) & vMask;
     }
 };
 

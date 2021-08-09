@@ -263,4 +263,24 @@ bool getLoop(Voice voice) {
     return obj != nullptr && (obj->controlFlags & Voice_Loop) != 0;
 }
 
+/** Audio Data object's state **/
+AudioDataState getAudioDataState(AudioData data) {
+    return (AudioDataState)ctx->dataPool[data.id].state;
+}
+
+double getAudioSourceLength(AudioData data) {
+    // TODO:
+    return 0.0;
+}
+
+double getVoiceLength(Voice voice) {
+    // TODO:
+    return 0.0;
+}
+
+double getVoicePosition(Voice voice) {
+    // TODO:
+    return 0.0;
+}
+
 }

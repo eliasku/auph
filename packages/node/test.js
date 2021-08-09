@@ -25,5 +25,6 @@ setInterval(() => {
 }, 30);
 
 setInterval(() => {
-    Auph.play(clap, 1 - usin(t), 0, 1);
-}, 720);
+    const voice = Auph.play(clap, 1 - usin(t), 0, 1);
+    console.info(voice);
+}, 720/4);
