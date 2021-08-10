@@ -1,10 +1,5 @@
-import {
-    destroyStreamPlayersPool,
-    getNextStreamPlayer,
-    getStreamPlayersCount,
-    StreamPlayer_resume
-} from "./impl/StreamPlayer";
-import {closeContext, getContext, getContextState, initContext, resumeAudioContext} from "./impl/Device";
+import {getNextStreamPlayer, getStreamPlayersCount, StreamPlayer_resume} from "./impl/StreamPlayer";
+import {_setDeviceActive, _setDeviceRunning} from "./impl/Device";
 import {
     _checkVoiceHandle,
     _getVoiceObj,
@@ -19,75 +14,40 @@ import {
     Voice_stop,
     voicePool
 } from "./impl/Voice";
-import {AudioData, audioDataPool, getNextAudioData} from "./impl/AudioData";
-import {_getBus, _getBusGain, Bus, Bus_enable, initBusPool, termBusPool} from "./impl/Bus";
+import {AuBuffer, bufferState, getNextBuffer} from "./impl/AudioData";
+import {_getBusGain, _getBusNode, Bus} from "./impl/Bus";
 import {error, log, measure, warn} from "./impl/debug";
-import {AudioDataFlag, Param, VoiceStateFlag} from "./impl/Constants";
+import {AudioDataFlag, MixerParam, VoiceStateFlag} from "./impl/Constants";
+import {get, Name, Param, set, smi} from "./api";
+import {getAudioContextObject, getContext} from "./impl/Context";
 
 export function init(): void {
-    const ctx = initContext();
-    if (ctx) {
-        initBusPool(ctx);
-    }
+    _setDeviceActive(1);
 }
 
 export function resume(): void {
-    const ctx = getContext();
-    if (ctx && ctx.state === "suspended") {
-        resumeAudioContext(ctx);
-    }
+    _setDeviceRunning(1);
 }
 
 export function pause(): void {
-    const ctx = getContext();
-    if (ctx && ctx.state === "running") {
-        log("pausing");
-        ctx.suspend().then(() => {
-            log("paused");
-        }).catch((reason) => {
-            error("pause error", reason);
-        });
-    }
+    _setDeviceRunning(0);
 }
 
 export function shutdown(): void {
-    const ctx = getContext();
-    if (ctx) {
-        termBusPool();
-        voicePool.length = 1;
-        audioDataPool.length = 1;
-        destroyStreamPlayersPool();
-        closeContext(ctx);
-    }
+    _setDeviceActive(0);
 }
 
 /*** Context State ***/
-export function getInteger(param: number): number {
-    switch (param) {
-        case Param.VoicesInUse: {
-            let count = 0;
-            for (let i = 1; i < voicePool.length; ++i) {
-                if (voicePool[i]!.buffer) {
-                    ++count;
-                }
-            }
-            return count;
-        }
-        case Param.StreamsInUse: {
-            return getStreamPlayersCount();
-        }
-        case Param.BuffersLoaded: {
-            return 0;
-        }
-        case Param.StreamsLoaded: {
-            return 0;
-        }
-        case Param.Device_SampleRate: {
-            const ctx = getContext();
-            return ctx ? ctx.sampleRate : 0;
-        }
-        case Param.Device_State: {
-            return getContextState();
+export function getMaster(param:MixerParam): smi {
+    const ctx = getAudioContextObject();
+    if (ctx) {
+        switch (param) {
+            case MixerParam.SampleRate:
+                return ctx.sampleRate | 0;
+            case MixerParam.Active:
+                return (ctx.state !== "closed") as any | 0;
+            case MixerParam.Running:
+                return (ctx.state === "running") as any | 0;
         }
     }
     return 0;
@@ -97,7 +57,7 @@ export function getInteger(param: number): number {
  * private function to get native HTMl5 AudioContext
  */
 export function _getAudioContext(): AudioContext | null {
-    return getContext();
+    return getAudioContextObject();
 }
 
 // TODO: move
@@ -107,12 +67,12 @@ function fetchURL<T>(filepath: string, cb: (response: Response) => Promise<T>): 
 }
 
 /***/
-export function load(filepath: string, streaming: boolean): AudioData {
-    let handle = getNextAudioData();
+export function load(filepath: string, streaming: boolean): AuBuffer {
+    let handle = getNextBuffer();
     if (handle === 0) {
         return 0;
     }
-    const obj = audioDataPool[handle]!;
+    const obj = bufferState[handle]!;
     obj.cf |= AudioDataFlag.Empty;
     if (streaming) {
         obj.cf |= AudioDataFlag.Stream;
@@ -196,7 +156,7 @@ export function play(data: AudioData,
         warn("nothing to play, no audio data");
         return 0;
     }
-    const targetNode = _getBusGain(bus);
+    const targetNode = _getBusNode(bus);
     if (!targetNode) {
         warn("invalid target bus!");
         return 0;

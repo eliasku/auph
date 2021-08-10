@@ -1,54 +1,65 @@
 import {getContext} from "./Device";
 
-export class BusObj {
-    constructor(readonly gain: GainNode,
-                public e = true) {
-    }
-}
-
 export type Bus = number;
 
-const busPool: (BusObj)[] = [];
+const busGain: GainNode[] = [];
+const busState: number[] = [];
 
-export function Bus_create(ctx: AudioContext): BusObj {
-    const obj = new BusObj(ctx.createGain());
-    busPool.push(obj);
-    return obj;
+export function _createBus(ctx: AudioContext, destination: AudioNode): number {
+    const gain = ctx.createGain();
+    gain.connect(destination);
+    const index = busGain.length;
+    busGain[index] = gain;
+    busState[index] = 1;
+    return index;
 }
 
 export function initBusPool(ctx: AudioContext) {
-    const master = Bus_create(ctx).gain;
-    master.connect(ctx.destination);
-    Bus_create(ctx).gain.connect(master);
-    Bus_create(ctx).gain.connect(master);
-    Bus_create(ctx).gain.connect(master);
+    _createBus(ctx, ctx.destination);
+    const masterGain = busGain[0];
+    _createBus(ctx, masterGain);
+    _createBus(ctx, masterGain);
+    _createBus(ctx, masterGain);
 }
 
 export function termBusPool() {
-    for (let i = 0; i < busPool.length; ++i) {
-        busPool[i].gain.disconnect();
+    for (let i = 0; i < busGain.length; ++i) {
+        busGain[i].disconnect();
     }
-    busPool.length = 0;
+    busGain.length = 0;
 }
 
-export function _getBus(handle: Bus): BusObj | undefined {
-    return busPool[handle];
+export function _getBusNode(index: number): AudioNode {
+    return busGain[index];
 }
 
-export function _getBusGain(handle: Bus): GainNode | undefined {
-    const obj = _getBus(handle);
-    return obj ? obj.gain : undefined;
+export function _getBusGain(index: number): number {
+    const gain = busGain[index];
+    return gain ? busGain[index].gain.value : 1.0;
 }
 
-export function Bus_enable(bus: BusObj, enabled: boolean): void {
-    if (bus.e !== enabled) {
-        const master = busPool[0];
-        const dest = bus === master ? getContext()!.destination : master.gain;
-        if (enabled) {
-            bus.gain.connect(dest);
+export function _setBusGain(index: number, gain: number): void {
+    const node = busGain[index];
+    if (node && node.gain.value !== gain) {
+        node.gain.value = gain;
+    }
+}
+
+export function _getBusState(index: number): number {
+    const state = busState[index];
+    return state !== undefined ? state : 0;
+}
+
+export function _setBusState(index: number, state: number): void {
+    const prev = busState[index] & 1;
+    if (prev !== state) {
+        const dest = index === 0 ? getContext()!.destination : busGain[0].gain;
+        const gain = busGain[index];
+        if (state) {
+            gain.connect(dest);
         } else {
-            bus.gain.disconnect(dest);
+            gain.disconnect(dest);
         }
-        bus.e = enabled;
+        busState[index] = state;
     }
 }

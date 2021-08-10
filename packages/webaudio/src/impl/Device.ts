@@ -1,102 +1,48 @@
-import {error, log, warn} from "./debug";
-import {DeviceState} from "./Constants";
+import {initBusPool, termBusPool} from "./Bus";
+import {voicePool} from "./Voice";
+import {audioDataPool} from "./AudioData";
+import {destroyStreamPlayersPool} from "./StreamPlayer";
+import {error, log} from "./debug";
+import {closeContext, getAudioContextObject, getContext, initContext, resumeAudioContext} from "./Context";
 
-let ctx: AudioContext | null = null;
-const unlockEvents = ["mousedown", "pointerdown", "touchstart"];
-let unlocked = false;
-
-export function getContext(): AudioContext | null {
-    if (!ctx) {
-        warn("not initialized");
-        return null;
+export function _setDeviceActive(v: number): void {
+    let ctx = getAudioContextObject();
+    if (v !== 0 && !ctx) {
+        ctx = initContext();
+        if (ctx) {
+            initBusPool(ctx);
+        }
+    } else if (v === 0 && ctx) {
+        termBusPool();
+        voicePool.length = 1;
+        audioDataPool.length = 1;
+        destroyStreamPlayersPool();
+        closeContext(ctx);
     }
-    if (ctx.state === "closed") {
-        error("invalid state:", "Context is closed");
-        return null;
-    }
-    return ctx;
 }
 
-export function getContextState(): DeviceState {
-    let state = DeviceState.Invalid;
+export function _getDeviceActive(): number {
+    const ctx = getAudioContextObject();
+    return (ctx && ctx.state !== "closed") ? 1 : 0;
+}
+
+export function _setDeviceRunning(v: number): void {
+    const ctx = getContext();
     if (ctx) {
-        if (ctx.state === "suspended") {
-            state = DeviceState.Paused;
-        } else if (ctx.state === "running") {
-            state = DeviceState.Running;
+        if (v === 0 && ctx.state === "running") {
+            log("pausing");
+            ctx.suspend().then(() => {
+                log("paused");
+            }).catch((reason) => {
+                error("pause error", reason);
+            });
+        } else if (v !== 0 && ctx.state === "suspended") {
+            resumeAudioContext(ctx);
         }
     }
-    return state;
 }
 
-export function resumeAudioContext(ctx: AudioContext) {
-    log("resuming...");
-    ctx.resume().then(() => {
-        log("resumed");
-    }).catch((reason) => {
-        if (!unlocked) {
-            log("cannot resume until user interaction, setup unlock handler...");
-            setupUnlockHandler();
-        } else {
-            error("error resuming AudioContext", reason);
-        }
-    });
-}
-
-export function suspendAudioContext(ctx: AudioContext) {
-    log("AudioContext suspending...");
-    ctx.suspend().then(() => {
-        log("AudioContext suspended");
-    }).catch((reason) => {
-        error("error suspending AudioContext", reason);
-    });
-}
-
-function unlock() {
-    unlocked = true;
-    const removeEventListener = document.removeEventListener;
-    for (let i = 0; i < unlockEvents.length; ++i) {
-        removeEventListener(unlockEvents[i], unlock);
-    }
-    if (ctx && ctx.state === "suspended") {
-        resumeAudioContext(ctx);
-    }
-}
-
-function setupUnlockHandler() {
-    const addEventListener = document.addEventListener;
-    for (let i = 0; i < unlockEvents.length; ++i) {
-        addEventListener(unlockEvents[i], unlock);
-    }
-}
-
-export function initContext(): AudioContext | null {
-    if (ctx) {
-        warn("already initialized");
-        return ctx;
-    }
-    ctx = new AudioContext({
-        latencyHint: "interactive",
-        sampleRate: 22050
-    });
-    if (!ctx) {
-        error("error create AudioContext");
-        return null;
-    }
-    if (ctx.state === "running") {
-        suspendAudioContext(ctx);
-    }
-    log("Latency: " + ctx.baseLatency);
-    log("Sample rate: " + ctx.sampleRate);
-    return ctx;
-}
-
-export function closeContext(_notNullCtx: AudioContext) {
-    log("shutdown...");
-    _notNullCtx.close().then(() => {
-        log("shutdown completed");
-    }).catch((reason) => {
-        error("shutdown error", reason);
-    });
-    ctx = null;
+export function _getDeviceRunning(): number {
+    const ctx = getAudioContextObject();
+    return (ctx && ctx.state === "running") ? 1 : 0;
 }

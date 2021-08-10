@@ -1,29 +1,23 @@
-import {AudioDataFlag} from "./Constants";
+export type AuBuffer = number;
 
-export type AudioData = number;
+export type BufferData = string | AudioBuffer | undefined;
 
-export class AudioDataObj {
-    cf = AudioDataFlag.Invalid;
-    data: string | AudioBuffer | null = null;
+const bufferMaxCount = 128;
+export const bufferVersion = new Uint8Array(bufferMaxCount);
+export const bufferState = new Uint8Array(bufferMaxCount);
+export const bufferData: BufferData[] = [];
 
-    constructor() {
-
-    }
-}
-
-export let audioDataPool: (AudioDataObj | null)[] = [null];
-const audioDataMaxCount = 128;
-
-export function getNextAudioData(): AudioData | 0 {
-    for (let i = 1; i < audioDataPool.length; ++i) {
-        if (audioDataPool[i]!.cf === 0) {
+export function getNextBuffer(): AuBuffer | 0 {
+    for (let i = 1; i < bufferState.length; ++i) {
+        if (bufferState[i] === 0) {
             return i;
         }
     }
-    const next = audioDataPool.length;
-    if (next < audioDataMaxCount) {
-        audioDataPool.push(new AudioDataObj());
-        return next;
-    }
     return 0;
+}
+
+export function destroyBuffer(buffer: AuBuffer) {
+    bufferState[buffer] = 0;
+    bufferData[buffer] = undefined;
+    bufferVersion[buffer] = bufferVersion[buffer] + 1;
 }
