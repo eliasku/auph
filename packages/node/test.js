@@ -21,10 +21,10 @@ function usin(t) {
 let t = 0.0;
 setInterval(() => {
     t += 0.01;
-    Auph.setPitch(musicVoice, 0.25 + usin(t));
+    Auph.setVoiceParam(musicVoice, 1, 0.25 + usin(t));
 }, 30);
 
 setInterval(() => {
     const voice = Auph.play(clap, 1 - usin(t), 0, 1);
     console.info(voice);
-}, 720/4);
+}, 720 / 4);

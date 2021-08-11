@@ -1,27 +1,28 @@
-import {getContext} from "./Device";
+import {getAudioContextObject} from "./Mixer";
+import {AuphBus, BusFlag} from "./types";
 
 export class BusObj {
-    constructor(readonly gain: GainNode,
-                public e = true) {
+    v = 0;
+    s = BusFlag.Active | BusFlag.Connected;
+
+    constructor(readonly gain: GainNode) {
     }
 }
 
-export type Bus = number;
+const busPool: BusObj[] = [];
 
-const busPool: (BusObj)[] = [];
-
-export function Bus_create(ctx: AudioContext): BusObj {
+export function createBusObj(ctx: AudioContext): BusObj {
     const obj = new BusObj(ctx.createGain());
     busPool.push(obj);
     return obj;
 }
 
 export function initBusPool(ctx: AudioContext) {
-    const master = Bus_create(ctx).gain;
+    const master = createBusObj(ctx).gain;
     master.connect(ctx.destination);
-    Bus_create(ctx).gain.connect(master);
-    Bus_create(ctx).gain.connect(master);
-    Bus_create(ctx).gain.connect(master);
+    createBusObj(ctx).gain.connect(master);
+    createBusObj(ctx).gain.connect(master);
+    createBusObj(ctx).gain.connect(master);
 }
 
 export function termBusPool() {
@@ -31,24 +32,25 @@ export function termBusPool() {
     busPool.length = 0;
 }
 
-export function _getBus(handle: Bus): BusObj | undefined {
+export function _getBus(handle: AuphBus): BusObj | undefined {
     return busPool[handle];
 }
 
-export function _getBusGain(handle: Bus): GainNode | undefined {
+export function _getBusGain(handle: AuphBus): GainNode | undefined {
     const obj = _getBus(handle);
     return obj ? obj.gain : undefined;
 }
 
-export function Bus_enable(bus: BusObj, enabled: boolean): void {
-    if (bus.e !== enabled) {
+export function _setBusConnected(bus: BusObj, connected: boolean): void {
+    const flag = (bus.s & BusFlag.Connected) !== 0;
+    if (flag !== connected) {
         const master = busPool[0];
-        const dest = bus === master ? getContext()!.destination : master.gain;
-        if (enabled) {
+        const dest = bus === master ? getAudioContextObject()!.destination : master.gain;
+        if (connected) {
             bus.gain.connect(dest);
         } else {
             bus.gain.disconnect(dest);
         }
-        bus.e = enabled;
+        bus.s ^= BusFlag.Connected;
     }
 }

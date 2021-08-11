@@ -4,25 +4,44 @@ import {
     getStreamPlayersCount,
     StreamPlayer_resume
 } from "./impl/StreamPlayer";
-import {closeContext, getContext, getContextState, initContext, resumeAudioContext} from "./impl/Device";
 import {
-    _checkVoiceHandle,
+    closeContext,
+    getAudioContextObject,
+    getContext,
+    getContextState,
+    initContext,
+    resumeAudioContext
+} from "./impl/Mixer";
+import {
     _getVoiceObj,
-    getNextVoice,
-    Voice,
+    createVoiceObj,
     Voice_changeDestination,
     Voice_loop,
-    Voice_pause,
     Voice_pitch,
     Voice_prepareBuffer,
+    Voice_running,
     Voice_startBuffer,
     Voice_stop,
     voicePool
 } from "./impl/Voice";
-import {AudioData, audioDataPool, getNextAudioData} from "./impl/AudioData";
-import {_getBus, _getBusGain, Bus, Bus_enable, initBusPool, termBusPool} from "./impl/Bus";
+import {_getBus, _getBusGain, _setBusConnected, initBusPool, termBusPool} from "./impl/Bus";
 import {error, log, measure, warn} from "./impl/debug";
-import {AudioDataFlag, Param, VoiceStateFlag} from "./impl/Constants";
+import {
+    AuphBuffer,
+    AuphBus,
+    AuphVoice,
+    BufferFlag,
+    BufferParam,
+    BusFlag,
+    BusParam,
+    iMask,
+    MixerFlag,
+    MixerParam,
+    vMask,
+    VoiceFlag,
+    VoiceParam
+} from "./impl/types";
+import {buffers, createBufferObj, destroyBufferObj, getBufferObj} from "./impl/Buffer";
 
 export function init(): void {
     const ctx = initContext();
@@ -55,42 +74,55 @@ export function shutdown(): void {
     if (ctx) {
         termBusPool();
         voicePool.length = 1;
-        audioDataPool.length = 1;
+        buffers.length = 1;
         destroyStreamPlayersPool();
         closeContext(ctx);
     }
 }
 
-/*** Context State ***/
-export function getInteger(param: number): number {
-    switch (param) {
-        case Param.VoicesInUse: {
-            let count = 0;
-            for (let i = 1; i < voicePool.length; ++i) {
-                if (voicePool[i]!.buffer) {
-                    ++count;
+export function getMixerParam(param: MixerParam): number {
+    const ctx = getAudioContextObject();
+    if (ctx) {
+        switch (param) {
+            case MixerParam.VoicesInUse: {
+                let count = 0;
+                for (let i = 1; i < voicePool.length; ++i) {
+                    if (voicePool[i]!.buffer) {
+                        ++count;
+                    }
                 }
+                return count;
             }
-            return count;
-        }
-        case Param.StreamsInUse: {
-            return getStreamPlayersCount();
-        }
-        case Param.BuffersLoaded: {
-            return 0;
-        }
-        case Param.StreamsLoaded: {
-            return 0;
-        }
-        case Param.Device_SampleRate: {
-            const ctx = getContext();
-            return ctx ? ctx.sampleRate : 0;
-        }
-        case Param.Device_State: {
-            return getContextState();
+            case MixerParam.StreamsInUse: {
+                return getStreamPlayersCount();
+            }
+            case MixerParam.BuffersLoaded: {
+                let count = 0;
+                for (let i = 1; i < buffers.length; ++i) {
+                    if (buffers[i]!.s !== 0) {
+                        ++count;
+                    }
+                }
+                return count;
+            }
+            case MixerParam.StreamsLoaded: {
+                return 0;
+            }
+            case MixerParam.SampleRate: {
+                return ctx.sampleRate;
+            }
         }
     }
     return 0;
+}
+
+export function getMixerState(): number {
+    const ctx = getAudioContextObject();
+    return ctx ? getContextState(ctx) : 0;
+}
+
+export function getMixerFlag(flag: MixerFlag): boolean {
+    return (getMixerState() & flag) !== 0;
 }
 
 /**
@@ -107,18 +139,17 @@ function fetchURL<T>(filepath: string, cb: (response: Response) => Promise<T>): 
 }
 
 /***/
-export function load(filepath: string, streaming: boolean): AudioData {
-    let handle = getNextAudioData();
+export function load(filepath: string, streaming: boolean): AuphBuffer {
+    let handle = createBufferObj();
     if (handle === 0) {
         return 0;
     }
-    const obj = audioDataPool[handle]!;
-    obj.cf |= AudioDataFlag.Empty;
+    const obj = buffers[handle & iMask]!;
     if (streaming) {
-        obj.cf |= AudioDataFlag.Stream;
+        obj.s |= BufferFlag.Stream;
         fetchURL(filepath, (response) => response.blob()).then((blob) => {
             obj.data = URL.createObjectURL(blob);
-            obj.cf |= AudioDataFlag.Loaded;
+            obj.s |= BufferFlag.Loaded;
         }).catch((reason) => {
             error("can't load audio stream data " + filepath, reason);
         });
@@ -135,7 +166,7 @@ export function load(filepath: string, streaming: boolean): AudioData {
             obj.data = buffer;
             if (buffer) {
                 log("decoding time: " + (measure(timeDecoding) | 0) + " ms.");
-                obj.cf |= AudioDataFlag.Loaded;
+                obj.s |= BufferFlag.Loaded;
             }
         }).catch((reason) => {
             error("can't load audio buffer from " + filepath, reason);
@@ -144,24 +175,23 @@ export function load(filepath: string, streaming: boolean): AudioData {
     return handle;
 }
 
-export function unload(data: AudioData): void {
-    if (data === 0) {
+export function unload(buffer: AuphBuffer): void {
+    if (buffer === 0) {
         return;
     }
-    stopAudioData(data);
-    const sourceObj = audioDataPool[data]!;
-    if (sourceObj) {
-        if ((sourceObj.cf & AudioDataFlag.Stream) !== 0 && sourceObj.data) {
-            URL.revokeObjectURL(sourceObj.data as string);
+    stopBuffer(buffer);
+    const obj = getBufferObj(buffer);
+    if (obj) {
+        if ((obj.s & BufferFlag.Stream) !== 0 && obj.data) {
+            URL.revokeObjectURL(obj.data as string);
         }
-        sourceObj.cf = 0;
-        sourceObj.data = null;
+        destroyBufferObj(buffer);
     }
 }
 
 /***
  *
- * @param data
+ * @param buffer
  * @param volume
  * @param pan
  * @param pitch
@@ -169,30 +199,30 @@ export function unload(data: AudioData): void {
  * @param loop
  * @param bus
  */
-export function play(data: AudioData,
+export function play(buffer: AuphBuffer,
                      volume = 1.0,
                      pan = 0.0,
                      pitch = 1.0,
                      paused = false,
                      loop = false,
-                     bus: Bus = 1): Voice {
-    if (data === 0) {
+                     bus: AuphBus = 1): AuphVoice {
+    if (buffer === 0) {
         return 0;
     }
     const ctx = getContext();
     if (!ctx) {
         return 0;
     }
-    const dataObj = audioDataPool[data];
-    if (!dataObj) {
+    const bufferObj = buffers[buffer & iMask];
+    if (!bufferObj || bufferObj.v !== (buffer & vMask)) {
         warn("audio source not found");
         return 0;
     }
-    if ((dataObj.cf & AudioDataFlag.Loaded) === 0) {
+    if ((bufferObj.s & BufferFlag.Loaded) === 0) {
         warn("audio source is not loaded yet");
         return 0;
     }
-    if (dataObj.data === null) {
+    if (bufferObj.data === null) {
         warn("nothing to play, no audio data");
         return 0;
     }
@@ -201,25 +231,22 @@ export function play(data: AudioData,
         warn("invalid target bus!");
         return 0;
     }
-    const voice = getNextVoice();
-    if (!voice) {
-        log("no more free simple voices!");
+    const voice = createVoiceObj();
+    if (voice === 0) {
+        log("no more free voices!");
         return 0;
     }
     const voiceObj = _getVoiceObj(voice)!;
     if (loop) {
-        voiceObj.cf |= VoiceStateFlag.Loop;
-    }
-    if (paused) {
-        voiceObj.cf |= VoiceStateFlag.Paused;
+        voiceObj.s |= VoiceFlag.Loop;
     }
     voiceObj.rate = 1.0;
-    voiceObj.data = data;
+    voiceObj.data = buffer;
     voiceObj.gain.gain.value = volume;
     voiceObj.pan.pan.value = pan;
 
-    if (dataObj.cf & AudioDataFlag.Stream) {
-        const mes = getNextStreamPlayer(dataObj.data as string);
+    if (bufferObj.s & BufferFlag.Stream) {
+        const mes = getNextStreamPlayer(bufferObj.data as string);
         if (!mes) {
             log("no more free media stream elements!");
             return 0;
@@ -229,10 +256,10 @@ export function play(data: AudioData,
         mes.node.connect(voiceObj.pan);
         if (!paused) {
             StreamPlayer_resume(mes);
-            voiceObj.cf |= VoiceStateFlag.Running;
+            voiceObj.s |= VoiceFlag.Running;
         }
     } else {
-        Voice_prepareBuffer(voiceObj, ctx, dataObj.data as AudioBuffer);
+        Voice_prepareBuffer(voiceObj, ctx, bufferObj.data as AudioBuffer);
         if (!paused) {
             Voice_startBuffer(voiceObj);
         }
@@ -244,168 +271,164 @@ export function play(data: AudioData,
     return voice;
 }
 
-export function stop(voice: Voice): void {
+export function stop(voice: AuphVoice): void {
     const obj = _getVoiceObj(voice);
     if (obj) {
         Voice_stop(obj);
     }
 }
 
-export function isVoiceValid(voice: Voice): boolean {
-    return _checkVoiceHandle(voice);
-}
-
-export function getVoiceState(voice: Voice): number {
-    const obj = _getVoiceObj(voice);
-    return obj ? obj.cf : 0;
-}
-
-export function setPan(voice: Voice, value: number): void {
-    const obj = _getVoiceObj(voice);
-    if (obj) {
-        obj.pan.pan.value = value;
-    }
-}
-
-export function setVolume(voice: Voice, value: number): void {
-    const obj = _getVoiceObj(voice);
-    if (obj) {
-        obj.gain.gain.value = value;
-    }
-}
-
-export function setPitch(voice: Voice, value: number): void {
-    const obj = _getVoiceObj(voice);
-    if (obj) {
-        Voice_pitch(obj, value);
-    }
-}
-
-export function setPause(voice: Voice, value: boolean): void {
-    const obj = _getVoiceObj(voice);
-    if (obj) {
-        Voice_pause(obj, value);
-    }
-}
-
-export function setLoop(voice: Voice, value: boolean): void {
-    const obj = _getVoiceObj(voice);
-    if (obj) {
-        Voice_loop(obj, value);
-    }
-}
-
-export function getPan(voice: Voice): number {
-    const obj = _getVoiceObj(voice);
-    return obj ? obj.pan.pan.value : 0.0;
-}
-
-export function getVolume(voice: Voice): number {
-    const obj = _getVoiceObj(voice);
-    return obj ? obj.gain.gain.value : 1.0;
-}
-
-export function getPitch(voice: Voice): number {
-    const obj = _getVoiceObj(voice);
-    return obj ? obj.rate : 1.0;
-}
-
-export function getPause(voice: Voice): boolean {
-    const obj = _getVoiceObj(voice);
-    return !!obj && (obj.cf & VoiceStateFlag.Paused) !== 0;
-}
-
-export function getLoop(voice: Voice): boolean {
-    const obj = _getVoiceObj(voice);
-    return !!obj && (obj.cf & VoiceStateFlag.Loop) !== 0;
-}
-
-export function stopAudioData(data: AudioData): void {
-    if (data === 0) {
-        console.warn("invalid source");
-        return;
-    }
-    for (let i = 1; i < voicePool.length; ++i) {
-        const v = voicePool[i]!;
-        if (v.data === data) {
-            Voice_stop(v);
-        }
-    }
-}
-
-
-/** Bus controls **/
-export function setBusVolume(bus: Bus, value: number): void {
-    const gain = _getBusGain(bus);
-    if (gain) {
-        gain.gain.value = value;
-    }
-}
-
-export function getBusVolume(bus: Bus): number {
-    const gain = _getBusGain(bus);
-    return gain ? gain.gain.value : 0.0;
-}
-
-export function setBusEnabled(bus: Bus, enabled: boolean): void {
-    const obj = _getBus(bus);
-    if (obj) {
-        Bus_enable(obj, enabled);
-    }
-}
-
-export function getBusEnabled(bus: Bus): boolean {
-    const obj = _getBus(bus);
-    return !!obj && obj.e;
-}
-
-/** length / position **/
-export function getAudioDataState(data: AudioData): number {
-    if (data !== 0) {
-        const obj = audioDataPool[data];
-        if (obj) {
-            return obj.cf;
-        }
-    }
-    return AudioDataFlag.Invalid
-}
-
-export function getAudioSourceLength(data: AudioData): number {
-    let d = 0.0;
-    if (data !== 0) {
-        const obj = audioDataPool[data];
-        if (obj && obj.data) {
-            if (obj.cf & AudioDataFlag.Stream) {
-                // TODO: :(
-            } else {
-                d = (obj.data as AudioBuffer).duration;
+export function stopBuffer(buffer: AuphBuffer): void {
+    if (buffer !== 0) {
+        for (let i = 1; i < voicePool.length; ++i) {
+            const v = voicePool[i]!;
+            if (v.data === buffer) {
+                Voice_stop(v);
             }
         }
     }
-    return d;
 }
 
-export function getVoiceLength(voice: Voice): number {
+export function setVoiceParam(voice: AuphVoice, param: VoiceParam, value: number): void {
     const obj = _getVoiceObj(voice);
-    let d = 0.0;
     if (obj) {
-        if (obj.buffer && obj.buffer.buffer) {
-            d = obj.buffer.buffer.duration;
-        } else if (obj.stream) {
-            d = obj.stream.el.duration;
+        switch (param) {
+            case VoiceParam.Gain:
+                _setAudioParam(obj.gain.gain, value);
+                break;
+            case VoiceParam.Pan:
+                _setAudioParam(obj.pan.pan, value);
+                break;
+            case VoiceParam.Rate:
+                Voice_pitch(obj, value);
+                break;
         }
     }
-    return d;
 }
 
-export function getVoicePosition(voice: Voice): number {
+export function getVoiceParam(voice: AuphVoice, param: VoiceParam): number {
     const obj = _getVoiceObj(voice);
+    if (obj) {
+        switch (param) {
+            case VoiceParam.Gain:
+                return obj.gain.gain.value;
+            case VoiceParam.Pan:
+                return obj.pan.pan.value;
+            case VoiceParam.Rate:
+                return obj.rate;
+            case VoiceParam.Duration: {
+                let d = 0.0;
+                if (obj.buffer && obj.buffer.buffer) {
+                    d = obj.buffer.buffer.duration;
+                } else if (obj.stream) {
+                    d = obj.stream.el.duration;
+                }
+                return d;
+            }
+            case VoiceParam.CurrentTime: {
+                let d = 0.0;
+                if (obj.buffer && obj.buffer.buffer) {
+                    // TODO: :(
+                } else if (obj.stream) {
+                    d = obj.stream.el.currentTime;
+                }
+                return d;
+            }
+        }
+    }
+    return 0.0;
+}
+
+export function setVoiceFlag(voice: AuphVoice, flag: VoiceFlag, value: boolean): void {
+    const obj = _getVoiceObj(voice);
+    if (obj) {
+        switch (flag) {
+            case VoiceFlag.Running:
+                Voice_running(obj, value);
+                break;
+            case VoiceFlag.Loop:
+                Voice_loop(obj, value);
+                break;
+        }
+    }
+}
+
+export function getVoiceState(voice: AuphVoice): number {
+    const obj = _getVoiceObj(voice);
+    return obj ? obj.s : 0;
+}
+
+export function getVoiceFlag(voice: AuphVoice, flag: VoiceFlag): boolean {
+    return (getVoiceState(voice) & flag) !== 0;
+}
+
+function _setAudioParam(param: AudioParam, value: number) {
+    if (param.value !== value) {
+        param.value = value;
+    }
+}
+
+/** Bus controls **/
+
+export function setBusParam(bus: AuphBus, param: BusParam, value: number): void {
+    const gain = _getBusGain(bus);
+    if (gain) {
+        switch (param) {
+            case BusParam.Gain:
+                _setAudioParam(gain.gain, value);
+                break;
+        }
+    }
+}
+
+export function getBusParam(bus: AuphBus, param: BusParam): number {
+    const gain = _getBusGain(bus);
+    if (gain) {
+        switch (param) {
+            case BusParam.Gain:
+                return gain.gain.value;
+        }
+    }
+    return 0.0;
+}
+
+export function setBusFlag(bus: AuphBus, flag: BusFlag, value: boolean): void {
+    const obj = _getBus(bus);
+    if (obj) {
+        switch (flag) {
+            case BusFlag.Connected:
+                _setBusConnected(obj, value);
+                break;
+        }
+    }
+}
+
+export function getBusFlag(bus: AuphBus, flag: BusFlag): boolean {
+    const obj = _getBus(bus);
+    return !!obj && (obj.s & flag) !== 0;
+}
+
+export function getBufferState(buffer: AuphBuffer): number {
+    const obj = getBufferObj(buffer);
+    return obj ? obj.s : 0;
+}
+
+export function getBufferFlag(buffer: AuphBuffer, flag: BufferFlag): boolean {
+    return (getBufferState(buffer) & flag) !== 0;
+}
+
+export function getBufferParam(buffer: AuphBuffer, param: BufferParam): number {
+    const obj = getBufferObj(buffer);
     let d = 0.0;
     if (obj) {
-        if (obj.buffer && obj.buffer) {
-            // TODO: :(
-        } else if (obj.stream) {
-            d = obj.stream.el.currentTime;
+        switch (param) {
+            case BufferParam.Duration:
+                if (obj.s & BufferFlag.Stream) {
+                    // TODO: :(
+                } else if (obj.data) {
+                    d = (obj.data as AudioBuffer).duration;
+                }
+                break;
         }
     }
     return d;

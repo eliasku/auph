@@ -1,42 +1,15 @@
 #pragma once
 
 #include <cstdint>
-#include <auph/engine/AudioData.hpp>
+#include <auph/engine/Buffer.hpp>
 #include <auph/engine/Voice.hpp>
 
 namespace auph {
-
-struct Bus {
-    uint32_t id;
-};
 
 inline Bus Bus_Master = {0};
 inline Bus Bus_Sound = {1};
 inline Bus Bus_Music = {2};
 inline Bus Bus_Speech = {3};
-
-struct AudioData {
-    uint32_t id;
-};
-
-struct Voice {
-    uint32_t id;
-};
-
-enum class DeviceState {
-    Invalid = 0,
-    Running = 1,
-    Paused = 2
-};
-
-enum class Var {
-    VoicesInUse = 0,
-    StreamsInUse = 1,
-    BuffersLoaded = 2,
-    StreamsLoaded = 3,
-    Device_SampleRate = 4,
-    Device_State = 5
-};
 
 void init();
 
@@ -46,13 +19,18 @@ void pause();
 
 void shutdown();
 
-int getInteger(Var param);
+// private
+void* _getAudioContext();
 
-AudioData load(const char* filepath, bool streaming);
+int getMixerParam(MixerParam param);
 
-void unload(AudioData data);
+uint32_t getMixerState();
 
-Voice play(AudioData data,
+Buffer load(const char* filepath, bool streaming);
+
+void unload(Buffer buffer);
+
+Voice play(Buffer buffer,
            float gain = 1.0f,
            float pan = 0.0f,
            float pitch = 1.0f,
@@ -62,58 +40,119 @@ Voice play(AudioData data,
 
 void stop(Voice voice);
 
-void stopAudioData(AudioData data);
+void stopBuffer(Buffer buffer);
 
-/** Bus controls **/
-void setBusVolume(Bus bus, float gain);
+/** Voice controls **/
 
-float getBusVolume(Bus bus);
+void setVoiceParam(Voice voice, VoiceParam param, float value);
 
-void setBusEnabled(Bus bus, bool enabled);
+float getVoiceParam(Voice voice, VoiceParam param);
 
-bool getBusEnabled(Bus bus);
-
-/** Audio Data object's state **/
-AudioDataState getAudioDataState(AudioData data);
-
-double getAudioSourceLength(AudioData data);
-
-double getVoiceLength(Voice voice);
-
-double getVoicePosition(Voice voice);
-
-/** Voice parameters control **/
-
-bool isVoiceValid(Voice voice);
+void setVoiceFlag(Voice voice, VoiceFlag flag, bool value);
 
 uint32_t getVoiceState(Voice voice);
 
-void setPan(Voice voice, float pan);
+bool getVoiceFlag(Voice voice, VoiceFlag flag);
 
-void setVolume(Voice voice, float gain);
+/** Bus controls **/
 
-void setPitch(Voice voice, float rate);
+void setBusParam(Bus bus, BusParam param, float value);
 
-void setPause(Voice voice, bool paused);
+float getBusParam(Bus bus, BusParam param);
 
-void setLoop(Voice voice, bool loopMode);
+void setBusFlag(Bus bus, BusFlag flag, bool value);
 
-float getPan(Voice voice);
+bool getBusFlag(Bus bus, BusFlag flag);
 
-float getVolume(Voice voice);
+/** Buffer control **/
 
-float getPitch(Voice voice);
+uint32_t getBufferState(Buffer buffer);
 
-bool getPause(Voice voice);
+bool getBufferFlag(Buffer buffer, BufferFlag flag);
 
-bool getLoop(Voice voice);
+float getBufferParam(Buffer buffer, BufferParam param);
 
-// private
-void* _getAudioContext();
 
-static const char* getDeviceStateString(DeviceState state) {
+/** Bus controls **/
+inline void setBusGain(Bus bus, float gain) {
+    setBusParam(bus, BusParam::Gain, gain);
+}
+
+inline float getBusGain(Bus bus) {
+    return getBusParam(bus, BusParam::Gain);
+}
+
+inline void setBusConnected(Bus bus, bool connected) {
+    setBusFlag(bus, Bus_Connected, connected);
+}
+
+inline bool getBusConnected(Bus bus) {
+    return getBusFlag(bus, Bus_Connected);
+}
+
+/** Audio Data object's state **/
+
+inline double getBufferDuration(Buffer buffer) {
+    return (double) getBufferParam(buffer, BufferParam::Duration);
+}
+
+inline double getVoiceDuration(Voice voice) {
+    return (double) getVoiceParam(voice, VoiceParam::Duration);
+}
+
+inline double getVoiceCurrentTime(Voice voice) {
+    return (double) getVoiceParam(voice, VoiceParam::CurrentTime);
+}
+
+/** Voice parameters control **/
+
+inline bool isVoiceValid(Voice voice) {
+    return getVoiceFlag(voice, Voice_Active);
+}
+
+inline void setPan(Voice voice, float pan) {
+    setVoiceParam(voice, VoiceParam::Pan, pan);
+}
+
+inline void setGain(Voice voice, float gain) {
+    setVoiceParam(voice, VoiceParam::Gain, gain);
+}
+
+inline void setRate(Voice voice, float rate) {
+    setVoiceParam(voice, VoiceParam::Rate, rate);
+}
+
+inline void setPause(Voice voice, bool paused) {
+    setVoiceFlag(voice, Voice_Running, !paused);
+}
+
+inline void setLoop(Voice voice, bool looping) {
+    setVoiceFlag(voice, Voice_Loop, looping);
+}
+
+inline float getPan(Voice voice) {
+    return getVoiceParam(voice, VoiceParam::Pan);
+}
+
+inline float getGain(Voice voice) {
+    return getVoiceParam(voice, VoiceParam::Gain);
+}
+
+inline float getRate(Voice voice) {
+    return getVoiceParam(voice, VoiceParam::Rate);
+}
+
+inline bool getPause(Voice voice) {
+    return !getVoiceFlag(voice, Voice_Running);
+}
+
+inline bool getLoop(Voice voice) {
+    return getVoiceFlag(voice, Voice_Loop);
+}
+
+static const char* getMixerStateString(uint32_t state) {
     static const char* names[3] = {"invalid", "running", "paused"};
-    return names[static_cast<uint32_t>(state) % 3];
+    return names[state & 3];
 }
 
 }

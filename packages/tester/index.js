@@ -1,5 +1,4 @@
 import * as Auph from "auph";
-import {getAudioDataStateString} from "auph";
 
 let streamSource = null;
 let streamVoice = undefined;
@@ -59,7 +58,7 @@ $("#stop-stream").addEventListener("click", () => {
 });
 
 $("#volume").addEventListener("input", (ev) => {
-    Auph.setVolume(streamVoice, ev.target.value);
+    Auph.setGain(streamVoice, ev.target.value);
 });
 
 $("#pan").addEventListener("input", (ev) => {
@@ -67,7 +66,7 @@ $("#pan").addEventListener("input", (ev) => {
 });
 
 $("#pitch").addEventListener("input", (ev) => {
-    Auph.setPitch(streamVoice, ev.target.value);
+    Auph.setRate(streamVoice, ev.target.value);
 });
 
 $("#load-buffer").addEventListener("click", () => {
@@ -122,27 +121,27 @@ $("#play-multi").addEventListener("click", () => {
 $("#stop-multi").addEventListener("click", () => {
     if (multiSources) {
         for (const source of multiSources) {
-            Auph.stopAudioSource(source);
+            Auph.stopBuffer(source);
         }
     }
 });
 
 setInterval(() => {
     $("#info").innerHTML = `<table>
-<tr><td>Device State</td><td>${Auph.getDeviceStateString(Auph.getInteger(Auph.DEVICE_STATE))}</td></tr>
-<tr><td>Sample Rate</td><td>${Auph.getInteger(Auph.DEVICE_SAMPLE_RATE)}</td></tr>
+<tr><td>Device State</td><td>${Auph.getMixerStateString(Auph.getMixerState())}</td></tr>
+<tr><td>Sample Rate</td><td>${Auph.getMixerParam(Auph.MIXER_SAMPLE_RATE)}</td></tr>
 
-<tr><td>Voices</td><td>${Auph.getInteger(Auph.VOICES_IN_USE)}</td></tr>
-<tr><td>Streams</td><td>${Auph.getInteger(Auph.STREAMS_IN_USE)}</td></tr>
+<tr><td>Voices</td><td>${Auph.getMixerParam(Auph.VOICES_IN_USE)}</td></tr>
+<tr><td>Streams</td><td>${Auph.getMixerParam(Auph.STREAMS_IN_USE)}</td></tr>
 </table>`;
 
     if (Auph.getVoiceState(streamVoice) & 1) {
-        const len = Auph.getVoiceLength(streamVoice);
-        const pos = Auph.getVoicePosition(streamVoice);
+        const len = Auph.getVoiceDuration(streamVoice);
+        const pos = Auph.getVoiceCurrentTime(streamVoice);
         $("#stream-playback-info").innerText = pos + " / " + len;
     } else if (streamSource) {
-        const st = Auph.getAudioDataState(streamSource);
-        $("#stream-playback-info").innerText = getAudioDataStateString(st);
+        const st = Auph.getBufferState(streamSource);
+        $("#stream-playback-info").innerText = Auph.getBufferStateString(st);
     }
 
 }, 300);
@@ -159,9 +158,9 @@ $("#run-random-paused").addEventListener("click", () => {
         let delay = 0;
         for (let i = 0; i < 10; ++i) {
             const voice = Auph.play(clapSource, 1, 0, 1, true);
-            Auph.setPitch(voice, 0.5 + Math.random());
-            Auph.setVolume(voice, 0.5 + 0.5 * Math.random());
+            Auph.setGain(voice, 0.5 + 0.5 * Math.random());
             Auph.setPan(voice, 2 * Math.random() - 1);
+            Auph.setRate(voice, 0.5 + Math.random());
             setTimeout(() => {
                 Auph.setPause(voice, false);
             }, delay);
@@ -257,7 +256,7 @@ $("#stop-large-buffer").addEventListener("click", () => {
 });
 
 $("#lb-volume").addEventListener("input", (ev) => {
-    Auph.setVolume(largeBufferVoice, ev.target.value);
+    Auph.setGain(largeBufferVoice, ev.target.value);
 });
 
 $("#lb-pan").addEventListener("input", (ev) => {
@@ -265,7 +264,7 @@ $("#lb-pan").addEventListener("input", (ev) => {
 });
 
 $("#lb-pitch").addEventListener("input", (ev) => {
-    Auph.setPitch(largeBufferVoice, ev.target.value);
+    Auph.setRate(largeBufferVoice, ev.target.value);
 });
 
 
@@ -274,33 +273,33 @@ $("#lb-pitch").addEventListener("input", (ev) => {
  */
 
 $("#master-volume").addEventListener("input", (ev) => {
-    Auph.setBusVolume(Auph.BUS_MASTER, ev.target.value);
+    Auph.setBusGain(Auph.BUS_MASTER, ev.target.value);
 });
 
 $("#sfx-volume").addEventListener("input", (ev) => {
-    Auph.setBusVolume(Auph.BUS_SFX, ev.target.value);
+    Auph.setBusGain(Auph.BUS_SFX, ev.target.value);
 });
 
 $("#music-volume").addEventListener("input", (ev) => {
-    Auph.setBusVolume(Auph.BUS_MUSIC, ev.target.value);
+    Auph.setBusGain(Auph.BUS_MUSIC, ev.target.value);
 });
 
 $("#speech-volume").addEventListener("input", (ev) => {
-    Auph.setBusVolume(Auph.BUS_SPEECH, ev.target.value);
+    Auph.setBusGain(Auph.BUS_SPEECH, ev.target.value);
 });
 
 $("#master-enabled").addEventListener("input", (ev) => {
-    Auph.setBusEnabled(Auph.BUS_MASTER, ev.target.checked);
+    Auph.setBusConnected(Auph.BUS_MASTER, ev.target.checked);
 });
 
 $("#sfx-enabled").addEventListener("input", (ev) => {
-    Auph.setBusEnabled(Auph.BUS_SFX, ev.target.checked);
+    Auph.setBusConnected(Auph.BUS_SFX, ev.target.checked);
 });
 
 $("#music-enabled").addEventListener("input", (ev) => {
-    Auph.setBusEnabled(Auph.BUS_MUSIC, ev.target.checked);
+    Auph.setBusConnected(Auph.BUS_MUSIC, ev.target.checked);
 });
 
 $("#speech-enabled").addEventListener("input", (ev) => {
-    Auph.setBusEnabled(Auph.BUS_SPEECH, ev.target.checked);
+    Auph.setBusConnected(Auph.BUS_SPEECH, ev.target.checked);
 });

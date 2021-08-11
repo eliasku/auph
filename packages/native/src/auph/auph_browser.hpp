@@ -21,138 +21,103 @@ void shutdown() {
     EM_ASM(Auph.shutdown());
 }
 
-int getInteger(Var param) {
-    return EM_ASM_INT(return Auph.getInteger($0), (int) param);
+// private
+void* _getAudioContext() {
+    return nullptr;
 }
 
-AudioData load(const char* filepath, bool streaming) {
+int getMixerParam(MixerParam param) {
+    return EM_ASM_INT(return Auph.getMixerParam($0), (uint32_t) param);
+}
+
+uint32_t getMixerState() {
+    return EM_ASM_INT(return Auph.getMixerState());
+}
+
+Buffer load(const char* filepath, bool streaming) {
     int r = EM_ASM_INT(return Auph.load(UTF8ToString($0), $1), filepath, streaming);
     return {(uint32_t) r};
 }
 
-void unload(AudioData data) {
-    EM_ASM(Auph.unload($0), data.id);
+void unload(Buffer buffer) {
+    EM_ASM(Auph.unload($0), buffer.id);
 }
 
-Voice play(AudioData data,
+Voice play(Buffer buffer,
            float gain,
            float pan,
            float pitch,
            bool loop,
            bool paused,
            Bus bus) {
-    int r = EM_ASM_INT(return Auph.play($0, $1, $2, $3, $4, $5, $6), data.id, gain, pan, pitch, loop, paused, bus.id);
+    int r = EM_ASM_INT(return Auph.play($0, $1, $2, $3, $4, $5, $6), buffer.id, gain, pan, pitch, loop, paused, bus.id);
     return {(uint32_t) r};
 }
 
-void stop(Voice voice) {
-    EM_ASM(Auph.stop($0), voice.id);
+void stop(Voice name) {
+    EM_ASM(Auph.stop($0), name.id);
 }
 
-void stopAudioData(AudioData data) {
-    EM_ASM(Auph.stopAudioData($0), data.id);
+void stopBuffer(Buffer name) {
+    EM_ASM(Auph.stopBuffer($0), name.id);
 }
 
-// private
-void* _getAudioContext() {
-    return nullptr;
+void setVoiceParam(Voice name, VoiceParam param, float value) {
+    EM_ASM(Auph.setVoiceParam($0, $1, $2), name.id, (int) param, value);
 }
 
-/** Bus controls **/
-void setBusVolume(Bus bus, float gain) {
-    EM_ASM(Auph.setBusVolume($0, $1), bus.id, gain);
-}
-
-float getBusVolume(Bus bus) {
-    double r = EM_ASM_DOUBLE(return Auph.getBusVolume($0), bus.id);
+float getVoiceParam(Voice name, VoiceParam param) {
+    double r = EM_ASM_DOUBLE(return Auph.getVoiceParam($0, $1), name.id, (int) param);
     return (float) r;
 }
 
-void setBusEnabled(Bus bus, bool enabled) {
-    EM_ASM(Auph.setBusEnabled($0, $1), bus.id, enabled);
+void setVoiceFlag(Voice name, VoiceFlag flag, bool value) {
+    EM_ASM(Auph.setVoiceFlag($0, $1, $2), name.id, (int) flag, value);
 }
 
-bool getBusEnabled(Bus bus) {
-    int r = EM_ASM_INT(return Auph.getBusEnabled($0), bus.id);
-    return r != 0;
-}
-
-/** Audio Data object's state **/
-AudioDataState getAudioDataState(AudioData data) {
-    int r = EM_ASM_INT(return Auph.getAudioDataState($0), data.id);
-    return (AudioDataState) r;
-}
-
-double getAudioSourceLength(AudioData data) {
-    double r = EM_ASM_DOUBLE(return Auph.getAudioSourceLength($0), data.id);
-    return r;
-}
-
-double getVoiceLength(Voice voice) {
-    double r = EM_ASM_DOUBLE(return Auph.getVoiceLength($0), voice.id);
-    return r;
-}
-
-double getVoicePosition(Voice voice) {
-    double r = EM_ASM_DOUBLE(return Auph.getVoicePosition($0), voice.id);
-    return r;
-}
-
-/** Voice parameters control **/
-
-bool isVoiceValid(Voice voice) {
-    int r = EM_ASM_INT(return Auph.isVoiceValid($0), voice.id);
-    return r != 0;
-}
-
-uint32_t getVoiceState(Voice voice) {
-    int r = EM_ASM_INT(return Auph.getVoiceState($0), voice.id);
+uint32_t getVoiceState(Voice name) {
+    int r = EM_ASM_INT(Auph.getVoiceState($0), name.id);
     return (uint32_t) r;
 }
 
-void setPan(Voice voice, float value) {
-    EM_ASM(Auph.setPan($0, $1), voice.id, value);
-}
-
-void setVolume(Voice voice, float value) {
-    EM_ASM(Auph.setVolume($0, $1), voice.id, value);
-}
-
-void setPitch(Voice voice, float value) {
-    EM_ASM(Auph.setPitch($0, $1), voice.id, value);
-}
-
-void setPause(Voice voice, bool value) {
-    EM_ASM(Auph.setPause($0, $1), voice.id, value);
-}
-
-void setLoop(Voice voice, bool value) {
-    EM_ASM(Auph.setLoop($0, $1), voice.id, value);
-}
-
-float getPan(Voice voice) {
-    double r = EM_ASM_DOUBLE(return Auph.getPan($0), voice.id);
-    return (float) r;
-}
-
-float getVolume(Voice voice) {
-    double r = EM_ASM_DOUBLE(return Auph.getVolume($0), voice.id);
-    return (float) r;
-}
-
-float getPitch(Voice voice) {
-    double r = EM_ASM_DOUBLE(return Auph.getPitch($0), voice.id);
-    return (float) r;
-}
-
-bool getPause(Voice voice) {
-    int r = EM_ASM_INT(return Auph.getPause($0), voice.id);
+bool getVoiceFlag(Voice name, VoiceFlag flag) {
+    int r = EM_ASM_INT(Auph.getVoiceFlag($0, $1), name.id, (int) flag);
     return r != 0;
 }
 
-bool getLoop(Voice voice) {
-    int r = EM_ASM_INT(return Auph.getLoop($0), voice.id);
+/** Bus controls **/
+
+void setBusParam(Bus name, BusParam param, float value) {
+    EM_ASM(Auph.setBusParam($0, $1, $2), name.id, (int) param, value);
+}
+
+float getBusParam(Bus name, BusParam param) {
+    double r = EM_ASM_DOUBLE(Auph.getBusParam($0, $1), name.id, (int) param);
+    return (float) r;
+}
+
+void setBusFlag(Bus name, BusFlag flag, bool value) {
+    EM_ASM(Auph.setBusFlag($0, $1, $2), name.id, (int) flag, value);
+}
+
+bool getBusFlag(Bus name, BusFlag flag) {
+    int r = EM_ASM_INT(Auph.getBusFlag($0, $1), name.id, (int) flag);
     return r != 0;
+}
+
+uint32_t getBufferState(Buffer name) {
+    int r = EM_ASM_INT(Auph.getBufferState($0), name.id);
+    return (uint32_t) r;
+}
+
+bool getBufferFlag(Buffer name, BufferFlag flag) {
+    int r = EM_ASM_INT(Auph.getBufferFlag($0, $1), name.id, (int) flag);
+    return r != 0;
+}
+
+float getBufferParam(Buffer name, BufferParam param) {
+    double r = EM_ASM_DOUBLE(Auph.getBufferParam($0, $1), name.id, (int) param);
+    return (float) r;
 }
 
 }

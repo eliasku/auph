@@ -54,8 +54,7 @@ Napi::Value load(const Napi::CallbackInfo& info) {
     const char* filepath = info[0].As<Napi::String>().Utf8Value().c_str();
     bool streaming = _toBool(info[1], false);
     auto data = auph::load(filepath, streaming);
-    Napi::Number dataHandle = Napi::Number::New(env, data.id);
-    return dataHandle;
+    return Napi::Number::New(env, data.id);
 }
 
 void unload(const Napi::CallbackInfo& info) {
@@ -99,91 +98,104 @@ void stop(const Napi::CallbackInfo& info) {
     auph::stop({voiceHandle});
 }
 
-void stopAudioData(const Napi::CallbackInfo& info) {
+void stopBuffer(const Napi::CallbackInfo& info) {
     const uint32_t voiceHandle = _toSMI(info[0], 0);
-    auph::stopAudioData({voiceHandle});
+    auph::stopBuffer({voiceHandle});
 }
 
+/** Voice controls **/
 
-/** Voice parameters control **/
-
-Napi::Value isVoiceValid(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const bool value = auph::isVoiceValid({voiceHandle});
-    return Napi::Boolean::New(env, value);
+void setVoiceParam(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t param = _toSMI(info[1], 0);
+    const float value = _toFloat(info[2], 0.0f);
+    auph::setVoiceParam({name}, (auph::VoiceParam) param, value);
 }
 
+Napi::Value getVoiceParam(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t param = _toSMI(info[1], 0);
+    const float value = auph::getVoiceParam({name}, (auph::VoiceParam) param);
+    return Napi::Number::New(info.Env(), value);
+}
+
+void setVoiceFlag(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t flag = _toSMI(info[1], 0);
+    const bool value = _toBool(info[2], false);
+    auph::setVoiceFlag({name}, (auph::VoiceFlag) flag, value);
+}
+
+//uint32_t getVoiceState(Voice voice);
 Napi::Value getVoiceState(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const uint32_t value = auph::getVoiceState({voiceHandle});
-    return Napi::Number::New(env, value);
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t value = auph::getVoiceState({name});
+    return Napi::Number::New(info.Env(), value);
 }
 
-void setPan(const Napi::CallbackInfo& info) {
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const float value = _toFloat(info[1], 0.0f);
-    auph::setPan({voiceHandle}, value);
+//bool getVoiceFlag(Voice voice, VoiceFlag flag)
+Napi::Value getVoiceFlag(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t flag = _toSMI(info[1], 0);
+    const bool value = auph::getVoiceFlag({name}, (auph::VoiceFlag) flag);
+    return Napi::Boolean::New(info.Env(), value);
 }
 
-void setVolume(const Napi::CallbackInfo& info) {
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const float value = _toFloat(info[1], 1.0f);
-    auph::setVolume({voiceHandle}, value);
+/** Bus controls **/
+
+void setBusParam(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t param = _toSMI(info[1], 0);
+    const float value = _toFloat(info[2], false);
+    auph::setBusParam({name}, (auph::BusParam) param, value);
 }
 
-void setPitch(const Napi::CallbackInfo& info) {
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const float value = _toFloat(info[1], 1.0f);
-    auph::setPitch({voiceHandle}, value);
+//float getBusParam(Bus bus, BusParam param);
+Napi::Value getBusParam(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t param = _toSMI(info[1], 0);
+    const uint32_t value = auph::getBusParam({name}, (auph::BusParam) param);
+    return Napi::Number::New(info.Env(), value);
 }
 
-void setPause(const Napi::CallbackInfo& info) {
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const bool value = _toBool(info[1], false);
-    auph::setPause({voiceHandle}, value);
+void setBusFlag(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t flag = _toSMI(info[1], 0);
+    const bool value = _toBool(info[2], false);
+    auph::setBusFlag({name}, (auph::BusFlag) flag, value);
 }
 
-void setLoop(const Napi::CallbackInfo& info) {
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const bool value = _toBool(info[1], false);
-    auph::setLoop({voiceHandle}, value);
+//bool getBusFlag(Bus bus, BusFlag flag);
+Napi::Value getBusFlag(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t flag = _toSMI(info[1], 0);
+    const bool value = auph::getBusFlag({name}, (auph::BusFlag) flag);
+    return Napi::Boolean::New(info.Env(), value);
 }
 
-Napi::Value getPan(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const float value = auph::getPan({voiceHandle});
-    return Napi::Number::New(env, value);
+/** Buffer control **/
+
+//uint32_t getBufferState(Buffer buffer)
+Napi::Value getBufferState(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t value = auph::getBufferState({name});
+    return Napi::Number::New(info.Env(), value);
 }
 
-Napi::Value getVolume(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const float value = auph::getVolume({voiceHandle});
-    return Napi::Number::New(env, value);
+//bool getBufferFlag(Buffer buffer, BufferFlag flag);
+Napi::Value getBufferFlag(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t flag = _toSMI(info[1], 0);
+    const bool value = auph::getBufferFlag({name}, (auph::BufferFlag) flag);
+    return Napi::Boolean::New(info.Env(), value);
 }
 
-Napi::Value getPitch(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const float value = auph::getPitch({voiceHandle});
-    return Napi::Number::New(env, value);
-}
-
-Napi::Value getPause(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const bool value = auph::getPause({voiceHandle});
-    return Napi::Boolean::New(env, value);
-}
-
-Napi::Value getLoop(const Napi::CallbackInfo& info) {
-    Napi::Env env = info.Env();
-    const uint32_t voiceHandle = _toSMI(info[0], 0);
-    const bool value = auph::getLoop({voiceHandle});
-    return Napi::Boolean::New(env, value);
+//float getBufferParam(Buffer buffer, BufferParam param);
+Napi::Value getBufferParam(const Napi::CallbackInfo& info) {
+    const uint32_t name = _toSMI(info[0], 0);
+    const uint32_t param = _toSMI(info[1], 0);
+    const uint32_t value = auph::getBufferParam({name}, (auph::BufferParam) param);
+    return Napi::Number::New(info.Env(), value);
 }
 
 Napi::Object Auph(Napi::Env env, Napi::Object exports) {
@@ -195,19 +207,21 @@ Napi::Object Auph(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "unload"), Napi::Function::New(env, unload));
     exports.Set(Napi::String::New(env, "play"), Napi::Function::New(env, play));
     exports.Set(Napi::String::New(env, "stop"), Napi::Function::New(env, stop));
-    exports.Set(Napi::String::New(env, "stopAudioData"), Napi::Function::New(env, stopAudioData));
-    exports.Set(Napi::String::New(env, "isVoiceValid"), Napi::Function::New(env, isVoiceValid));
+    exports.Set(Napi::String::New(env, "stopBuffer"), Napi::Function::New(env, stopBuffer));
+
+    exports.Set(Napi::String::New(env, "setVoiceParam"), Napi::Function::New(env, setVoiceParam));
+    exports.Set(Napi::String::New(env, "getVoiceParam"), Napi::Function::New(env, getVoiceParam));
+    exports.Set(Napi::String::New(env, "setVoiceFlag"), Napi::Function::New(env, setVoiceFlag));
     exports.Set(Napi::String::New(env, "getVoiceState"), Napi::Function::New(env, getVoiceState));
-    exports.Set(Napi::String::New(env, "setPan"), Napi::Function::New(env, setPan));
-    exports.Set(Napi::String::New(env, "setVolume"), Napi::Function::New(env, setVolume));
-    exports.Set(Napi::String::New(env, "setPitch"), Napi::Function::New(env, setPitch));
-    exports.Set(Napi::String::New(env, "setPause"), Napi::Function::New(env, setPause));
-    exports.Set(Napi::String::New(env, "setLoop"), Napi::Function::New(env, setLoop));
-    exports.Set(Napi::String::New(env, "getPan"), Napi::Function::New(env, getPan));
-    exports.Set(Napi::String::New(env, "getVolume"), Napi::Function::New(env, getVolume));
-    exports.Set(Napi::String::New(env, "getPitch"), Napi::Function::New(env, getPitch));
-    exports.Set(Napi::String::New(env, "getPause"), Napi::Function::New(env, getPause));
-    exports.Set(Napi::String::New(env, "getLoop"), Napi::Function::New(env, getLoop));
+    exports.Set(Napi::String::New(env, "getVoiceFlag"), Napi::Function::New(env, getVoiceFlag));
+    exports.Set(Napi::String::New(env, "setBusParam"), Napi::Function::New(env, setBusParam));
+    exports.Set(Napi::String::New(env, "getBusParam"), Napi::Function::New(env, getBusParam));
+    exports.Set(Napi::String::New(env, "setBusFlag"), Napi::Function::New(env, setBusFlag));
+    exports.Set(Napi::String::New(env, "getBusFlag"), Napi::Function::New(env, getBusFlag));
+    exports.Set(Napi::String::New(env, "getBufferState"), Napi::Function::New(env, getBufferState));
+    exports.Set(Napi::String::New(env, "getBufferFlag"), Napi::Function::New(env, getBufferFlag));
+    exports.Set(Napi::String::New(env, "getBufferParam"), Napi::Function::New(env, getBufferParam));
+
     return exports;
 }
 

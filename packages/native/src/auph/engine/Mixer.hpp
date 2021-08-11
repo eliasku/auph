@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../device/AudioDevice.hpp"
-#include "AudioData.hpp"
+#include "Buffer.hpp"
 #include "Voice.hpp"
 #include "Bus.hpp"
 
@@ -29,7 +29,7 @@ static inline void mixSamples(MixSample* mix,
                               const double begin,
                               const double end,
                               const double advance,
-                              const AudioDataSource* audioSource,
+                              const BufferDataSource* audioSource,
                               MixSample gain) {
     const float gainL = gain.L / Divisor;
     const float gainR = gain.R / Divisor;
@@ -108,8 +108,8 @@ void renderVoices(VoiceObj* voices, BusObj* busline, uint32_t voicesCount, MixSa
     const float masterGain = busline[0].get();
     for (uint32_t voiceIndex = 0; voiceIndex < voicesCount; ++voiceIndex) {
         auto& voice = voices[voiceIndex];
-        if (voice.controlFlags & Voice_Running) {
-            const float busGain = busline[voice.bus].get() * masterGain;
+        if (voice.state & Voice_Running) {
+            const float busGain = busline[voice.bus.id & iMask].get() * masterGain;
 
             auto p = voice.position;
             const double pitch = voice.pitch * (double) voice.data->sampleRate / sampleRate;
@@ -117,10 +117,10 @@ void renderVoices(VoiceObj* voices, BusObj* busline, uint32_t voicesCount, MixSa
             double playTo = voice.position + frames * pitch;
             const double len = (double) voice.data->length;
             if (playTo >= len) {
-                if (voice.controlFlags & Voice_Loop) {
+                if (voice.state & Voice_Loop) {
                     playNext = playTo - len;
                 } else {
-                    voice.controlFlags ^= Voice_Running;
+                    voice.state ^= Voice_Running;
                 }
                 playTo = len;
             }
@@ -135,7 +135,7 @@ void renderVoices(VoiceObj* voices, BusObj* busline, uint32_t voicesCount, MixSa
                 voice.data->reader(dest, 0.0, playNext, pitch, voice.data, gain);
             }
 
-            if (!(voice.controlFlags & Voice_Running)) {
+            if (!(voice.state & Voice_Running)) {
                 voice.stop();
             }
         }

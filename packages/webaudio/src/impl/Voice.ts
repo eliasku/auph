@@ -1,15 +1,13 @@
 import {StreamPlayer, StreamPlayer_resume, StreamPlayer_stop} from "./StreamPlayer";
-import {getContext} from "./Device";
-import {AudioData} from "./AudioData";
-import {VoiceStateFlag} from "./Constants";
-
-export type Voice = number;
-
-const vMask = 0xFFFF00;
-const vIncr = 0x000100;
-const iMask = 0x0000FF;
+import {getContext} from "./Mixer";
+import {AuphBuffer, AuphVoice, iMask, vIncr, vMask, VoiceFlag} from "./types";
 
 export class VoiceObj {
+    // handle version (maybe will add index as well)
+    v = 0;
+    // Control Flags
+    s: number = VoiceFlag.Active;
+
     stream: StreamPlayer | null = null;
 
     // buffer playback
@@ -20,15 +18,9 @@ export class VoiceObj {
     // "Pitch" / "Playback Rate"
     rate = 1.0;
 
-    // Control Flags
-    cf = 0;
-
     target: AudioNode | null = null;
 
-    data: AudioData = 0;
-
-    // handle version (maybe will add index as well)
-    v = 0;
+    data: AuphBuffer = 0;
 
     _e = (e: Event) => {
         // maybe check is useless
@@ -79,7 +71,7 @@ export function Voice_stop(v: VoiceObj) {
     // stop buffer
     const buffer = v.buffer;
     if (buffer) {
-        if ((v.cf & VoiceStateFlag.Running) !== 0) {
+        if ((v.s & VoiceFlag.Running) !== 0) {
             buffer.stop();
         }
         buffer.disconnect();
@@ -88,19 +80,19 @@ export function Voice_stop(v: VoiceObj) {
 
     Voice_resetDestination(v);
     v.data = 0;
-    v.cf = 0;
+    v.s = 0;
     v.v = (v.v + vIncr) & vMask;
 }
 
 export function Voice_startBuffer(v: VoiceObj) {
-    if ((v.cf & VoiceStateFlag.Running) === 0) {
+    if ((v.s & VoiceFlag.Running) === 0) {
         const source = v.buffer;
         if (source) {
             //source.addEventListener("ended", v._e, {once: true});
             source.onended = v._e;
-            source.loop = (v.cf & VoiceStateFlag.Loop) !== 0;
+            source.loop = (v.s & VoiceFlag.Loop) !== 0;
             source.start();
-            v.cf |= VoiceStateFlag.Running;
+            v.s |= VoiceFlag.Running;
         }
     }
 }
@@ -113,9 +105,9 @@ export function Voice_prepareBuffer(v: VoiceObj, ctx: AudioContext, audioBuffer:
 }
 
 export function Voice_loop(v: VoiceObj, value: boolean): void {
-    const current = (v.cf & VoiceStateFlag.Loop) !== 0;
+    const current = (v.s & VoiceFlag.Loop) !== 0;
     if (value !== current) {
-        v.cf ^= VoiceStateFlag.Loop;
+        v.s ^= VoiceFlag.Loop;
 
         if (v.stream) {
             v.stream.el.loop = value;
@@ -125,24 +117,23 @@ export function Voice_loop(v: VoiceObj, value: boolean): void {
     }
 }
 
-export function Voice_pause(v: VoiceObj, value: boolean): void {
-    const paused = (v.cf & VoiceStateFlag.Paused) !== 0;
-    if (value !== paused) {
-        v.cf ^= VoiceStateFlag.Paused;
-
+export function Voice_running(v: VoiceObj, value: boolean): void {
+    const running = (v.s & VoiceFlag.Running) !== 0;
+    if (value !== running) {
+        v.s ^= VoiceFlag.Running;
         if (value) {
-            if (v.stream) {
-                v.stream.el.pause();
-            } else if (v.buffer) {
-                v.buffer.playbackRate.value = 0.0;
-            }
-        } else {
             if (v.stream) {
                 StreamPlayer_resume(v.stream);
             } else if (v.buffer) {
                 v.buffer.playbackRate.value = v.rate;
                 // restart if play called in pause mode
                 Voice_startBuffer(v);
+            }
+        } else {
+            if (v.stream) {
+                v.stream.el.pause();
+            } else if (v.buffer) {
+                v.buffer.playbackRate.value = 0.0;
             }
         }
     }
@@ -154,7 +145,7 @@ export function Voice_pitch(v: VoiceObj, value: number): void {
         if (v.stream) {
             v.stream.el.playbackRate = value;
         } else if (v.buffer) {
-            if (!(v.cf & VoiceStateFlag.Paused)) {
+            if ((v.s & VoiceFlag.Running) !== 0) {
                 v.buffer.playbackRate.value = value;
             }
         }
@@ -164,24 +155,15 @@ export function Voice_pitch(v: VoiceObj, value: number): void {
 export let voicePool: (VoiceObj | null)[] = [null];
 const voicesMaxCount = 64;
 
-export function _checkVoiceHandle(handle: Voice): boolean {
-    const obj = voicePool[handle & iMask];
-    return !!obj && obj.v === (handle & vMask);
-}
-
-export function _getVoiceObjAt(index: number): VoiceObj | null {
-    return voicePool[index];
-}
-
-export function _getVoiceObj(handle: Voice): VoiceObj | null {
+export function _getVoiceObj(handle: AuphVoice): VoiceObj | null {
     const obj = voicePool[handle & iMask];
     return (obj && obj.v === (handle & vMask)) ? obj : null;
 }
 
-export function getNextVoice(): Voice {
+export function createVoiceObj(): AuphVoice {
     for (let i = 1; i < voicePool.length; ++i) {
         const v = voicePool[i]!;
-        if (v.data === 0) {
+        if (v.s === 0) {
             return i | v.v;
         }
     }

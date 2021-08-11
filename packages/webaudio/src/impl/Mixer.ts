@@ -1,5 +1,5 @@
 import {error, log, warn} from "./debug";
-import {DeviceState} from "./Constants";
+import {MixerFlag} from "./types";
 
 let ctx: AudioContext | null = null;
 const unlockEvents = ["mousedown", "pointerdown", "touchstart"];
@@ -17,13 +17,16 @@ export function getContext(): AudioContext | null {
     return ctx;
 }
 
-export function getContextState(): DeviceState {
-    let state = DeviceState.Invalid;
-    if (ctx) {
-        if (ctx.state === "suspended") {
-            state = DeviceState.Paused;
-        } else if (ctx.state === "running") {
-            state = DeviceState.Running;
+export function getAudioContextObject(): AudioContext | null {
+    return ctx;
+}
+
+export function getContextState(ctx: AudioContext): number {
+    let state = 0;
+    if (ctx.state !== "closed") {
+        state |= MixerFlag.Active;
+        if (ctx.state === "running") {
+            state |= MixerFlag.Running;
         }
     }
     return state;
