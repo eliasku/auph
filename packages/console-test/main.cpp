@@ -4,8 +4,8 @@
 #include <cmath>
 #include <ctime>
 
-static auph::AudioData music{};
-static auph::AudioData clap{};
+static auph::Buffer music{};
+static auph::Buffer clap{};
 static auph::Voice musicVoice{};
 
 double usin(double x) {
@@ -13,13 +13,13 @@ double usin(double x) {
 }
 
 void onFrame(double time) {
-    if (auph::getAudioDataState(music) & auph::AudioData_Loaded) {
+    if (auph::getBufferFlag(music, auph::Buffer_Loaded)) {
         if (musicVoice.id == 0) {
             musicVoice = auph::play(music, 1.0f, 0.0f, 1.0f, true);
         }
 
         const double t = time / 3.0;
-        auph::setPitch(musicVoice, (float) (0.25 + usin(t)));
+        auph::setRate(musicVoice, (float) (0.25 + usin(t)));
 
         static double nextClapTime = 0.0;
         if (time >= nextClapTime) {

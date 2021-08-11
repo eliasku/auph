@@ -1,4 +1,4 @@
-import {getContext} from "./Device";
+import {getContext} from "./Mixer";
 import {error, log} from "./debug";
 
 const emptyWaveData = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAVFYAAFRWAAABAAgAZGF0YQAAAAA=";

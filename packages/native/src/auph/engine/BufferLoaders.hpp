@@ -1,36 +1,44 @@
 #pragma once
 
-#include "AudioData.hpp"
+#include "Buffer.hpp"
 
 #ifdef AUPH_WAV
 #define DR_WAV_IMPLEMENTATION
+
 #include <dr/dr_wav.h>
+
 #endif // AUPH_WAV
 
 #ifdef AUPH_MP3
 #define DR_MP3_IMPLEMENTATION
+
 #include <dr/dr_mp3.h>
+
 #endif // AUPH_MP3
 
 #ifdef AUPH_OGG
+
 #include <stb/stb_vorbis.c>
+
 #endif // AUPH_OGG
 
 namespace auph {
 
-AudioDataObj::~AudioDataObj() {
+BufferObj::~BufferObj() {
     unload();
 }
 
-void AudioDataObj::unload() {
-    free(source.data.buffer);
-    free(source.streamData);
-    source = {};
+void BufferObj::unload() {
+    free(data.data.buffer);
+    free(data.streamData);
+    data = {};
+    state = 0;
+    version = (version + vIncr) & vMask;
 }
 
 #ifdef AUPH_MP3
 
-bool loadFile_MP3(const char* filepath, AudioDataSource* dest) {
+bool loadFile_MP3(const char* filepath, BufferDataSource* dest) {
     drmp3_config config{};
     drmp3_uint64 totalFrames{};
     int16_t* data = drmp3_open_file_and_read_pcm_frames_s16(filepath, &config, &totalFrames, nullptr);
@@ -50,7 +58,7 @@ bool loadFile_MP3(const char* filepath, AudioDataSource* dest) {
 
 #ifdef AUPH_WAV
 
-bool loadFile_WAV(const char* filepath, AudioDataSource* dest) {
+bool loadFile_WAV(const char* filepath, BufferDataSource* dest) {
     drwav_uint64 totalFrameCount{};
     unsigned int channels;
     unsigned int sampleRate;
@@ -83,7 +91,7 @@ static void oggStreamReader(MixSample* mix,
                             const double begin,
                             const double end,
                             const double advance,
-                            const AudioDataSource* dataSource,
+                            const BufferDataSource* dataSource,
                             MixSample gain) {
     auto* stream = (OggStream*) dataSource->streamData;
     const auto channels = dataSource->channels;
@@ -110,7 +118,7 @@ static void oggStreamReader(MixSample* mix,
     dataSource->data.buffer = nullptr;
 }
 
-bool streamFile_OGG(const char* filepath, AudioDataSource* dest) {
+bool streamFile_OGG(const char* filepath, BufferDataSource* dest) {
     int error = 0;
     auto* ogg = stb_vorbis_open_filename(filepath, &error, nullptr);
     if (error != 0 || ogg == nullptr) {
@@ -133,7 +141,7 @@ bool streamFile_OGG(const char* filepath, AudioDataSource* dest) {
     return true;
 }
 
-bool loadFile_OGG(const char* filepath, AudioDataSource* dest) {
+bool loadFile_OGG(const char* filepath, BufferDataSource* dest) {
     int error = 0;
     auto* ogg = stb_vorbis_open_filename(filepath, &error, nullptr);
     if (error != 0 || ogg == nullptr) {
@@ -173,7 +181,7 @@ const char* getExtension(const char* filepath) {
     return lastDot;
 }
 
-bool loadToDataSource(AudioDataSource* dataSource, const char* filepath, bool streaming) {
+bool loadToDataSource(BufferDataSource* dataSource, const char* filepath, bool streaming) {
     const char* e = getExtension(filepath);
 #ifdef AUPH_MP3
     if (e[1] == 'm' && e[2] == 'p' && e[3] == '3') {
@@ -199,15 +207,13 @@ bool loadToDataSource(AudioDataSource* dataSource, const char* filepath, bool st
     return false;
 }
 
-bool AudioDataObj::load(const char* filepath, bool streaming) {
-    bool result = false;
-    if (state & AudioData_Empty) {
+bool BufferObj::load(const char* filepath, bool streaming) {
+    const bool result = loadToDataSource(&data, filepath, streaming);
+    if (result) {
+        state |= Buffer_Active;
+        state |= Buffer_Loaded;
         if (streaming) {
-            state |= AudioData_Stream;
-        }
-        result = loadToDataSource(&source, filepath, streaming);
-        if (result) {
-            state |= AudioData_Loaded;
+            state |= Buffer_Stream;
         }
     }
     return result;

@@ -13,19 +13,21 @@ module.exports = {
 
     play: Auph.play,
     stop: Auph.stop,
-    stopAudioData: Auph.stopAudioData,
+    stopBuffer: Auph.stopBuffer,
 
     /** Voice parameters control **/
-    isVoiceValid: Auph.isVoiceValid,
+    setVoiceParam: Auph.setVoiceParam,
+    getVoiceParam: Auph.getVoiceParam,
+    setVoiceFlag: Auph.setVoiceFlag,
     getVoiceState: Auph.getVoiceState,
-    setPan: Auph.setPan,
-    setVolume: Auph.setVolume,
-    setPitch: Auph.setPitch,
-    setPause: Auph.setPause,
-    setLoop: Auph.setLoop,
-    getPan: Auph.getPan,
-    getVolume: Auph.getVolume,
-    getPitch: Auph.getPitch,
-    getPause: Auph.getPause,
-    getLoop: Auph.getLoop
+    getVoiceFlag: Auph.getVoiceFlag,
+
+    setBusParam: Auph.setBusParam,
+    getBusParam: Auph.getBusParam,
+    setBusFlag: Auph.setBusFlag,
+    getBusFlag: Auph.getBusFlag,
+
+    getBufferState: Auph.getBufferState,
+    getBufferFlag: Auph.getBufferFlag,
+    getBufferParam: Auph.getBufferParam
 };

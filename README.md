@@ -18,11 +18,10 @@ Trivial audio mixer API for native and web targets.
 
 ### Parameters
 
-- **Volume**: volume of Bus or Voice (gain).
-  - alt: **Gain**
+- **Gain**: volume of Bus or Voice.
 - **Pan**: control stereo-panning of Voice, by default is `0` (center balance), full left channel is `-1`, full Right channel is `1`.
-- **Pitch**: control playback rate of Voice, by default is `1` (100% speed of playback)
-  - alt: **Rate**, **Speed**
+- **Rate**: control playback rate of Voice, by default is `1` (100% speed of playback)
+  - alt: **Pitch**, **Speed**
 
 ### Voice Flags
 

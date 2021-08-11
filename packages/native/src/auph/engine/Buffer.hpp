@@ -1,15 +1,9 @@
 #pragma once
 
 #include "../device/AudioDevice.hpp"
+#include "Types.hpp"
 
 namespace auph {
-
-enum AudioDataState : uint8_t {
-    AudioData_Invalid = 0,
-    AudioData_Empty = 1,
-    AudioData_Loaded = 2,
-    AudioData_Stream = 4
-};
 
 union SamplesData {
     // hackish const
@@ -23,16 +17,16 @@ struct MixSample {
     float R;
 };
 
-struct AudioDataSource;
+struct BufferDataSource;
 
 /**
  * stream reader function
  * reads num of frames and return number of read frames
  */
-typedef void (* SourceReader)(MixSample*, const double, const double, const double, const AudioDataSource*,
+typedef void (* SourceReader)(MixSample*, const double, const double, const double, const BufferDataSource*,
                               MixSample gain);
 
-struct AudioDataSource {
+struct BufferDataSource {
     void* streamData = nullptr;
     SamplesData data = {nullptr};
     // length in frames (samples / channels)
@@ -44,11 +38,12 @@ struct AudioDataSource {
     SourceReader reader = nullptr;
 };
 
-struct AudioDataObj {
-    uint8_t state = AudioData_Empty;
-    AudioDataSource source{};
+struct BufferObj {
+    uint32_t state = 0;
+    uint32_t version = 0;
+    BufferDataSource data{};
 
-    ~AudioDataObj();
+    ~BufferObj();
 
     bool load(const char* filepath, bool streaming);
 

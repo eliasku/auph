@@ -2,7 +2,7 @@
 
 #include "device/AudioDevice_impl.hpp"
 #include "engine/Mixer.hpp"
-#include "engine/AudioData_impl.hpp"
+#include "engine/BufferLoaders.hpp"
 #include "auph.hpp"
 
 namespace auph {
@@ -12,24 +12,35 @@ constexpr uint32_t AudioSourcesMaxCount = 128;
 struct Context {
     AudioDevice device{};
     Mixer mixer{};
-    DeviceState state = DeviceState::Paused;
-    AudioDataObj dataPool[AudioSourcesMaxCount];
-    VoiceObj voicePool[Mixer::VoicesMaxCount];
+    uint32_t state = 0;
+    BufferObj buffers[AudioSourcesMaxCount];
+    VoiceObj voices[Mixer::VoicesMaxCount];
     BusObj busLine[4]{};
 
     Context() {
-        mixer.voices = voicePool;
+        mixer.voices = voices;
         mixer.busLine = busLine;
         device.onPlayback = Mixer::playback;
         device.userData = &mixer;
-        state = DeviceState::Paused;
+        state = Mixer_Active;
     }
 
-    VoiceObj* getVoiceObj(Voice voice) {
-        const auto index = voice.id & iMask;
+    BufferObj* getBufferObj(Buffer name) {
+        const auto index = name.id & iMask;
+        if (index > 0 && index < AudioSourcesMaxCount) {
+            auto* obj = buffers + index;
+            if (obj->version == (name.id & vMask)) {
+                return obj;
+            }
+        }
+        return nullptr;
+    }
+
+    VoiceObj* getVoiceObj(Voice name) {
+        const auto index = name.id & iMask;
         if (index > 0 && index < Mixer::VoicesMaxCount) {
-            auto* obj = voicePool + index;
-            if (obj->v == (voice.id & vMask)) {
+            auto* obj = voices + index;
+            if (obj->version == (name.id & vMask)) {
                 return obj;
             }
         }
@@ -39,9 +50,9 @@ struct Context {
     [[nodiscard]]
     Voice getNextVoice() const {
         for (uint32_t i = 1; i < Mixer::VoicesMaxCount; ++i) {
-            const auto* obj = voicePool + i;
+            const auto* obj = voices + i;
             if (obj->data == nullptr) {
-                return {i | obj->v};
+                return {i | obj->version};
             }
         }
         return {0};
@@ -53,100 +64,110 @@ Context* ctx = nullptr;
 void init() {
     if (!ctx) {
         ctx = new Context();
+        ctx->state = Mixer_Active;
     }
 }
 
 void resume() {
     if (ctx) {
         ctx->device.start();
-        ctx->state = DeviceState::Running;
+        ctx->state = Mixer_Active | Mixer_Running;
     }
 }
 
 void pause() {
     if (ctx) {
         ctx->device.stop();
-        ctx->state = DeviceState::Paused;
+        ctx->state = Mixer_Active;
     }
 }
 
 void shutdown() {
+    ctx->state = 0;
     delete ctx;
     ctx = nullptr;
-}
-
-AudioData load(const char* filepath, bool streaming) {
-    for (uint32_t i = 1; i < AudioSourcesMaxCount; ++i) {
-        auto* src = &ctx->dataPool[i];
-        // data slot is free
-        if (src->source.reader == nullptr) {
-            // data slot is loading
-            if (src->load(filepath, streaming)) {
-                return {i};
-            }
-        }
-    }
-    return {0};
-}
-
-void unload(AudioData data) {
-    auto* obj = &ctx->dataPool[data.id];
-    obj->unload();
 }
 
 void* _getAudioContext() {
     return &ctx;
 }
 
-int getInteger(Var param) {
+int getMixerParam(MixerParam param) {
     switch (param) {
-        case Var::VoicesInUse: {
-            uint32_t count = 0;
-            for (uint32_t i = 0; i < Mixer::VoicesMaxCount; ++i) {
-                if (ctx->voicePool[i].controlFlags & Voice_Running) {
+        case MixerParam::VoicesInUse: {
+            int count = 0;
+            for (uint32_t i = 1; i < Mixer::VoicesMaxCount; ++i) {
+                if (ctx->voices[i].state & Voice_Running) {
                     ++count;
                 }
             }
             return count;
         }
-        case Var::StreamsInUse: {
+        case MixerParam::StreamsInUse: {
             return 0;//getStreamPlayersCount();
         }
-        case Var::BuffersLoaded: {
+        case MixerParam::BuffersLoaded: {
             return 0;
         }
-        case Var::StreamsLoaded: {
+        case MixerParam::StreamsLoaded: {
             return 0;
         }
-        case Var::Device_SampleRate: {
+        case MixerParam::SampleRate: {
             // TODO:
             return 44100;
-        }
-        case Var::Device_State: {
-            return static_cast<int>(ctx->state);
         }
     }
     return 0;
 }
 
-Voice play(AudioData data, float gain, float pan, float pitch, bool loop, bool paused, Bus bus) {
-    auto voice = ctx->getNextVoice();
-    if (voice.id) {
-        auto* obj = &ctx->voicePool[voice.id & iMask];
-        obj->controlFlags = Voice_Running;
-        if (loop) {
-            obj->controlFlags |= Voice_Loop;
+uint32_t getMixerState() {
+    return ctx->state;
+}
+
+Buffer load(const char* filepath, bool streaming) {
+    for (uint32_t i = 1; i < AudioSourcesMaxCount; ++i) {
+        auto* src = &ctx->buffers[i];
+        // data slot is free
+        if (src->state == 0) {
+            // data slot is loading
+            if (src->load(filepath, streaming)) {
+                return {i | src->version};
+            }
         }
-        if (paused) {
-            obj->controlFlags |= Voice_Paused;
-        }
-        obj->data = &ctx->dataPool[data.id].source;
-        obj->gain = gain;
-        obj->pan = pan;
-        obj->pitch = pitch;
-        obj->position = 0.0;
-        obj->bus = bus.id;
     }
+    return {0};
+}
+
+void unload(Buffer buffer) {
+    auto* obj = ctx->getBufferObj(buffer);
+    if (obj) {
+        obj->unload();
+    }
+}
+
+Voice play(Buffer buffer, float gain, float pan, float pitch, bool loop, bool paused, Bus bus) {
+    auto* bufferObj = ctx->getBufferObj(buffer);
+    if (!bufferObj) {
+        return {0};
+    }
+    const auto voice = ctx->getNextVoice();
+    if (!voice.id) {
+        return {0};
+    }
+    auto* obj = &ctx->voices[voice.id & iMask];
+    obj->state = Voice_Active;
+    if (loop) {
+        obj->state |= Voice_Loop;
+    }
+    if (!paused) {
+        obj->state |= Voice_Running;
+    }
+    obj->data = &bufferObj->data;
+    obj->gain = gain;
+    obj->pan = pan;
+    obj->pitch = pitch;
+    obj->position = 0.0;
+    obj->bus = bus;
     return voice;
 }
 
@@ -157,130 +178,142 @@ void stop(Voice voice) {
     }
 }
 
-void stopAudioData(AudioData data) {
-    const auto* dataSourcePtr = &ctx->dataPool[data.id].source;
+void stopBuffer(Buffer buffer) {
+    const auto* bufferObj = ctx->getBufferObj(buffer);
+    if (!bufferObj) {
+        return;
+    }
+    const auto* pDataSource = &bufferObj->data;
     for (uint32_t i = 1; i < Mixer::VoicesMaxCount; ++i) {
-        auto* voiceObj = &ctx->voicePool[i];
-        if (voiceObj->data == dataSourcePtr) {
+        auto* voiceObj = &ctx->voices[i];
+        if (voiceObj->data == pDataSource) {
             voiceObj->stop();
         }
     }
 }
 
-
-/** Bus controls **/
-void setBusVolume(Bus bus, float gain) {
-    ctx->busLine[bus.id].gain = gain;
+void setVoiceParam(Voice voice, VoiceParam param, float value) {
+    auto* obj = ctx->getVoiceObj(voice);
+    if (obj) {
+        switch (param) {
+            case VoiceParam::Gain:
+                obj->gain = value;
+                break;
+            case VoiceParam::Pan:
+                obj->pan = value;
+                break;
+            case VoiceParam::Rate:
+                obj->pitch = value;
+                break;
+            case VoiceParam::Duration:
+                // NO-OP
+                break;
+            case VoiceParam::CurrentTime:
+                // TODO: convert to seconds
+                obj->position = value;
+                break;
+        }
+    }
 }
 
-float getBusVolume(Bus bus) {
-    return ctx->busLine[bus.id].gain;
+float getVoiceParam(Voice voice, VoiceParam param) {
+    const auto* obj = ctx->getVoiceObj(voice);
+    if (obj) {
+        switch (param) {
+            case VoiceParam::Gain:
+                return obj->gain;
+            case VoiceParam::Pan:
+                return obj->pan;
+            case VoiceParam::Rate:
+                return obj->pitch;
+            case VoiceParam::Duration:
+                // TODO:
+                return 0.0f;
+            case VoiceParam::CurrentTime:
+                // TODO: convert to seconds
+                return (float) obj->position;
+        }
+    }
+    return 0.0f;
 }
 
-void setBusEnabled(Bus bus, bool enabled) {
-    ctx->busLine[bus.id].enabled = enabled;
-}
-
-bool getBusEnabled(Bus bus) {
-    return ctx->busLine[bus.id].enabled;
-}
-
-
-/** Voice parameters control **/
-
-bool isVoiceValid(Voice voice) {
-    return ctx->getVoiceObj(voice) != nullptr;
+void setVoiceFlag(Voice voice, VoiceFlag flag, bool value) {
+    auto* obj = ctx->getVoiceObj(voice);
+    if (obj) {
+        const bool was = (obj->state & flag) != 0;
+        if (was != value) {
+            obj->state ^= (uint32_t) flag;
+        }
+    }
 }
 
 uint32_t getVoiceState(Voice voice) {
     const auto* obj = ctx->getVoiceObj(voice);
-    return obj ? obj->controlFlags : 0;
+    return obj ? obj->state : 0;
 }
 
-void setPan(Voice voice, float pan) {
-    auto* obj = ctx->getVoiceObj(voice);
-    if (obj) {
-        obj->pan = pan;
-    }
+bool getVoiceFlag(Voice voice, VoiceFlag flag) {
+    return (getVoiceState(voice) & flag) != 0;
 }
 
-void setVolume(Voice voice, float gain) {
-    auto* obj = ctx->getVoiceObj(voice);
-    if (obj) {
-        obj->gain = gain;
-    }
-}
+/** Bus controls **/
 
-void setPitch(Voice voice, float rate) {
-    auto* obj = ctx->getVoiceObj(voice);
+void setBusParam(Bus bus, BusParam param, float value) {
+    auto* obj = ctx->busLine + bus.id;
     if (obj) {
-        obj->pitch = rate;
-    }
-}
-
-void setPause(Voice voice, bool paused) {
-    auto* obj = ctx->getVoiceObj(voice);
-    if (obj) {
-        auto isOnPause = (obj->controlFlags & Voice_Paused) != 0;
-        if(isOnPause != paused) {
-            obj->controlFlags ^= Voice_Paused;
+        switch (param) {
+            case BusParam::Gain:
+                obj->gain = value;
+                break;
         }
     }
 }
 
-void setLoop(Voice voice, bool loopMode) {
-    auto* obj = ctx->getVoiceObj(voice);
+float getBusParam(Bus bus, BusParam param) {
+    auto* obj = ctx->busLine + bus.id;
     if (obj) {
-        auto looping = (obj->controlFlags & Voice_Loop) != 0;
-        if(looping != loopMode) {
-            obj->controlFlags ^= Voice_Loop;
+        switch (param) {
+            case BusParam::Gain:
+                return obj->gain;
+        }
+    }
+    return 0.0;
+}
+
+void setBusFlag(Bus bus, BusFlag flag, bool value) {
+    auto* obj = ctx->busLine + bus.id;
+    if (obj) {
+        const bool was = (obj->state & flag) != 0;
+        if (was != value) {
+            obj->state ^= (uint32_t) flag;
         }
     }
 }
 
-float getPan(Voice voice) {
-    const auto* obj = ctx->getVoiceObj(voice);
-    return obj ? obj->pan : 0.0f;
+bool getBusFlag(Bus bus, BusFlag flag) {
+    auto* obj = ctx->busLine + bus.id;
+    return obj ? (obj->state & flag) != 0 : false;
 }
 
-float getVolume(Voice voice) {
-    const auto* obj = ctx->getVoiceObj(voice);
-    return obj ? obj->gain : 1.0f;
+uint32_t getBufferState(Buffer buffer) {
+    auto* obj = ctx->getBufferObj(buffer);
+    return obj ? obj->state : 0;
 }
 
-float getPitch(Voice voice) {
-    const auto* obj = ctx->getVoiceObj(voice);
-    return obj ? obj->pitch : 1.0f;
+bool getBufferFlag(Buffer buffer, BufferFlag flag) {
+    return (getBufferState(buffer) & flag) != 0;
 }
 
-bool getPause(Voice voice) {
-    const auto* obj = ctx->getVoiceObj(voice);
-    return obj != nullptr && (obj->controlFlags & Voice_Paused) != 0;
-}
-
-bool getLoop(Voice voice) {
-    const auto* obj = ctx->getVoiceObj(voice);
-    return obj != nullptr && (obj->controlFlags & Voice_Loop) != 0;
-}
-
-/** Audio Data object's state **/
-AudioDataState getAudioDataState(AudioData data) {
-    return (AudioDataState)ctx->dataPool[data.id].state;
-}
-
-double getAudioSourceLength(AudioData data) {
-    // TODO:
-    return 0.0;
-}
-
-double getVoiceLength(Voice voice) {
-    // TODO:
-    return 0.0;
-}
-
-double getVoicePosition(Voice voice) {
-    // TODO:
-    return 0.0;
+float getBufferParam(Buffer buffer, BufferParam param) {
+    auto* obj = ctx->getBufferObj(buffer);
+    if (obj) {
+        switch (param) {
+            case BufferParam::Duration:
+                // TODO:
+                return 0.0f;
+        }
+    }
+    return 0.0f;
 }
 
 }
