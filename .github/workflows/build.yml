@@ -1,0 +1,82 @@
+name: Build
+
+on:
+  push:
+    # auto-update branches checked by created PR
+    branches-ignore:
+      - 'update/*'
+    paths-ignore:
+      - '.changeset/**'
+
+  # only test check PR to master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build JS
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Build
+        run: yarn run build
+
+  build-cmake:
+    name: Build CMake targets
+    runs-on: ${{ matrix.os.os }}
+    strategy:
+      matrix:
+        os:
+          - { os: ubuntu-latest,  shell: bash }
+          - { os: macos-latest,   shell: bash }
+          - { os: windows-latest, shell: msys2 }
+    defaults:
+      run:
+        shell: '${{ matrix.os.shell }} {0}'
+    env:
+      CC: clang
+      CXX: clang++
+      USE_CCACHE: 1
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          path-type: inherit
+          release: false
+
+      - name: Setup OpenGL on Ubuntu
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libglu1-mesa-dev mesa-common-dev xorg-dev libasound-dev
+
+      - name: Setup Ninja
+        uses: seanmiddleditch/gha-setup-ninja@master
+
+      - name: Install CCache
+        uses: eliasku/install-ccache-action@master
+
+      - name: Setup CCache
+        uses: eliasku/ccache-action@master
+        with:
+          key: ${{ runner.os }}
+
+      - name: Install dependencies
+        run: yarn --frozen-lockfile
+
+      - name: Build
+        run: yarn run build-cmake
