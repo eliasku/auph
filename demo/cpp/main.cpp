@@ -1,5 +1,4 @@
 #include <auph/auph.hpp>
-#include <auph/auph_wrapper.hpp>
 
 #include <cstdio>
 #include <cmath>

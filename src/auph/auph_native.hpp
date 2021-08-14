@@ -3,7 +3,7 @@
 #include "device/AudioDevice_impl.hpp"
 #include "engine/Mixer.hpp"
 #include "engine/BufferLoaders.hpp"
-#include "auph.hpp"
+#include "auph_interface.hpp"
 
 namespace auph {
 
