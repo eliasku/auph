@@ -1,51 +1,27 @@
-import { Voice } from "./impl/Voice";
-import { AudioData } from "./impl/AudioData";
-import { Bus } from "./impl/Bus";
-export declare function init(): void;
-export declare function resume(): void;
-export declare function pause(): void;
-export declare function shutdown(): void;
-/*** Context State ***/
-export declare function getInteger(param: number): number;
-/**
- * private function to get native HTMl5 AudioContext
- */
-export declare function _getAudioContext(): AudioContext | null;
-/***/
-export declare function load(filepath: string, streaming: boolean): AudioData;
-export declare function unload(data: AudioData): void;
-/***
- *
- * @param data
- * @param volume
- * @param pan
- * @param pitch
- * @param paused
- * @param loop
- * @param bus
- */
-export declare function play(data: AudioData, volume?: number, pan?: number, pitch?: number, paused?: boolean, loop?: boolean, bus?: Bus): Voice;
-export declare function stop(voice: Voice): void;
-export declare function isVoiceValid(voice: Voice): boolean;
-export declare function getVoiceState(voice: Voice): number;
-export declare function setPan(voice: Voice, value: number): void;
-export declare function setVolume(voice: Voice, value: number): void;
-export declare function setPitch(voice: Voice, value: number): void;
-export declare function setPause(voice: Voice, value: boolean): void;
-export declare function setLoop(voice: Voice, value: boolean): void;
-export declare function getPan(voice: Voice): number;
-export declare function getVolume(voice: Voice): number;
-export declare function getPitch(voice: Voice): number;
-export declare function getPause(voice: Voice): boolean;
-export declare function getLoop(voice: Voice): boolean;
-export declare function stopAudioData(data: AudioData): void;
-/** Bus controls **/
-export declare function setBusVolume(bus: Bus, value: number): void;
-export declare function getBusVolume(bus: Bus): number;
-export declare function setBusEnabled(bus: Bus, enabled: boolean): void;
-export declare function getBusEnabled(bus: Bus): boolean;
-/** length / position **/
-export declare function getAudioDataState(data: AudioData): number;
-export declare function getAudioSourceLength(data: AudioData): number;
-export declare function getVoiceLength(voice: Voice): number;
-export declare function getVoicePosition(voice: Voice): number;
+import { AuphBuffer, AuphBus, AuphMixer, AuphVoice, f32 } from "./protocol/interface";
+export * from "./protocol/static";
+export declare const init: () => void;
+export declare const shutdown: () => void;
+export declare const set: (name: number, param: number, value: number) => void;
+export declare const get: (name: number, param: number) => number;
+export declare const load: (filepath: string, flags: number) => number;
+export declare const unload: (name: number) => void;
+export declare const stop: (name: number) => void;
+export declare function pause(name?: AuphMixer | AuphVoice | AuphBuffer | AuphBus): void;
+export declare function resume(name?: AuphMixer | AuphVoice | AuphBuffer | AuphBus): void;
+export declare function play(buffer: AuphBuffer, gain?: number, pan?: number, rate?: number, loop?: boolean, paused?: boolean, bus?: AuphBus): AuphVoice;
+export declare function getMixerStateString(state: number): string;
+export declare function getBufferStateString(state: number): string;
+export declare function setGain(busOrVoice: AuphBus | AuphVoice, value: number): void;
+export declare function getGain(busOrVoice: AuphBus | AuphVoice): f32;
+export declare function setPan(voice: AuphVoice, pan: f32): void;
+export declare function setRate(voice: AuphVoice, rate: number): void;
+export declare function setPause(name: AuphMixer | AuphVoice | AuphBuffer | AuphBus, value: boolean): void;
+export declare function setLoop(voice: AuphVoice, value: boolean): void;
+export declare function getPan(voice: AuphVoice): number;
+export declare function getRate(voice: AuphVoice): number;
+export declare function getPause(voice: AuphVoice): boolean;
+export declare function getLoop(voice: AuphVoice): boolean;
+export declare function getCurrentTime(voice: AuphVoice | AuphMixer): number;
+export declare function isActive(name: AuphVoice | AuphBus | AuphBuffer | AuphMixer): boolean;
+export declare function getDuration(name: AuphBuffer | AuphVoice): number;
