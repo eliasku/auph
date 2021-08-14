@@ -1,4 +1,5 @@
 #include <auph/auph.hpp>
+#include <auph/auph_wrapper.hpp>
 
 #include <cstdio>
 #include <cmath>
@@ -19,7 +20,7 @@ void onFrame(double time) {
         }
 
         const double t = time / 3.0;
-        auph::setRate(musicVoice, (float) (0.25 + usin(t)));
+        //auph::setRate(musicVoice, (float) (0.25 + usin(t)));
 
         static double nextClapTime = 0.0;
         if (time >= nextClapTime) {
@@ -45,8 +46,8 @@ int main() {
 
     auph::init();
     auph::resume();
-    music = auph::load("../../tester/assets/ogg/sample2.ogg", false);
-    clap = auph::load("../../tester/assets/mp3/CLAP.mp3", false);
+    music = auph::load("../../assets/mp3/Kalimba.mp3", auph::Flag_Stream);
+    clap = auph::load("../../assets/mp3/CLAP.mp3", 0);
 
 #if defined(__EMSCRIPTEN__)
     emscripten_request_animation_frame_loop(raf, nullptr);
