@@ -1,6 +1,6 @@
 #pragma once
 
-#include "auph.hpp"
+#include "auph_interface.hpp"
 #include <emscripten.h>
 
 namespace auph {
