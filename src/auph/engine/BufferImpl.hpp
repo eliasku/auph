@@ -44,16 +44,20 @@ bool loadToBuffer(BufferDataSource* dataSource, const char* filepath, bool strea
     const char* e = getExtension(filepath);
 #ifdef AUPH_MP3
     if (e[1] == 'm' && e[2] == 'p' && e[3] == '3') {
-        return loadFile_MP3(filepath, dataSource);
+        if (streaming) {
+            return openStreamMp3(filepath, dataSource);
+        } else {
+            return loadFileMp3(filepath, dataSource);
+        }
     }
 #endif // AUPH_MP3
 
 #ifdef AUPH_OGG
     if (e[1] == 'o' && e[2] == 'g' && e[3] == 'g') {
         if (streaming) {
-            return streamFile_OGG(filepath, dataSource);
+            return openStreamOgg(filepath, dataSource);
         } else {
-            return loadFile_OGG(filepath, dataSource);
+            return loadFileOgg(filepath, dataSource);
         }
     }
 #endif // AUPH_OGG
