@@ -165,8 +165,8 @@ public:
         uint32_t p = 0;
         auto* dest = (int16_t*) data->data;
         for (uint32_t i = 0; i < data->frames; ++i) {
-            dest[p++] = (int16_t) (src->L * 0x8000);
-            dest[p++] = (int16_t) (src->R * 0x8000);
+            dest[p++] = (int16_t) (src->L * 0x7FFF);
+            dest[p++] = (int16_t) (src->R * 0x7FFF);
             ++src;
         }
     }
