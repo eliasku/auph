@@ -1,20 +1,23 @@
 # 🔊 auph 🎧
 
-Trivial audio mixer API for native and web targets.
+Trivial audio mixer API for native and web targets. [Online Demo](https://eliasku.github.io/auph/)
 
-### Packages
+> ⚠️ Work in progress!
+> API is constantly changing.
+> The native playback at the moment sounds bad, has not been tested, and has not been fully tested on mobile projects.
 
-- [JavaScript Browser](./packages/webaudio) JavaScript implementation for Web Browsers (also used in C++ library for Emscripten/WebAssembly build)
-- [C++](./packages/native) library supports macOS, iOS, Android and WebAssembly targets
+- [Auph JavaScript](./web/README.md)
+- [Auph For NodeJS](./nodejs/README.md)
+- [Auph C/C++](./NATIVE.md)
 
 ## Core Concepts
 
 ### Objects
 
-- **Device**: single global engine or mixer object, could be initialized and terminated, paused and resumed.
-- **AudioData**: data that can be loaded and unloaded. We are playing audio from Data objects.
+- **Mixer**: global mixer, could be initialized and terminated, paused and resumed.
+- **Buffer**: data buffers that can be loaded and unloaded. We are playing audio from Buffer objects.
 - **Voice**: instance of Audio Player used to control sound playback.
-- **Bus**: simple hierarchy object for mixing, Master Bus is connected to Audio Device. All another bus objects are connected to the Master Bus. Bus splits game track audio voices by groups Music, Sound, Speech. Enable controlling of Gain and Muting for each audio group.
+- **Bus**: simple hierarchy object for mixing, Master Bus is connected to Mixer's output. All another bus objects are connected to the Master Bus. Bus splits game track audio voices by groups Music, Sound, Speech. Enable controlling of Gain and Muting for each audio group.
 
 ### Parameters
 
@@ -32,70 +35,3 @@ Trivial audio mixer API for native and web targets.
 
 - **Play**: open voice object, associate it with *Audio Data* and start playback. If **Paused** flag is set on **Play**, voice is alive, but will being on pause.
 - **Stop**: stop and close voice object.
-
-## API
-
-### Device
-
-- **init**
-- **resume**
-- **pause**
-- **shutdown**
-
-### Audio Data
-
-- **load**
-  - `(filepath: string, streaming: boolean) => AudioData`
-- **unload**
-  - `(data: AudioData) => void`
-
-### Control Voices
-```
-Voice play(AudioSource source,
-  volume = 1.0,
-  pan = 0.0,
-  pitch = 1.0,
-  paused = false,
-  loop = false
-  Bus bus = 0)
-```
-
-`void stopAudioData(audioData)`
-
-`void stop(Voice voice)`
-
-`void setPan(Void voice, float value)`
-
-`void setVolume(Void voice, float value)`
-
-`void setPitch(Void voice, float value)`
-
-`void setPause(Void voice, bool paused)`
-
-### Extra
-
-- **getInteger**: get global parameter value (sample rate, voices count, etc)
-  - `(param:Var) => integer`
-- **_getAudioContext()**: internal device's context
-  - `() => any`
-
-## C++
-
-### Platforms
-
-- [x] Android: [Google's Oboe](https://github.com/google/oboe) (OpenSLES / **AAudio**)
-- [x] macOS: CoreAudio
-- [x] iOS: CoreAudio + AVSession
-- [x] WebAssembly: WebAudio
-- [ ] Windows: WASAPI
-- [ ] Linux: ALSA
-
-### Format support
-
-- [x] OGG: `stb_vorbis`
-- [x] MP3: `dr_mp3` (currently no streaming)
-- [x] WAV: `dr_wav` (currently no streaming)
-
-## Roadmap
-
-- native: Support for Windows (WASAPI) and Linux (ALSA)
