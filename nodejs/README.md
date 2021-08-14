@@ -10,6 +10,7 @@ Work in progress
 - [ ] get state functions
 
 ### Platforms
+
 - [x] macOS
 - [ ] Windows
 - [ ] Linux
@@ -17,16 +18,16 @@ Work in progress
 ### Example
 
 ```javascript
-const Auph = require("auph-node");
+const auph = require("auph");
 
-Auph.init();
-Auph.resume();
+auph.init();
+auph.resume();
 
-const clap = Auph.load("clap.mp3", false);
-const music = Auph.load("music.ogg", false);
+const clap = auph.load("clap.mp3", 0);
+const music = auph.load("music.ogg", 0);
 
-Auph.play(clap);
-Auph.play(music);
+auph.play(clap);
+auph.play(music);
 
 setTimeout(() => {
     Auph.shutdown();

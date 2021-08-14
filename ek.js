@@ -16,16 +16,12 @@ module.exports = (ctx) => {
             java: [path.join(__dirname, "android/java")]
         },
         macos: {
-            cpp: [
-                path.join(__dirname, "platforms/apple"),
-                path.join(__dirname, "platforms/mac")
-            ],
             cpp_flags: {
                 files: [
                     path.join(__dirname, "src/auph-all.cpp")
                 ],
                 flags: "-x objective-c++"
-            },
+            }
         },
         ios: {
             cpp_flags: {
@@ -41,7 +37,7 @@ module.exports = (ctx) => {
             }
         },
         web: {
-            js: [require.resolve("auph/dist/browser/auph-emscripten.js")]
+            js: [path.resolve(__dirname, "web/dist/browser/auph-strip.js")]
         },
         windows: {},
         linux: {}

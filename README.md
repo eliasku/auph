@@ -26,7 +26,7 @@ Trivial audio mixer API for native and web targets.
 ### Voice Flags
 
 - **Loop Mode**: voice could be in the loop mode or not.
-- **Paused Flag**: played voice is active until it's stopped, either we are able to *pause* or *resume* playback by setting **Paused** flag on and off.
+- **Running Flag**: played voice is active until it's stopped, either we are able to *pause* or *resume* playback by setting **Running** flag on and off.
 
 ### Voice lifecycle
 
@@ -79,7 +79,23 @@ Voice play(AudioSource source,
 - **_getAudioContext()**: internal device's context
   - `() => any`
 
+## C++
+
+### Platforms
+
+- [x] Android: [Google's Oboe](https://github.com/google/oboe) (OpenSLES / **AAudio**)
+- [x] macOS: CoreAudio
+- [x] iOS: CoreAudio + AVSession
+- [x] WebAssembly: WebAudio
+- [ ] Windows: WASAPI
+- [ ] Linux: ALSA
+
+### Format support
+
+- [x] OGG: `stb_vorbis`
+- [x] MP3: `dr_mp3` (currently no streaming)
+- [x] WAV: `dr_wav` (currently no streaming)
+
 ## Roadmap
 
-- native: Play sounds with NodeJS! Require native bindings and JS wrapper interface
 - native: Support for Windows (WASAPI) and Linux (ALSA)

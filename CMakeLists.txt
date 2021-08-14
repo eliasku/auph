@@ -25,6 +25,6 @@ endif ()
 
 if (EMSCRIPTEN)
     target_link_options(${PROJECT_NAME} PUBLIC
-            --js-library ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/browser/auph-webaudio.js
+            --js-library ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/browser/auph-strip.js
             )
 endif ()

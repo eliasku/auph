@@ -14,9 +14,9 @@ export default [
     {
         input: "./web/dist/module/webaudio/index.js",
         output: {
-            file: "./web/dist/browser/auph-webaudio.js",
+            file: "./web/dist/browser/auph-strip.js",
             format: "iife",
-            name: "auwa",
+            name: "auph",
             compact: true,
             plugins: [terser()],
             sourcemap: true
