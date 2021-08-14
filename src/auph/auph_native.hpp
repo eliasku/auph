@@ -212,7 +212,7 @@ int get(int name, int param) {
     }
 
     if (type == Type_Voice) {
-        const auto* obj = ctx->getVoiceObj({name});
+        const auto* obj = ctx->getVoiceObj(name);
         if (obj) {
             switch (param) {
                 case Param_State:
@@ -237,7 +237,7 @@ int get(int name, int param) {
         }
         return 0;
     } else if (type == Type_Bus) {
-        const auto* obj = ctx->getBusObj({name});
+        const auto* obj = ctx->getBusObj(name);
         if (obj) {
             switch (param) {
                 case Param_State:
@@ -251,13 +251,13 @@ int get(int name, int param) {
         }
         return 0;
     } else if (type == Type_Buffer) {
-        const auto* obj = ctx->getBufferObj({name});
+        const auto* obj = ctx->getBufferObj(name);
         if (obj) {
             switch (param) {
                 case Param_State:
                     return obj->state;
                 case Param_Duration:
-                    return obj->data.length;
+                    return (int)obj->data.length;
                 default:
                     //warn("param not supported");
                     break;
