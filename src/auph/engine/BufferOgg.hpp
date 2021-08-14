@@ -4,19 +4,19 @@
 
 namespace auph {
 
-struct OggStream {
+struct StreamOgg {
     stb_vorbis* f = nullptr;
     SourceReader parentReader = nullptr;
     float prev[2]{};
 };
 
-static void oggStreamReader(MixSample* mix,
+static void readStreamOgg(MixSample* mix,
                             const double begin,
                             const double end,
                             const double advance,
                             const BufferDataSource* dataSource,
                             MixSample volume) {
-    auto* stream = (OggStream*) dataSource->streamData;
+    auto* stream = (StreamOgg*) dataSource->streamData;
     const auto channels = dataSource->channels;
     static const int BufferFloatsMax = 2048 * 10;
     float buffer[BufferFloatsMax];
@@ -43,7 +43,7 @@ static void oggStreamReader(MixSample* mix,
     dataSource->data.buffer = nullptr;
 }
 
-bool streamFile_OGG(const char* filepath, BufferDataSource* dest) {
+bool openStreamOgg(const char* filepath, BufferDataSource* dest) {
     int error = 0;
     auto* ogg = stb_vorbis_open_filename(filepath, &error, nullptr);
     if (error != 0 || ogg == nullptr) {
@@ -58,15 +58,15 @@ bool streamFile_OGG(const char* filepath, BufferDataSource* dest) {
     dest->sampleRate = info.sample_rate;
     dest->length = frames;
 
-    auto* streamData = (OggStream*) malloc(sizeof(OggStream));
+    auto* streamData = (StreamOgg*) malloc(sizeof(StreamOgg));
     dest->streamData = streamData;
     streamData->f = ogg;
-    streamData->parentReader = selectSourceReader(dest->format, dest->channels, true);
-    dest->reader = oggStreamReader;
+    streamData->parentReader = selectSourceReader(dest->format, dest->channels, false);
+    dest->reader = readStreamOgg;
     return true;
 }
 
-bool loadFile_OGG(const char* filepath, BufferDataSource* dest) {
+bool loadFileOgg(const char* filepath, BufferDataSource* dest) {
     int error = 0;
     auto* ogg = stb_vorbis_open_filename(filepath, &error, nullptr);
     if (error != 0 || ogg == nullptr) {

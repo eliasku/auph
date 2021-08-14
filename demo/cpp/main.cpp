@@ -45,9 +45,9 @@ int main() {
 
     auph::init();
     auph::resume();
-    //music = auph::load("../../assets/mp3/Kalimba.mp3", auph::Flag_Stream);
+    music = auph::load("../../assets/mp3/Kalimba.mp3", auph::Flag_Stream);
     //music = auph::load("../../assets/ogg/sample2.ogg", 0);
-    music = auph::load("../../assets/ogg/sample2.ogg", auph::Flag_Stream);
+//    music = auph::load("../../assets/ogg/sample2.ogg", auph::Flag_Stream);
     clap = auph::load("../../assets/mp3/CLAP.mp3", 0);
 
 #if defined(__EMSCRIPTEN__)

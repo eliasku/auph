@@ -87,3 +87,7 @@ export const enum Flag {
     Stream = 4
 }
 
+export const enum Status {
+    // TODO: errors and warnings
+}
+
