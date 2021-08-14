@@ -50,10 +50,10 @@ bool checkError(OSStatus status) {
 
 class AudioDevice {
 public:
-    static inline constexpr unsigned BufferFrames = 2048;
-    static inline constexpr unsigned BuffersCountMax = 3;
+    static constexpr unsigned BufferFrames = 2048;
+    static constexpr unsigned BuffersCountMax = 3;
 
-    static inline AudioDevice* instance = nullptr;
+    static AudioDevice* instance;
 
     AudioQueueRef audioQueue = nullptr;
     AudioDeviceCallback onPlayback = nullptr;
@@ -62,7 +62,7 @@ public:
     AudioQueueBufferRef buffers[BuffersCountMax]{};
 
     AudioDevice() {
-        instance = this;
+        AudioDevice::instance = this;
     }
 
 //    void refreshDevices() {
@@ -206,6 +206,7 @@ static void audioPlaybackCallback(void* inUserData, AudioQueueRef inAQ, AudioQue
     AudioQueueEnqueueBuffer(inAQ, inBuffer, 0, nullptr);
 }
 
+AudioDevice* AudioDevice::instance = nullptr;
 
 }
 

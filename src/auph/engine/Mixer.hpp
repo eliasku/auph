@@ -37,29 +37,27 @@ static inline void mixSamples(MixSample* mix,
     double p = begin;
     while (p < end) {
         const auto frame = (uint32_t) p;
-        if constexpr(Interpolate) {
+        if (Interpolate) {
             const uint32_t frames = audioSource->length;
             const auto t = p - (double) frame;
             const auto ti = 1.0 - t;
             const auto frame2 = (frame + 1) % frames;
-            if constexpr(Channels == 2) {
+            if (Channels == 2) {
                 auto iA = frame << 1;
                 auto iB = frame2 << 1;
                 mix->L += gainL * (source[iA++] * ti + source[iB++] * t);
                 mix->R += gainR * (source[iA] * ti + source[iB] * t);
-            }
-            if constexpr(Channels == 1) {
+            } else if (Channels == 1) {
                 const float M = source[frame] * ti + source[frame2] * t;
                 mix->L += gainL * M;
                 mix->R += gainR * M;
             }
         } else {
-            if constexpr(Channels == 2) {
+            if (Channels == 2) {
                 auto i = frame << 1;
                 mix->L += gainL * source[i++];
                 mix->R += gainR * source[i];
-            }
-            if constexpr(Channels == 1) {
+            } else if (Channels == 1) {
                 const float M = source[frame];
                 mix->L += gainL * M;
                 mix->R += gainR * M;
@@ -144,8 +142,8 @@ void renderVoices(VoiceObj* voices, BusObj* busline, uint32_t voicesCount, MixSa
 
 class Mixer {
 public:
-    static inline constexpr uint32_t VoicesMaxCount = 64;
-    static inline constexpr uint32_t ScratchBufferSize = 2048;
+    static constexpr uint32_t VoicesMaxCount = 64;
+    static constexpr uint32_t ScratchBufferSize = 2048;
     VoiceObj* voices = nullptr;
     BusObj* busLine = nullptr;
     MixSample scratch[ScratchBufferSize]{};

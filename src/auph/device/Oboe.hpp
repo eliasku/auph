@@ -41,7 +41,7 @@ class AudioDevice :
         public oboe::AudioStreamErrorCallback {
 
 public:
-    inline static AudioDevice* instance = nullptr;
+    static AudioDevice* instance;
 
     oboe::AudioStream* audioStream = nullptr;
     AudioDeviceCallback onPlayback = nullptr;
@@ -84,7 +84,7 @@ public:
     }
 
     AudioDevice() {
-        instance = this;
+        AudioDevice::instance = this;
     }
 
     void _restartStream() {
@@ -151,6 +151,8 @@ public:
         instance = nullptr;
     }
 };
+
+AudioDevice* AudioDevice::instance = nullptr;
 
 }
 

@@ -13,8 +13,8 @@ void* ioThread(void* param);
 class ThreadWrapper {
 public:
     //  64 -- number of packets in ring buffer, default: 64
-    static inline constexpr unsigned PacketsCount = 64;
-    static inline constexpr unsigned PacketFrames = 128;
+    static constexpr unsigned PacketsCount = 64;
+    static constexpr unsigned PacketFrames = 128;
 
     Fifo fifo{PacketsCount, PacketFrames * sizeof(float)};
     AudioDevice* device{};
