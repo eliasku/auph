@@ -1,6 +1,6 @@
 {
   "name": "auph",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "browser": "web/dist/browser/auph.js",
   "main": "web/dist/cjs/index.js",
   "module": "web/dist/module/index.js",
@@ -8,6 +8,7 @@
   "scripts": {
     "watch": "tsc -w -p web/tsconfig.json & rollup -w -c web/rollup.config.js",
     "build": "tsc -p web/tsconfig.json && rollup -c web/rollup.config.js",
+    "build-cmake": "node scripts/build-cmake.js",
     "postbuild": "node scripts/build-demo && node scripts/build-pages",
     "build-node": "node-gyp rebuild",
     "demo-node": "node demo/node.js",
