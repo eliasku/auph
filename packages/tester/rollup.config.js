@@ -8,15 +8,13 @@ export default {
             format: "iife",
             compact: true,
             sourcemap: true,
-            globals: {
-                auph: "Auph"
-            }
+            interop: false
         }
     ],
-   external: ["auph"],
-    plugins:[
-       nodeResolve({
-           skip: ["auph"]
-       })
+    external: ["auph"],
+    plugins: [
+        nodeResolve({
+            browser: true
+        })
     ]
 };

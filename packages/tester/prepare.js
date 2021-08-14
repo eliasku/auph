@@ -11,7 +11,11 @@ const files = [
     "auph.js.map"
 ];
 
-const srcPath = path.resolve(__dirname, "../webaudio/dist/browser");
+const srcPath = path.resolve(
+    path.dirname(require.resolve( "auph/package.json")),
+    "web/dist/browser"
+);
+
 const dstPath = "dist";
 for (const file of files) {
     fs.copyFileSync(path.join(srcPath, file), path.join(dstPath, file));

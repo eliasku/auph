@@ -13,8 +13,8 @@ double usin(double x) {
 }
 
 void onFrame(double time) {
-    if (auph::getBufferFlag(music, auph::Buffer_Loaded)) {
-        if (musicVoice.id == 0) {
+    if (auph::get(music.id, auph::Param_State) & auph::Flag_Loaded) {
+        if (!auph::isActive(musicVoice.id)) {
             musicVoice = auph::play(music, 1.0f, 0.0f, 1.0f, true);
         }
 

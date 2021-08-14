@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(auph-console-test)
 
-add_subdirectory(../native auph)
+add_subdirectory(../auph auph)
 
 set(CMAKE_CXX_STANDARD 17)
 
