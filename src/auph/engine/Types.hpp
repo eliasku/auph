@@ -22,12 +22,12 @@ struct Bus {
     int id;
 };
 
-inline constexpr Bus Bus_Master = {0};
-inline constexpr Bus Bus_Sound = {1};
-inline constexpr Bus Bus_Music = {2};
-inline constexpr Bus Bus_Speech = {3};
+constexpr Bus Bus_Master = {0};
+constexpr Bus Bus_Sound = {1};
+constexpr Bus Bus_Music = {2};
+constexpr Bus Bus_Speech = {3};
 
-inline constexpr Bus DefaultBus = Bus_Sound;
+constexpr Bus DefaultBus = Bus_Sound;
 
 /** Object Type **/
 enum Type : int {

@@ -6,12 +6,12 @@ namespace auph {
 
 class AudioDevice {
 public:
-    static inline AudioDevice* instance = nullptr;
+    static AudioDevice* instance;
     AudioDeviceCallback onPlayback = nullptr;
     void* userData = nullptr;
 
     AudioDevice() {
-        instance = this;
+        AudioDevice::instance = this;
     }
 
     bool start() {
@@ -29,5 +29,7 @@ public:
         instance = nullptr;
     }
 };
+
+AudioDevice* AudioDevice::instance = nullptr;
 
 }
