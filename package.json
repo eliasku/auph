@@ -8,10 +8,9 @@
   "scripts": {
     "watch": "tsc -w -p web/tsconfig.json & rollup -w -c web/rollup.config.js",
     "build": "tsc -p web/tsconfig.json && rollup -c web/rollup.config.js",
-    "build-cmake": "node scripts/build-cmake.js",
-    "build-pages": "node scripts/build-pages.js",
+    "build-cmake": "node scripts/build-cmake",
+    "build-pages": "node scripts/build-demo && node scripts/build-pages",
     "build-node": "node-gyp rebuild",
-    "postbuild": "node scripts/build-demo && node scripts/build-pages",
     "demo-node": "node demo/node.js",
     "release": "changeset publish",
     "version": "changeset version && yarn run update-lock",
