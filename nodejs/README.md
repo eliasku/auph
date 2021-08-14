@@ -1,14 +1,5 @@
 ## Auph for NodeJS
 
-Work in progress
-
-- [x] init, pause, resume, shutdown
-- [x] load, unload
-- [x] play, stop
-- [ ] voice params control
-- [ ] bus control
-- [ ] get state functions
-
 ### Platforms
 
 - [x] macOS
