@@ -87,9 +87,6 @@ bool loadFileOgg(const char* filepath, BufferDataSource* dest) {
     auto* data = (float*) malloc(4 * info.channels * frames);
 
     const auto numFrames = stb_vorbis_get_samples_float_interleaved(ogg, info.channels, data, samples);
-    if (numFrames != frames) {
-        printf("cannot read OGG\n");
-    }
     stb_vorbis_close(ogg);
 
     dest->data.f32 = data;
