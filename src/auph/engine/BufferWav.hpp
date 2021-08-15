@@ -71,9 +71,6 @@ static MixSample* readStreamWav(MixSample* mix,
         x1 += 1;
         x2 += 1;
     }
-    if (x2 > 1 + framesReady) {
-        printf("not enought %lf   %lu\n", x2, framesReady);
-    }
     mix = stream->parentReader(mix, x1, x2, advance, dataSource, volume);
 
     stream->cursor = (uint64_t) ceil(end);
