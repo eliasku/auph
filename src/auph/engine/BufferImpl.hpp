@@ -64,7 +64,11 @@ bool loadToBuffer(BufferDataSource* dataSource, const char* filepath, bool strea
 
 #ifdef AUPH_WAV
     if (e[1] == 'w' && e[2] == 'a' && e[3] == 'v') {
-        return loadFile_WAV(filepath, dataSource);
+        if (streaming) {
+            return openStreamWav(filepath, dataSource);
+        } else {
+            return loadFileWav(filepath, dataSource);
+        }
     }
 #endif // AUPH_WAV
     return false;

@@ -10,9 +10,9 @@
 
 ### Format support
 
-- [x] OGG: `stb_vorbis`
-- [x] MP3: `dr_mp3` (currently no streaming)
-- [x] WAV: `dr_wav` (currently no streaming)
+- [x] ogg: [stb_vorbis](https://github.com/nothings/stb)
+- [x] mp3: [dr_mp3](https://github.com/mackron/dr_libs)
+- [x] wav: [dr_wav](https://github.com/mackron/dr_libs)
 
 ### Example
 ```cpp

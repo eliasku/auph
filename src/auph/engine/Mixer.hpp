@@ -25,7 +25,7 @@ void clip(float* dest, uint32_t size) {
 }
 
 template<bool Interpolate, unsigned Channels, typename S, unsigned Divisor>
-static inline void mixSamples(MixSample* mix,
+static inline MixSample* mixSamples(MixSample* mix,
                               const double begin,
                               const double end,
                               const double advance,
@@ -66,6 +66,7 @@ static inline void mixSamples(MixSample* mix,
         ++mix;
         p += advance;
     }
+    return mix;
 }
 
 SourceReader selectSourceReader(SampleFormat format, uint32_t channels, bool interpolate) {
@@ -107,6 +108,7 @@ void renderVoices(VoiceObj* voices, BusObj* busline, uint32_t voicesCount, MixSa
     for (uint32_t voiceIndex = 0; voiceIndex < voicesCount; ++voiceIndex) {
         auto& voice = voices[voiceIndex];
         if (voice.state & Flag_Running) {
+            auto* currentDest = dest;
             const float busGain = busline[voice.bus.id & iMask].get() * masterGain;
 
             auto p = voice.position;
@@ -127,10 +129,11 @@ void renderVoices(VoiceObj* voices, BusObj* busline, uint32_t voicesCount, MixSa
             const float pan = voice.panF32();
             const MixSample volume{gain * (1.0f - pan),
                                    gain * (1.0f + pan)};
-            voice.data->reader(dest, p, playTo, pitch, voice.data, volume);
+            currentDest = voice.data->reader(currentDest, p, playTo, pitch, voice.data, volume);
             if (playNext > 0.0) {
                 voice.position = playNext;
-                voice.data->reader(dest, 0.0, playNext, pitch, voice.data, volume);
+                voice.data->reader(currentDest, 0.0, playNext, pitch, voice.data, volume);
+//                voice.position = 0;
             }
 
             if (!(voice.state & Flag_Running)) {
