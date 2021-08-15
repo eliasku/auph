@@ -15,7 +15,7 @@ double usin(double x) {
 void onFrame(double time) {
     if (auph::get(music.id, auph::Param_State) & auph::Flag_Loaded) {
         if (!auph::isActive(musicVoice.id)) {
-            musicVoice = auph::play(music, 1.0f, 0.0f, 0.2f, true);
+            musicVoice = auph::play(music, 1.0f, 0.0f, 1.0f, true);
         }
 
         const double t = time / 3.0;
@@ -24,7 +24,7 @@ void onFrame(double time) {
         static double nextClapTime = 0.0;
         if (time >= nextClapTime) {
             nextClapTime = time + 0.720 / 4.0;
-            //auph::play(clap, (float) (1.0 - usin(t)));
+            auph::play(clap, (float) (1.0 - usin(t)));
         }
     }
 }
@@ -45,9 +45,21 @@ int main() {
 
     auph::init();
     auph::resume();
-    music = auph::load("../../assets/mp3/Kalimba.mp3", auph::Flag_Stream);
+    //music = auph::load("../../assets/wav/KickDrum.wav", 0);
+    //music = auph::load("../../assets/wav/KickDrum.wav", auph::Flag_Stream);
+
+    //music = auph::load("../../assets/mp3/CLAP.mp3", auph::Flag_Stream);
+    //music = auph::load("../../assets/mp3/CLAP.mp3", 0);
+
+    //music = auph::load("../../assets/mp3/FUNKY_HOUSE.mp3", auph::Flag_Stream);
+    //music = auph::load("../../assets/mp3/FUNKY_HOUSE.mp3", 0);
+
+    music = auph::load("../../assets/mp3/examples_beat.mp3", auph::Flag_Stream);
+    //music = auph::load("../../assets/mp3/examples_beat.mp3", 0);
+
+    //music = auph::load("../../assets/mp3/Kalimba.mp3", auph::Flag_Stream);
     //music = auph::load("../../assets/ogg/sample2.ogg", 0);
-//    music = auph::load("../../assets/ogg/sample2.ogg", auph::Flag_Stream);
+    //music = auph::load("../../assets/ogg/sample2.ogg", auph::Flag_Stream);
     clap = auph::load("../../assets/mp3/CLAP.mp3", 0);
 
 #if defined(__EMSCRIPTEN__)

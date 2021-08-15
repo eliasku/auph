@@ -16,7 +16,7 @@ bool loadFileMp3(const char* filepath, BufferDataSource* dest) {
         dest->sampleRate = config.sampleRate;
         dest->channels = config.channels;
         dest->length = totalFrames;
-        dest->reader = selectSourceReader(dest->format, dest->channels, true);
+        dest->reader = selectSourceReader(dest->format, dest->channels, false);
         return true;
     }
     return false;
@@ -25,22 +25,27 @@ bool loadFileMp3(const char* filepath, BufferDataSource* dest) {
 
 struct StreamMp3 {
     drmp3 f{};
+    uint64_t cursor = 0;
     SourceReader parentReader = nullptr;
     float prev[2]{};
 };
 
-static void readStreamMp3(MixSample* mix,
-                          const double begin,
-                          const double end,
-                          const double advance,
-                          const BufferDataSource* dataSource,
-                          MixSample volume) {
+static MixSample* readStreamMp3(MixSample* mix,
+                                const double begin,
+                                const double end,
+                                const double advance,
+                                const BufferDataSource* dataSource,
+                                MixSample volume) {
     auto* stream = (StreamMp3*) dataSource->streamData;
     const auto channels = dataSource->channels;
     static const int BufferFloatsMax = 2048 * 10;
     float buffer[BufferFloatsMax];
     dataSource->data.buffer = buffer;
 
+    if (stream->cursor != (uint64_t) ceil(begin)) {
+        stream->cursor = (uint64_t) ceil(begin);
+        drmp3_seek_to_pcm_frame(&stream->f, stream->cursor);
+    }
     auto p = begin;
     auto newFrames = (int) end - (int) p;
     const auto startOffset = (int) p;
@@ -54,13 +59,14 @@ static void readStreamMp3(MixSample* mix,
     if (framesReady > 0) {
         stream->prev[0] = buffer[framesReady * channels - 2];
         stream->prev[1] = buffer[framesReady * channels - 1];
-        stream->parentReader(mix, p - startOffset, end - startOffset, advance, dataSource, volume);
+        mix = stream->parentReader(mix, p - startOffset, end - startOffset, advance, dataSource, volume);
     }
     dataSource->data.buffer = nullptr;
+    stream->cursor = (uint64_t) ceil(end);
+    return mix;
 }
 
 bool openStreamMp3(const char* filepath, BufferDataSource* dest) {
-    drmp3_config config{};
     drmp3 file{};
     bool ok = drmp3_init_file(&file, filepath, nullptr);
     if (!ok) {

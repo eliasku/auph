@@ -22,8 +22,10 @@ struct BufferDataSource;
 /**
  * stream reader function
  * reads num of frames and return number of read frames
+ *
+ * returns next dest pointer
  */
-typedef void (* SourceReader)(MixSample*, const double, const double, const double, const BufferDataSource*,
+typedef MixSample* (* SourceReader)(MixSample*, const double, const double, const double, const BufferDataSource*,
         MixSample volume);
 
 struct BufferDataSource {

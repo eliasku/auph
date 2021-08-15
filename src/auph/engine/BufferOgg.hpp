@@ -6,11 +6,12 @@ namespace auph {
 
 struct StreamOgg {
     stb_vorbis* f = nullptr;
+    uint64_t cursor = 0;
     SourceReader parentReader = nullptr;
     float prev[2]{};
 };
 
-static void readStreamOgg(MixSample* mix,
+static MixSample* readStreamOgg(MixSample* mix,
                             const double begin,
                             const double end,
                             const double advance,
@@ -21,6 +22,11 @@ static void readStreamOgg(MixSample* mix,
     static const int BufferFloatsMax = 2048 * 10;
     float buffer[BufferFloatsMax];
     dataSource->data.buffer = buffer;
+
+    if (stream->cursor != (uint64_t) ceil(begin)) {
+        stream->cursor = (uint64_t) ceil(begin);
+        stb_vorbis_seek_frame(stream->f, stream->cursor);
+    }
 
     auto p = begin;
     auto newFrames = (int) end - (int) p;
@@ -38,9 +44,11 @@ static void readStreamOgg(MixSample* mix,
     if (framesReady > 0) {
         stream->prev[0] = buffer[framesReady * channels - 2];
         stream->prev[1] = buffer[framesReady * channels - 1];
-        stream->parentReader(mix, p - startOffset, end - startOffset, advance, dataSource, volume);
+        mix = stream->parentReader(mix, p - startOffset, end - startOffset, advance, dataSource, volume);
     }
     dataSource->data.buffer = nullptr;
+    stream->cursor = (uint64_t) ceil(end);
+    return mix;
 }
 
 bool openStreamOgg(const char* filepath, BufferDataSource* dest) {
