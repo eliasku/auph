@@ -2,6 +2,8 @@
 
 #include "Buffer.hpp"
 
+#include <cmath>
+
 #ifdef AUPH_WAV
 #include "BufferWav.hpp"
 #endif
