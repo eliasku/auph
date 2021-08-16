@@ -6,11 +6,16 @@ let streamVoice = 0;
 let bufferSource = 0;
 let bufferVoice = 0;
 
+let shortStreamBuffer = 0;
+let shortStreamVoice = 0;
+
 function clearState() {
     streamSource = 0;
     streamVoice = 0;
     bufferSource = 0;
     bufferVoice = 0;
+    shortStreamBuffer = 0;
+    shortStreamVoice = 0;
 }
 
 function $(selector) {
@@ -70,9 +75,53 @@ $("#pitch").addEventListener("input", (ev) => {
     auph.setRate(streamVoice, ev.target.value);
 });
 
+/** Short stream looping **/
+
+$("#load-short-stream").addEventListener("click", () => {
+    if (!auph.isActive(shortStreamBuffer)) {
+        $("#load-short-stream").setAttribute("disabled", "disabled");
+        fetch(new Request("assets/mp3/examples_beat.mp3")).then((a) => {
+            return a.arrayBuffer();
+        }).then((arrayBuffer) => {
+            shortStreamBuffer = auph.loadMemory(new Uint8Array(arrayBuffer), auph.STREAM);
+            $("#load-short-stream").removeAttribute("disabled");
+        });
+    }
+});
+
+$("#play-short-stream").addEventListener("click", (ev) => {
+    if (auph.isActive(shortStreamVoice)) {
+        const paused = !auph.getPause(shortStreamVoice);
+        auph.setPause(shortStreamVoice, paused);
+        ev.target.innerText = paused ? "Resume" : "Pause";
+    } else {
+        shortStreamVoice = auph.play(shortStreamBuffer, 1, 0, 1, $("#loop-short-stream").checked);
+    }
+});
+
+$("#stop-short-stream").addEventListener("click", () => {
+    auph.stop(shortStreamVoice);
+    shortStreamVoice = 0;
+    $("#play-short-stream").innerText = "Play";
+});
+
+$("#loop-short-stream").addEventListener("input", (ev) => {
+    if (auph.isActive(shortStreamVoice)) {
+        auph.setLoop(shortStreamVoice, ev.target.checked);
+    }
+});
+
+/** short static audio buffer **/
+
 $("#load-buffer").addEventListener("click", () => {
     if (!auph.isActive(bufferSource)) {
-        bufferSource = auph.load("assets/mp3/FUNKY_HOUSE.mp3", 0);
+        $("#load-buffer").setAttribute("disabled", "disabled");
+        fetch(new Request("assets/mp3/FUNKY_HOUSE.mp3")).then((a) => {
+            return a.arrayBuffer();
+        }).then((arrayBuffer) => {
+            bufferSource = auph.loadMemory(new Uint8Array(arrayBuffer), 0);
+            $("#load-buffer").removeAttribute("disabled");
+        });
     }
 });
 

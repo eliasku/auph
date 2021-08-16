@@ -5,6 +5,7 @@ export declare const shutdown: () => void;
 export declare const set: (name: number, param: number, value: number) => void;
 export declare const get: (name: number, param: number) => number;
 export declare const load: (filepath: string, flags: number) => number;
+export declare const loadMemory: (data: Uint8Array, flags: number) => number;
 export declare const unload: (name: number) => void;
 export declare const stop: (name: number) => void;
 export declare function pause(name?: AuphMixer | AuphVoice | AuphBuffer | AuphBus): void;
