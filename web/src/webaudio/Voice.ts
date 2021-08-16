@@ -17,18 +17,18 @@ export class VoiceObj implements Obj {
 
     stream: StreamPlayer | null = null;
 
-    // buffer playback
+    // static buffer playback
     _started = false;
     buffer: AudioBufferSourceNode | null = null;
 
     // common nodes
     target: AudioNode | null = null;
 
-    _e = (e: Event) => {
-        // maybe check is useless
-        if (this.buffer === e.target) {
+    _e = () => {
+        // maybe check is useful
+        //if (this.buffer === e.target || (this.stream && this.stream.el === e.target)) {
             _voiceStop(this);
-        }
+        //}
     }
 
     constructor(readonly gain: GainNode,

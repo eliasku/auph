@@ -6,7 +6,8 @@ declare const auwa: IAuph;
 
 function loadDriver(): IAuph {
     if (typeof process !== "undefined") {
-        return require("auph/nodejs/index.js");
+        //return require(__dirname + "/../../../nodejs/index");
+        return require("bindings")("auph");
     } else if (typeof auwa !== "undefined") {
         return auwa;
     } else if (typeof AudioContext !== "undefined") {
@@ -25,6 +26,7 @@ export const shutdown = _.shutdown;
 export const set = _.set;
 export const get = _.get;
 export const load = _.load;
+export const loadMemory = _.loadMemory;
 export const unload = _.unload;
 export const stop = _.stop;
 

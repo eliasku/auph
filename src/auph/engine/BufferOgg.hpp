@@ -8,15 +8,15 @@ struct StreamOgg {
     stb_vorbis* f = nullptr;
     uint64_t cursor = 0;
     SourceReader parentReader = nullptr;
-    float prev[2]{};
+    float prev[10]{};
 };
 
 static MixSample* readStreamOgg(MixSample* mix,
-                            const double begin,
-                            const double end,
-                            const double advance,
-                            const BufferDataSource* dataSource,
-                            MixSample volume) {
+                                const double begin,
+                                const double end,
+                                const double advance,
+                                const BufferDataSource* dataSource,
+                                MixSample volume) {
     auto* stream = (StreamOgg*) dataSource->streamData;
     const auto channels = dataSource->channels;
     static const int BufferFloatsMax = 2048 * 10;
@@ -33,8 +33,8 @@ static MixSample* readStreamOgg(MixSample* mix,
     const auto startOffset = (int) p;
     buffer[0] = stream->prev[0];
     buffer[1] = stream->prev[1];
-    if (newFrames > BufferFloatsMax / channels - 1) {
-        newFrames = BufferFloatsMax / channels - 1;
+    for (int ch = 0; ch < channels; ++ch) {
+        buffer[ch] = stream->prev[ch];
     }
     const auto framesReady = newFrames > 0 ?
                              stb_vorbis_get_samples_float_interleaved(stream->f,
@@ -42,8 +42,9 @@ static MixSample* readStreamOgg(MixSample* mix,
                                                                       buffer + channels,
                                                                       newFrames * channels) : 0;
     if (framesReady > 0) {
-        stream->prev[0] = buffer[framesReady * channels - 2];
-        stream->prev[1] = buffer[framesReady * channels - 1];
+        for (int ch = 0; ch < channels; ++ch) {
+            stream->prev[ch] = buffer[framesReady * channels + ch];
+        }
         mix = stream->parentReader(mix, p - startOffset, end - startOffset, advance, dataSource, volume);
     }
     dataSource->data.buffer = nullptr;
@@ -51,13 +52,7 @@ static MixSample* readStreamOgg(MixSample* mix,
     return mix;
 }
 
-bool openStreamOgg(const char* filepath, BufferDataSource* dest) {
-    int error = 0;
-    auto* ogg = stb_vorbis_open_filename(filepath, &error, nullptr);
-    if (error != 0 || ogg == nullptr) {
-        stb_vorbis_close(ogg);
-        return false;
-    }
+bool loadOgg(stb_vorbis* ogg, BufferDataSource* dest, bool streaming) {
     auto frames = stb_vorbis_stream_length_in_samples(ogg);
     auto info = stb_vorbis_get_info(ogg);
 
@@ -66,36 +61,45 @@ bool openStreamOgg(const char* filepath, BufferDataSource* dest) {
     dest->sampleRate = info.sample_rate;
     dest->length = frames;
 
-    auto* streamData = (StreamOgg*) malloc(sizeof(StreamOgg));
-    dest->streamData = streamData;
-    streamData->f = ogg;
-    streamData->parentReader = selectSourceReader(dest->format, dest->channels, false);
-    dest->reader = readStreamOgg;
+    if (streaming) {
+        auto* streamData = (StreamOgg*) malloc(sizeof(StreamOgg));
+        memset(streamData, 0, sizeof(StreamOgg));
+        dest->streamData = streamData;
+        streamData->f = ogg;
+        streamData->parentReader = selectSourceReader(dest->format, dest->channels, false);
+        dest->reader = readStreamOgg;
+    } else {
+        int samples = (int) (info.channels * frames);
+        auto* data = (float*) malloc(4 * info.channels * frames);
+
+        const auto numFrames = stb_vorbis_get_samples_float_interleaved(ogg, info.channels, data, samples);
+        stb_vorbis_close(ogg);
+
+        dest->data.f32 = data;
+        dest->length = numFrames;
+        dest->reader = selectSourceReader(dest->format, dest->channels, false);
+    }
     return true;
 }
 
-bool loadFileOgg(const char* filepath, BufferDataSource* dest) {
+bool loadFileOgg(const char* filepath, BufferDataSource* dest, bool streaming) {
     int error = 0;
     auto* ogg = stb_vorbis_open_filename(filepath, &error, nullptr);
     if (error != 0 || ogg == nullptr) {
         stb_vorbis_close(ogg);
         return false;
     }
-    auto frames = stb_vorbis_stream_length_in_samples(ogg);
-    auto info = stb_vorbis_get_info(ogg);
-    int samples = (int) (info.channels * frames);
-    auto* data = (float*) malloc(4 * info.channels * frames);
+    return loadOgg(ogg, dest, streaming);
+}
 
-    const auto numFrames = stb_vorbis_get_samples_float_interleaved(ogg, info.channels, data, samples);
-    stb_vorbis_close(ogg);
-
-    dest->data.f32 = data;
-    dest->format = SampleFormat_F32;
-    dest->channels = info.channels;
-    dest->sampleRate = info.sample_rate;
-    dest->length = numFrames;
-    dest->reader = selectSourceReader(dest->format, dest->channels, false);
-    return true;
+bool loadMemoryOgg(const void* data, uint32_t size, BufferDataSource* dest, bool streaming) {
+    int error = 0;
+    auto* ogg = stb_vorbis_open_memory((const uint8_t*) data, (int) size, &error, nullptr);
+    if (error != 0 || ogg == nullptr) {
+        stb_vorbis_close(ogg);
+        return false;
+    }
+    return loadOgg(ogg, dest, streaming);
 }
 
 }

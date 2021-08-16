@@ -63,7 +63,10 @@ enum Flag : int {
 
     // Buffer Flags
     Flag_Loaded = 2,
-    Flag_Stream = 4
+    Flag_Stream = 4,
+
+    // Copy Flag for buffer
+    Flag_Copy = 8
 };
 
 /** common utilities **/

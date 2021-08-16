@@ -16,6 +16,8 @@ export interface IAuph {
 
     load(filepath: string, flags: u31): AuphBuffer;
 
+    loadMemory(data:Uint8Array, flags: u31): AuphBuffer;
+
     unload(name: Name): void;
 
     stop(name: Name): void;

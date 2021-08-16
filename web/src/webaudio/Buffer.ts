@@ -58,6 +58,26 @@ function _fetchURL<T>(filepath: string, cb: (response: Response) => Promise<T>):
     return fetch(new Request(filepath)).then(cb);
 }
 
+export function _bufferMemory(obj: BufferObj, data: Uint8Array, flags: u31) {
+    obj.s |= Flag.Active;
+    const buffer = data.buffer.slice(data.byteOffset, data.byteLength);
+    if (flags & Flag.Stream) {
+        obj.s |= Flag.Stream;
+        obj.data = URL.createObjectURL(new Blob([buffer]));
+        obj.s |= Flag.Loaded;
+    } else {
+        const ctx = getContext();
+        if (ctx) {
+            ctx.decodeAudioData(buffer).then((audioBuffer) => {
+                obj.data = audioBuffer;
+                obj.s |= Flag.Loaded;
+            }).catch((reason) => {
+                error("Error decode audio buffer", reason);
+            });
+        }
+    }
+}
+
 export function _bufferLoad(obj: BufferObj, filepath: string, flags: u31) {
     obj.s |= Flag.Active;
     if (flags & Flag.Stream) {
@@ -84,7 +104,7 @@ export function _bufferLoad(obj: BufferObj, filepath: string, flags: u31) {
                 obj.s |= Flag.Loaded;
             }
         }).catch((reason) => {
-            error("can't load audio buffer from " + filepath, reason);
+            error("Error decoding audio buffer", reason);
         });
     }
 }

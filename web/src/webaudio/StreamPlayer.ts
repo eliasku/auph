@@ -25,6 +25,7 @@ export function StreamPlayer_isFree(player: StreamPlayer): boolean {
 export function StreamPlayer_stop(player: StreamPlayer): void {
     const el = player.el;
     if (el.src !== emptyWaveData) {
+        el.onended = null;
         el.pause();
         el.src = emptyWaveData;
         el.currentTime = 0;

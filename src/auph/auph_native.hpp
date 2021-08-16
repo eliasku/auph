@@ -68,6 +68,17 @@ struct Context {
         return 0;
     }
 
+    int getNextBuffer() const {
+        for (int i = 1; i < BuffersMaxCount; ++i) {
+            const auto* obj = buffers + i;
+            // data slot is free
+            if (!obj->state) {
+                return obj->id;
+            }
+        }
+        return 0;
+    }
+
     BusObj* getBusObj(int name) {
         const auto index = name & iMask;
         if (index >= 0 && index < 4) {
@@ -257,7 +268,7 @@ int get(int name, int param) {
                 case Param_State:
                     return obj->state;
                 case Param_Duration:
-                    return (int)obj->data.length;
+                    return (int) obj->data.length;
                 default:
                     //warn("param not supported");
                     break;
@@ -269,13 +280,23 @@ int get(int name, int param) {
 }
 
 Buffer load(const char* filepath, int flags) {
-    for (uint32_t i = 1; i < BuffersMaxCount; ++i) {
-        auto* src = &ctx->buffers[i];
-        // data slot is free
-        if (src->state == 0) {
-            // data slot is loading
-            if (src->load(filepath, flags & Flag_Stream)) {
-                return {src->id};
+    auto id = ctx->getNextBuffer();
+    if (id) {
+        auto* buf = ctx->getBufferObj(id);
+        if (buf && buf->load(filepath, flags)) {
+            return {id};
+        }
+    }
+    return {0};
+}
+
+Buffer loadMemory(const void* data, int size, int flags) {
+    if (data && size > 4) {
+        auto id = ctx->getNextBuffer();
+        if (id) {
+            auto* buf = ctx->getBufferObj(id);
+            if (buf && buf->loadFromMemory(data, (uint32_t) size, flags)) {
+                return {id};
             }
         }
     }

@@ -13,8 +13,13 @@ void shutdown() {
     EM_ASM(auph.shutdown());
 }
 
-Buffer load(const char* filepath, uint32_t flags) {
+Buffer load(const char* filepath, int flags) {
     int r = EM_ASM_INT(return auph.load(UTF8ToString($0), $1), filepath, flags);
+    return {r};
+}
+
+Buffer loadMemory(const void* data, int size, int flags) {
+    int r = EM_ASM_INT(return auph.loadMemory(HEAPU8.subarray($0, $1), $2), data, size, flags);
     return {r};
 }
 
@@ -43,11 +48,6 @@ void set(int name, int param, int value) {
 int get(int name, int param) {
     int r = EM_ASM_INT(return auph.get($0, $1), name, param);
     return r;
-}
-
-// private
-void* _getAudioContext() {
-    return nullptr;
 }
 
 }

@@ -12,6 +12,8 @@ void shutdown();
 
 Buffer load(const char* filepath, int flags);
 
+Buffer loadMemory(const void* data, int size, int flags);
+
 void unload(Buffer buffer);
 
 Voice voice(Buffer buffer, int gain, int pan, int rate, int flags, Bus bus);
