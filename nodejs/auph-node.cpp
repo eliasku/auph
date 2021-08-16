@@ -35,10 +35,30 @@ Napi::Value load(const Napi::CallbackInfo& info) {
         return env.Null();
     }
 
-    const char* filepath = info[0].As<Napi::String>().Utf8Value().c_str();
+    auto filepath = info[0].As<Napi::String>().Utf8Value();
     int flags = _toSMI(info[1], 0);
-    auto data = auph::load(filepath, flags);
-    return Napi::Number::New(env, data.id);
+
+    auto buffer = auph::load(filepath.c_str(), flags);
+    return Napi::Number::New(env, buffer.id);
+}
+
+Napi::Value loadMemory(const Napi::CallbackInfo& info) {
+    Napi::Env env = info.Env();
+
+    if (info.Length() < 2) {
+        Napi::TypeError::New(env, "Wrong number of arguments").ThrowAsJavaScriptException();
+        return env.Null();
+    }
+
+    auto data = info[0].As<Napi::TypedArray>();
+    int flags = _toSMI(info[1], 0);
+
+    auto arrayBuffer = data.ArrayBuffer();
+    uint8_t* dataBuffer = (uint8_t*) arrayBuffer.Data() + data.ByteOffset();
+    int dataSize = (int) data.ByteLength();
+
+    auto buffer = auph::loadMemory(dataBuffer, dataSize, flags | auph::Flag_Copy);
+    return Napi::Number::New(env, buffer.id);
 }
 
 void unload(const Napi::CallbackInfo& info) {
@@ -97,6 +117,7 @@ Napi::Object exportAuph(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "init"), Napi::Function::New(env, init));
     exports.Set(Napi::String::New(env, "shutdown"), Napi::Function::New(env, shutdown));
     exports.Set(Napi::String::New(env, "load"), Napi::Function::New(env, load));
+    exports.Set(Napi::String::New(env, "loadMemory"), Napi::Function::New(env, loadMemory));
     exports.Set(Napi::String::New(env, "unload"), Napi::Function::New(env, unload));
     exports.Set(Napi::String::New(env, "voice"), Napi::Function::New(env, voice));
     exports.Set(Napi::String::New(env, "stop"), Napi::Function::New(env, stop));
@@ -107,4 +128,5 @@ Napi::Object exportAuph(Napi::Env env, Napi::Object exports) {
 
 }
 
-NODE_API_MODULE(auph, exportAuph)
+NODE_API_MODULE(auph, exportAuph
+)

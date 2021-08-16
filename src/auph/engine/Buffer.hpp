@@ -26,7 +26,7 @@ struct BufferDataSource;
  * returns next dest pointer
  */
 typedef MixSample* (* SourceReader)(MixSample*, const double, const double, const double, const BufferDataSource*,
-        MixSample volume);
+                                    MixSample volume);
 
 struct BufferDataSource {
     void* streamData = nullptr;
@@ -44,10 +44,13 @@ struct BufferObj {
     int id = 0;
     int state = 0;
     BufferDataSource data{};
+    void* sourceBufferData = nullptr;
 
     ~BufferObj();
 
     bool load(const char* filepath, int flags);
+
+    bool loadFromMemory(const void* data, uint32_t size, int flags);
 
     void unload();
 };

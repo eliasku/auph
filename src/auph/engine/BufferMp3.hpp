@@ -22,12 +22,27 @@ bool loadFileMp3(const char* filepath, BufferDataSource* dest) {
     return false;
 }
 
+bool loadMemoryMp3(const void* data, uint32_t size, BufferDataSource* dest) {
+    drmp3_config config{};
+    drmp3_uint64 totalFrames{};
+    int16_t* samples = drmp3_open_memory_and_read_pcm_frames_s16(data, (size_t) size, &config, &totalFrames, nullptr);
+    if (data != nullptr) {
+        dest->data.i16 = samples;
+        dest->format = SampleFormat_I16;
+        dest->sampleRate = config.sampleRate;
+        dest->channels = config.channels;
+        dest->length = totalFrames;
+        dest->reader = selectSourceReader(dest->format, dest->channels, false);
+        return true;
+    }
+    return false;
+}
 
 struct StreamMp3 {
     drmp3 f{};
     uint64_t cursor = 0;
     SourceReader parentReader = nullptr;
-    float prev[2]{};
+    float prev[10]{};
 };
 
 static MixSample* readStreamMp3(MixSample* mix,
@@ -46,19 +61,22 @@ static MixSample* readStreamMp3(MixSample* mix,
         stream->cursor = (uint64_t) ceil(begin);
         drmp3_seek_to_pcm_frame(&stream->f, stream->cursor);
     }
+
     auto p = begin;
     auto newFrames = (int) end - (int) p;
     const auto startOffset = (int) p;
-    buffer[0] = stream->prev[0];
-    buffer[1] = stream->prev[1];
+    for (int ch = 0; ch < channels; ++ch) {
+        buffer[ch] = stream->prev[ch];
+    }
     if (newFrames > BufferFloatsMax / channels - 1) {
         newFrames = BufferFloatsMax / channels - 1;
     }
     const auto framesReady = newFrames > 0 ? drmp3_read_pcm_frames_f32(&stream->f, newFrames, buffer + channels) : 0;
 
     if (framesReady > 0) {
-        stream->prev[0] = buffer[framesReady * channels - 2];
-        stream->prev[1] = buffer[framesReady * channels - 1];
+        for (int ch = 0; ch < channels; ++ch) {
+            stream->prev[ch] = buffer[framesReady * channels + ch];
+        }
         mix = stream->parentReader(mix, p - startOffset, end - startOffset, advance, dataSource, volume);
     }
     dataSource->data.buffer = nullptr;
@@ -66,23 +84,36 @@ static MixSample* readStreamMp3(MixSample* mix,
     return mix;
 }
 
-bool openStreamMp3(const char* filepath, BufferDataSource* dest) {
-    drmp3 file{};
-    bool ok = drmp3_init_file(&file, filepath, nullptr);
-    if (!ok) {
-        return false;
-    }
+bool openStreamMp3(StreamMp3* stream, BufferDataSource* dest) {
     dest->format = SampleFormat_F32;
-    dest->channels = file.channels;
-    dest->sampleRate = file.sampleRate;
-    dest->length = drmp3_get_pcm_frame_count(&file);
+    dest->channels = stream->f.channels;
+    dest->sampleRate = stream->f.sampleRate;
+    dest->length = drmp3_get_pcm_frame_count(&stream->f);
 
-    auto* streamData = (StreamMp3*) malloc(sizeof(StreamMp3));
-    dest->streamData = streamData;
-    streamData->f = file;
-    streamData->parentReader = selectSourceReader(dest->format, dest->channels, false);
+    dest->streamData = stream;
+    stream->parentReader = selectSourceReader(dest->format, dest->channels, false);
     dest->reader = readStreamMp3;
     return true;
+}
+
+bool openFileStreamMp3(const char* filepath, BufferDataSource* dest) {
+    auto* stream = new StreamMp3();
+    bool ok = drmp3_init_file(&stream->f, filepath, nullptr);
+    if (!ok) {
+        delete stream;
+        return false;
+    }
+    return openStreamMp3(stream, dest);
+}
+
+bool openMemoryStreamMp3(const void* data, uint32_t size, BufferDataSource* dest) {
+    auto* stream = new StreamMp3();
+    bool ok = drmp3_init_memory(&stream->f, data, (size_t) size, nullptr);
+    if (!ok) {
+        delete stream;
+        return false;
+    }
+    return openStreamMp3(stream, dest);
 }
 
 }

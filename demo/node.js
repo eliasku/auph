@@ -1,15 +1,27 @@
-const auph = require("auph");
+//const auph = require("auph");
+const auph = require("..");
+const fs = require("fs");
+const path = require("path");
 
 // initialize mixer and run
 auph.init();
 auph.resume();
 
 // load clap sound
-const clap = auph.load("../tester/assets/mp3/CLAP.mp3", 0);
+const clap = auph.load(path.resolve(__dirname, "assets/mp3/CLAP.mp3"), 0);
 console.info(clap);
 
 // load music stream
-const music = auph.load("../tester/assets/mp3/Kalimba.mp3", auph.STREAM);
+
+const buf = fs.readFileSync(path.resolve(__dirname, "assets/mp3/FUNKY_HOUSE.mp3"));
+// const buf = fs.readFileSync(path.resolve(__dirname, "assets/mp3/Kalimba.mp3"));
+console.info(buf.byteLength);
+const music = auph.loadMemory(buf, auph.STREAM);
+//const music = auph.loadMemory(fs.readFileSync(path.resolve(__dirname, "assets/mp3/FUNKY_HOUSE.mp3")), 0);
+
+//const music = auph.load(path.resolve(__dirname, "assets/mp3/FUNKY_HOUSE.mp3"), auph.STREAM);
+//const music = auph.load(path.resolve(__dirname, "assets/mp3/Kalimba.mp3"), auph.STREAM);
+//const music = auph.load(path.resolve(__dirname, "assets/ogg/sample1.ogg"), auph.STREAM);
 console.info(music);
 
 const musicVoice = auph.play(music);

@@ -38,7 +38,7 @@ import {
     u31,
     Unit
 } from "../protocol/interface";
-import {_bufferDestroy, _bufferLoad, _getBufferObj, buffers, getNextBufferObj} from "./Buffer";
+import {_bufferDestroy, _bufferLoad, _bufferMemory, _getBufferObj, buffers, getNextBufferObj} from "./Buffer";
 
 export function init(): void {
     const ctx = initContext();
@@ -63,6 +63,15 @@ export function load(filepath: string, flags: u31): AuphBuffer {
     if (handle) {
         const obj = buffers[handle & iMask]!;
         _bufferLoad(obj, filepath, flags);
+    }
+    return handle;
+}
+
+export function loadMemory(data: Uint8Array, flags: u31): AuphBuffer {
+    let handle = getNextBufferObj();
+    if (handle) {
+        const obj = buffers[handle & iMask]!;
+        _bufferMemory(obj, data, flags);
     }
     return handle;
 }
@@ -142,6 +151,7 @@ export function voice(buffer: AuphBuffer,
         voiceObj.stream = mes;
         mes.el.loop = !!(flags & Flag.Loop);
         mes.node.connect(voiceObj.pan);
+        mes.el.onended = voiceObj._e;
         if (flags & Flag.Running) {
             _streamPlayerResume(mes);
         }

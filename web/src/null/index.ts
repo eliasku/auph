@@ -10,6 +10,10 @@ export function load(filepath: string, flags: u31): AuphBuffer {
     return 0;
 }
 
+export function loadMemory(data: Uint8Array, flags: u31): AuphBuffer {
+    return 0;
+}
+
 export function unload(name: Name): void {
 }
 

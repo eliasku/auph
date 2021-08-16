@@ -19,12 +19,12 @@ void onFrame(double time) {
         }
 
         const double t = time / 3.0;
-        auph::setRate(musicVoice, (float) (0.25 + usin(t)));
+        //auph::setRate(musicVoice, (float) (0.25 + usin(t)));
 
         static double nextClapTime = 0.0;
         if (time >= nextClapTime) {
             nextClapTime = time + 0.720 / 4.0;
-            auph::play(clap, (float) (1.0 - usin(t)));
+            //auph::play(clap, (float) (1.0 - usin(t)));
         }
     }
 }
@@ -40,6 +40,34 @@ EM_BOOL raf(double time, void* userData) {
 
 #endif
 
+struct Buf {
+    void* buffer = nullptr;
+    size_t size = 0;
+};
+
+Buf readFile(const char* filepath) {
+    auto f = fopen(filepath, "r");
+    Buf buf{};
+    if (f) {
+        fpos_t size = 0;
+        fseek(f, 0, SEEK_END);
+        fgetpos(f, &size);
+        fseek(f, 0, SEEK_SET);
+        if (size > 0) {
+            void* buffer = malloc(size);
+            const size_t read = fread(buffer, 1, size, f);
+            if (size == read) {
+                buf.buffer = buffer;
+                buf.size = size;
+            } else {
+                free(buffer);
+            }
+        }
+        fclose(f);
+    }
+    return buf;
+}
+
 int main() {
     printf("AUPH!\nAUPH!\n\n\n");
 
@@ -54,13 +82,24 @@ int main() {
     //music = auph::load("../../assets/mp3/FUNKY_HOUSE.mp3", auph::Flag_Stream);
     //music = auph::load("../../assets/mp3/FUNKY_HOUSE.mp3", 0);
 
-    music = auph::load("../../assets/mp3/examples_beat.mp3", auph::Flag_Stream);
+    //auto beatsData = readFile("../../assets/wav/KickDrum.wav");
+    //auto beatsData = readFile("../../assets/mp3/examples_beat.mp3");
+    //auto beatsData = readFile("../../assets/ogg/examples_beat.ogg");
+    //auto beatsData = readFile("../../assets/ogg/sample2.ogg");
+    //auto beatsData = readFile("../../assets/mp3/FUNKY_HOUSE.mp3");
+    auto beatsData = readFile("../../assets/mp3/Kalimba.mp3");
+    music = auph::loadMemory(beatsData.buffer, beatsData.size, auph::Flag_Stream);
+    //music = auph::loadMemory(beatsData.buffer, beatsData.size, 0);
+    printf("music buffer: %d\n", music.id);
+
+    //music = auph::load("../../assets/mp3/examples_beat.mp3", auph::Flag_Stream);
     //music = auph::load("../../assets/mp3/examples_beat.mp3", 0);
 
     //music = auph::load("../../assets/mp3/Kalimba.mp3", auph::Flag_Stream);
     //music = auph::load("../../assets/ogg/sample2.ogg", 0);
     //music = auph::load("../../assets/ogg/sample2.ogg", auph::Flag_Stream);
     clap = auph::load("../../assets/mp3/CLAP.mp3", 0);
+    printf("CLAP buffer: %d\n", clap.id);
 
 #if defined(__EMSCRIPTEN__)
     emscripten_request_animation_frame_loop(raf, nullptr);

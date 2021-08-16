@@ -24,11 +24,30 @@ bool loadFileWav(const char* filepath, BufferDataSource* dest) {
     return false;
 }
 
+bool loadMemoryWav(const void* data, uint32_t size, BufferDataSource* dest) {
+    drwav_uint64 totalFrameCount{};
+    unsigned int channels;
+    unsigned int sampleRate;
+    int16_t* samples = drwav_open_memory_and_read_pcm_frames_s16(data, (size_t) size, &channels, &sampleRate,
+                                                                 &totalFrameCount,
+                                                                 nullptr);
+    if (data != nullptr) {
+        dest->data.i16 = samples;
+        dest->format = SampleFormat_I16;
+        dest->sampleRate = sampleRate;
+        dest->channels = channels;
+        dest->length = totalFrameCount;
+        dest->reader = selectSourceReader(dest->format, dest->channels, false);
+        return true;
+    }
+    return false;
+}
+
 struct StreamWav {
     drwav f{};
     uint64_t cursor = 0;
     SourceReader parentReader = nullptr;
-    float prev[2]{};
+    float prev[10]{};
 };
 
 static MixSample* readStreamWav(MixSample* mix,
@@ -79,25 +98,37 @@ static MixSample* readStreamWav(MixSample* mix,
     return mix;
 }
 
-bool openStreamWav(const char* filepath, BufferDataSource* dest) {
-    drwav file{};
-    bool ok = drwav_init_file(&file, filepath, nullptr);
-    if (!ok) {
-        return false;
-    }
+bool openStreamWav(StreamWav* stream, BufferDataSource* dest) {
     dest->format = SampleFormat_F32;
-    dest->channels = file.channels;
-    dest->sampleRate = file.sampleRate;
-    dest->length = file.totalPCMFrameCount;
+    dest->channels = stream->f.channels;
+    dest->sampleRate = stream->f.sampleRate;
+    dest->length = stream->f.totalPCMFrameCount;
 
-    auto* streamData = (StreamWav*) malloc(sizeof(StreamWav));
-    dest->streamData = streamData;
-    streamData->f = file;
-    streamData->parentReader = selectSourceReader(dest->format, dest->channels, false);
+    dest->streamData = stream;
+    stream->parentReader = selectSourceReader(dest->format, dest->channels, false);
     dest->reader = readStreamWav;
     return true;
 }
 
+bool openFileStreamWav(const char* filepath, BufferDataSource* dest) {
+    auto* stream = new StreamWav();
+    bool ok = drwav_init_file(&stream->f, filepath, nullptr);
+    if (!ok) {
+        delete stream;
+        return false;
+    }
+    return openStreamWav(stream, dest);
+}
+
+bool openMemoryStreamWav(const void* data, uint32_t size, BufferDataSource* dest) {
+    auto* stream = new StreamWav();
+    bool ok = drwav_init_memory(&stream->f, data, (size_t) size, nullptr);
+    if (!ok) {
+        delete stream;
+        return false;
+    }
+    return openStreamWav(stream, dest);
+}
 
 }
 
