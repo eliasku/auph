@@ -37,7 +37,7 @@ module.exports = (ctx) => {
             }
         },
         web: {
-            js: [path.resolve(__dirname, "web/dist/browser/auph-strip.js")]
+            pre_js: [path.resolve(__dirname, "web/dist/emscripten")]
         },
         windows: {},
         linux: {}

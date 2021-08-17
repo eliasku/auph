@@ -6,7 +6,6 @@ constexpr int tMask = 0x30000000;
 constexpr int vMask = 0x00FFFF00;
 constexpr int vIncr = 0x00000100;
 constexpr int iMask = 0x000000FF;
-constexpr int hMixer = 0x00000001;
 
 constexpr int Unit = 1024;
 
@@ -22,20 +21,21 @@ struct Bus {
     int id;
 };
 
-constexpr Bus Bus_Master = {0};
-constexpr Bus Bus_Sound = {1};
-constexpr Bus Bus_Music = {2};
-constexpr Bus Bus_Speech = {3};
-
-constexpr Bus DefaultBus = Bus_Sound;
-
 /** Object Type **/
 enum Type : int {
-    Type_Reserved = 0,
+    Type_Mixer = 0,
     Type_Bus = 1 << 28,
     Type_Buffer = 2 << 28,
     Type_Voice = 3 << 28
 };
+
+constexpr Bus Bus_Master = {Type_Bus | 0};
+constexpr Bus Bus_Sound = {Type_Bus | 1};
+constexpr Bus Bus_Music = {Type_Bus | 2};
+constexpr Bus Bus_Speech = {Type_Bus | 3};
+
+constexpr Bus DefaultBus = Bus_Sound;
+constexpr int hMixer = Type_Mixer | 1;
 
 enum Param : int {
     Param_State = 0,

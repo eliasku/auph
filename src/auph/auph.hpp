@@ -14,7 +14,7 @@ inline Voice play(Buffer buffer,
                   float rate = 1.0f,
                   bool loop = false,
                   bool paused = false,
-                  Bus bus = {0}) {
+                  Bus bus = Bus_Sound) {
     int flags = 0;
     if (loop) flags |= Flag_Loop;
     if (!paused) flags |= Flag_Running;
@@ -49,19 +49,19 @@ inline void setRate(Voice voice, float rate) {
 }
 
 inline void setPause(int name, bool value) {
-    set(name, Param_Flags | Flag_Running, value ? 0 : 1);
+    set(name, (int)Param_Flags | Flag_Running, value ? 0 : 1);
 }
 
 inline void setLoop(Voice voice, bool value) {
-    set(voice.id, Param_Flags | Flag_Loop, value);
+    set(voice.id, (int)Param_Flags | Flag_Loop, value);
 }
 
 inline float getPan(Voice voice) {
-    return get(voice.id, Param_Pan) / (float) Unit - 1.0f;
+    return (float) get(voice.id, Param_Pan) / (float) Unit - 1.0f;
 }
 
 inline float getRate(Voice voice) {
-    return get(voice.id, Param_Rate) / Unit;
+    return (float) get(voice.id, Param_Rate) / Unit;
 }
 
 inline bool getPause(Voice voice) {

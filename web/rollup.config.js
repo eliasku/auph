@@ -14,7 +14,8 @@ export default [
     {
         input: "./web/dist/module/webaudio/index.js",
         output: {
-            file: "./web/dist/browser/auph-strip.js",
+            // support core api for emscripten implementation
+            file: "./web/dist/emscripten/auph.js",
             format: "iife",
             name: "auph",
             compact: true,
