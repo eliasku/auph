@@ -19,7 +19,7 @@ Buffer load(const char* filepath, int flags) {
 }
 
 Buffer loadMemory(const void* data, int size, int flags) {
-    int r = EM_ASM_INT(return auph.loadMemory(HEAPU8.slice($0, $0 + $1), $2), data, size, flags);
+    int r = EM_ASM_INT(return auph.loadMemory(HEAPU8.subarray($0, $0 + $1), $2), data, size, flags);
     return {r};
 }
 

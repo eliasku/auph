@@ -60,7 +60,7 @@ function _fetchURL<T>(filepath: string, cb: (response: Response) => Promise<T>):
 
 export function _bufferMemory(obj: BufferObj, data: Uint8Array, flags: u31) {
     obj.s |= Flag.Active;
-    const buffer = data.buffer.slice(data.byteOffset, data.byteLength);
+    const buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
     if (flags & Flag.Stream) {
         obj.s |= Flag.Stream;
         obj.data = URL.createObjectURL(new Blob([buffer]));
