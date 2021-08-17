@@ -87,14 +87,18 @@ int main() {
 
     //music = auph::load("../../assets/mp3/FUNKY_HOUSE.mp3", auph::Flag_Stream);
     //music = auph::load("../../assets/mp3/FUNKY_HOUSE.mp3", 0);
+//    music = auph::load("../../assets/mp3/Kalimba.mp3", auph::Flag_Stream);
 
     //auto beatsData = readFile("../../assets/wav/KickDrum.wav");
     //auto beatsData = readFile("../../assets/mp3/examples_beat.mp3");
     //auto beatsData = readFile("../../assets/ogg/examples_beat.ogg");
     //auto beatsData = readFile("../../assets/ogg/sample2.ogg");
     //auto beatsData = readFile("../../assets/mp3/FUNKY_HOUSE.mp3");
+
     auto beatsData = readFile("../../assets/mp3/Kalimba.mp3");
     music = auph::loadMemory(beatsData.buffer, beatsData.size, auph::Flag_Stream);
+
+
     //music = auph::loadMemory(beatsData.buffer, beatsData.size, 0);
     printf("music buffer: %d\n", music.id);
 

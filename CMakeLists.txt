@@ -7,18 +7,18 @@ option(AUPH_WAV "Auph WAV format support" ON)
 option(AUPH_MP3 "Auph MP3 format support" ON)
 option(AUPH_OGG "Auph OGG format support" ON)
 
-add_library(${PROJECT_NAME} STATIC src/auph-all.cpp)
+add_library(${PROJECT_NAME} STATIC auph-static.cpp)
 
 if(AUPH_WAV)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DAUPH_WAV)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC AUPH_WAV)
 endif()
 
 if(AUPH_MP3)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DAUPH_MP3)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC AUPH_MP3)
 endif()
 
 if(AUPH_OGG)
-    target_compile_definitions(${PROJECT_NAME} PUBLIC -DAUPH_OGG)
+    target_compile_definitions(${PROJECT_NAME} PUBLIC AUPH_OGG)
 endif()
 
 target_include_directories(${PROJECT_NAME}
@@ -42,7 +42,7 @@ endif ()
 
 if (EMSCRIPTEN)
     target_link_options(${PROJECT_NAME} PUBLIC
-            --js-library ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/browser/auph-strip.js
+            --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/emscripten/auph.js
             )
 endif ()
 
@@ -70,6 +70,6 @@ endif ()
 
 if (EMSCRIPTEN)
     target_link_options(${PROJECT_NAME} INTERFACE
-            --js-library ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/browser/auph-strip.js
+            --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/emscripten/auph.js
             )
 endif ()
