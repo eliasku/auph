@@ -4,3 +4,4 @@ pages/
 build/
 web/dist/
 cmake-build-*
+npm.cmake
