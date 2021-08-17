@@ -6,6 +6,8 @@
   "module": "web/dist/module/index.js",
   "types": "web/dist/types/index.d.ts",
   "scripts": {
+    "install": "node-gyp build || exit 0",
+    "postinstall": "npx npm-cmake || exit 0",
     "watch": "tsc -w -p web/tsconfig.json & rollup -w -c web/rollup.config.js",
     "build": "tsc -p web/tsconfig.json && rollup -c web/rollup.config.js",
     "build-cmake": "node scripts/build-cmake",
@@ -47,7 +49,8 @@
   },
   "dependencies": {
     "bindings": "^1.5.0",
-    "node-addon-api": "^4.0.0"
+    "node-addon-api": "^4.0.0",
+    "npm-cmake": "^0.1.0"
   },
   "gypfile": true,
   "engines": {

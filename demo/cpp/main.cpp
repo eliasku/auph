@@ -1,5 +1,11 @@
 #include <auph/auph.hpp>
 
+#define AUPH_WAV
+#define AUPH_OGG
+#define AUPH_MP3
+
+#include <auph/auph_impl.hpp>
+
 #include <cstdio>
 #include <cmath>
 #include <ctime>
@@ -19,12 +25,12 @@ void onFrame(double time) {
         }
 
         const double t = time / 3.0;
-        //auph::setRate(musicVoice, (float) (0.25 + usin(t)));
+        auph::setRate(musicVoice, (float) (0.25 + usin(t)));
 
         static double nextClapTime = 0.0;
         if (time >= nextClapTime) {
             nextClapTime = time + 0.720 / 4.0;
-            //auph::play(clap, (float) (1.0 - usin(t)));
+            auph::play(clap, (float) (1.0 - usin(t)));
         }
     }
 }
@@ -49,7 +55,7 @@ Buf readFile(const char* filepath) {
     auto f = fopen(filepath, "r");
     Buf buf{};
     if (f) {
-        fpos_t size = 0;
+        fpos_t size{};
         fseek(f, 0, SEEK_END);
         fgetpos(f, &size);
         fseek(f, 0, SEEK_SET);

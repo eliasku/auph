@@ -106,7 +106,7 @@ bool loadMemoryToBuffer(BufferDataSource* dataSource, const void* data, uint32_t
 #endif // AUPH_WAV
 
 #ifdef AUPH_MP3
-    if (fourCC == 0x49443303 /* ID3 */ || (fourCC & 0xFFE00000) == 0xFFE00000 /* 11-bit sync */) {
+    if ((fourCC & 0xFFFFFF00) == 'ID3\0' || (fourCC & 0xFFE00000) == 0xFFE00000 /* 11-bit sync */) {
         if (flags & Flag_Stream) {
             return openMemoryStreamMp3(data, size, dataSource);
         } else {
