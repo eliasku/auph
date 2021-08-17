@@ -1225,6 +1225,11 @@ normalize-package-data@^2.5.0:
     semver "2 || 3 || 4 || 5"
     validate-npm-package-license "^3.0.1"
 
+npm-cmake@^0.1.0:
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/npm-cmake/-/npm-cmake-0.1.0.tgz#f41d06a45514c8116ca9b509fece3d4c108c7d3d"
+  integrity sha512-5+KvNIcBoXN5uK0JCW8vURoNHSbapK4+QXLdzo8Eq8VCQyz8FVrboiEDuOZpE3gW9SnHrhhbUtQj3TWFKiZzfA==
+
 npm-run-path@^2.0.0:
   version "2.0.2"
   resolved "https://registry.yarnpkg.com/npm-run-path/-/npm-run-path-2.0.2.tgz#35a9232dfa35d7067b4cb2ddf2357b1871536c5f"
