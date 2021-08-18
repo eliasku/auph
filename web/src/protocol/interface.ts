@@ -16,7 +16,7 @@ export interface IAuph {
 
     load(filepath: string, flags: u31): AuphBuffer;
 
-    loadMemory(data:Uint8Array, flags: u31): AuphBuffer;
+    loadMemory(data: Uint8Array, flags: u31): AuphBuffer;
 
     unload(name: Name): void;
 
@@ -89,7 +89,33 @@ export const enum Flag {
     Stream = 4
 }
 
-export const enum Status {
-    // TODO: errors and warnings
+export const enum Message {
+    NotSupported,
+    InvalidState,
+
+    DeviceResuming,
+    DeviceResumed,
+    DeviceResumeError,
+
+    DevicePausing,
+    DevicePaused,
+    DevicePauseError,
+
+    DeviceClosing,
+    DeviceClosed,
+    DeviceCloseError,
+
+    Warning_NoFreeVoices,
+    // only for web, audio elements pool is limited
+    Warning_NoFreeStreamPlayers,
+    Warning_AlreadyInitialized,
+
+    BufferNotFound,
+    BufferIsNotLoaded,
+    BufferNoData,
+
+    UserInteractionRequiredToStart,
+
+    BusNotFound
 }
 

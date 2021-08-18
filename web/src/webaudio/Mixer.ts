@@ -1,17 +1,13 @@
 import {error, log, warn} from "./debug";
-import {Flag, u31} from "../protocol/interface";
+import {Flag, Message, u31} from "../protocol/interface";
 
 let ctx: AudioContext | null = null;
 const unlockEvents = ["mousedown", "pointerdown", "touchstart"];
 let unlocked = false;
 
 export function getContext(): AudioContext | null {
-    if (!ctx) {
-        warn("not initialized");
-        return null;
-    }
-    if (ctx.state === "closed") {
-        error("invalid state:", "Context is closed");
+    if (!ctx || ctx.state === "closed") {
+        warn(Message.InvalidState);
         return null;
     }
     return ctx;
@@ -33,25 +29,25 @@ export function getContextState(ctx: AudioContext): u31 {
 }
 
 export function audioContextResume(ctx: AudioContext) {
-    log("resuming...");
+    log(Message.DeviceResuming);
     ctx.resume().then(() => {
-        log("resumed");
+        log(Message.DeviceResumed);
     }).catch((reason) => {
         if (!unlocked) {
-            log("cannot resume until user interaction, setup unlock handler...");
+            log(Message.UserInteractionRequiredToStart);
             setupUnlockHandler();
         } else {
-            error("error resuming AudioContext", reason);
+            error(Message.DeviceResumeError, reason);
         }
     });
 }
 
 export function audioContextPause(ctx: AudioContext) {
-    log("AudioContext suspending...");
+    log(Message.DevicePausing);
     ctx.suspend().then(() => {
-        log("AudioContext suspended");
+        log(Message.DevicePaused);
     }).catch((reason) => {
-        error("error suspending AudioContext", reason);
+        error(Message.DevicePauseError, reason);
     });
 }
 
@@ -73,33 +69,42 @@ function setupUnlockHandler() {
     }
 }
 
+function newAudioContext(options?: AudioContextOptions): AudioContext | null {
+    try {
+        const scope: any = window;
+        const audioContext: any = scope.AudioContext || scope.webkitAudioContext;
+        //scope.AudioContext = audioContext;
+        return new audioContext({
+            latencyHint: "interactive",
+            sampleRate: 22050
+        });
+    } catch {
+        error(Message.NotSupported);
+    }
+    return null;
+}
+
 export function initContext(): AudioContext | null {
     if (ctx) {
-        warn("already initialized");
+        warn(Message.Warning_AlreadyInitialized);
         return ctx;
     }
-    ctx = new AudioContext({
+    ctx = newAudioContext({
         latencyHint: "interactive",
         sampleRate: 22050
     });
-    if (!ctx) {
-        error("error create AudioContext");
-        return null;
-    }
-    if (ctx.state === "running") {
+    if (ctx && ctx.state === "running") {
         audioContextPause(ctx);
     }
-    log("Latency: " + ctx.baseLatency);
-    log("Sample rate: " + ctx.sampleRate);
     return ctx;
 }
 
 export function closeContext(_notNullCtx: AudioContext) {
-    log("shutdown...");
+    log(Message.DeviceClosing);
     _notNullCtx.close().then(() => {
-        log("shutdown completed");
+        log(Message.DeviceClosed);
     }).catch((reason) => {
-        error("shutdown error", reason);
+        error(Message.DeviceCloseError, reason);
     });
     ctx = null;
 }
