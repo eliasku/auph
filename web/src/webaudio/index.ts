@@ -30,6 +30,7 @@ import {
     DefaultBus,
     Flag,
     iMask,
+    Message,
     Mixer,
     Name,
     Param,
@@ -111,25 +112,25 @@ export function voice(buffer: AuphBuffer,
     }
     const bufferObj = _getBufferObj(buffer);
     if (!bufferObj) {
-        warn("audio source not found");
+        warn(Message.BufferNotFound);
         return 0;
     }
     if (!(bufferObj.s & Flag.Loaded)) {
-        warn("audio source is not loaded yet");
+        warn(Message.BufferIsNotLoaded);
         return 0;
     }
     if (!bufferObj.data) {
-        warn("nothing to play, no audio data");
+        warn(Message.BufferNoData);
         return 0;
     }
     const targetNode = _getBusGain(bus ? bus : DefaultBus);
     if (!targetNode) {
-        warn("invalid target bus!");
+        warn(Message.BusNotFound);
         return 0;
     }
     const voice = createVoiceObj();
     if (voice === 0) {
-        log("no more free voices!");
+        log(Message.Warning_NoFreeVoices);
         return 0;
     }
     const voiceObj = _getVoiceObj(voice)!;
@@ -145,7 +146,7 @@ export function voice(buffer: AuphBuffer,
     if (bufferObj.s & Flag.Stream) {
         const mes = getNextStreamPlayer(bufferObj.data as string);
         if (!mes) {
-            log("no more free media stream elements!");
+            log(Message.Warning_NoFreeStreamPlayers);
             return 0;
         }
         voiceObj.stream = mes;
@@ -189,7 +190,7 @@ export function stop(name: Name): void {
                 }
             }
         } else {
-            warn("invalid buffer reference");
+            warn(Message.BufferNotFound);
         }
     }
 }
@@ -325,7 +326,7 @@ export function get(name: Name, param: u31): u31 {
                     return (d * Unit) | 0;
                 }
                 default:
-                    warn("not supported");
+                    warn(Message.NotSupported);
                     break;
             }
         }
@@ -339,7 +340,7 @@ export function get(name: Name, param: u31): u31 {
                 case Param.Gain:
                     return obj._gain;
                 default:
-                    warn("not supported");
+                    warn(Message.NotSupported);
                     break;
             }
         }
@@ -354,14 +355,14 @@ export function get(name: Name, param: u31): u31 {
                     let d = 0.0;
                     if (obj.s & Flag.Stream) {
                         // TODO: :(
-                        warn("not supported");
+                        warn(Message.NotSupported);
                     } else if (obj.data) {
                         d = (obj.data as AudioBuffer).duration;
                     }
                     return (d * Unit) | 0;
                 }
                 default:
-                    warn("param not supported");
+                    warn(Message.NotSupported);
                     break;
             }
         }

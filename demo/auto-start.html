@@ -10,15 +10,14 @@
 <script>
     auph.init();
     auph.resume();
+    // TODO:
     const data = auph.load("assets/mp3/CLAP.mp3", false);
 
-    document.querySelector("#start").onclick = () => {
-        setInterval(() => {
-            //for (let i = 0; i < 128; ++i) {
-            auph.play(data, 0.2, 0, 3, false, false, auph.BUS_SFX);
-            //}
-        }, 10);
-    };
+    setInterval(() => {
+        //for (let i = 0; i < 128; ++i) {
+        auph.play(data, 0.2, 0, 3, false, false, auph.BUS_SFX);
+        //}
+    }, 500);
 </script>
 </body>
 </html>
