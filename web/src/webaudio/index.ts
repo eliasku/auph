@@ -22,7 +22,7 @@ import {
     voicePool
 } from "./Voice";
 import {_getBus, _getBusGain, _setBusConnected, busLine, initBusPool, termBusPool} from "./Bus";
-import {error, log, warn} from "./debug";
+import {setError, warn} from "./debug";
 import {
     AuphBuffer,
     AuphBus,
@@ -102,35 +102,37 @@ export function voice(buffer: AuphBuffer,
                       bus: AuphBus): AuphVoice {
     // arguments check debug
     if (flags & ~(Flag.Running | Flag.Loop)) {
-        error("Bad flags");
+        setError(Message.InvalidArguments);
+        return 0;
     }
     ///
 
-    const ctx = getContext();
-    if (!ctx) {
+    const ctx = getAudioContextObject();
+    if (!ctx || ctx.state !== "running") {
+        setError(Message.InvalidMixerState, ctx?.state);
         return 0;
     }
     const bufferObj = _getBufferObj(buffer);
     if (!bufferObj) {
-        warn(Message.BufferNotFound);
+        setError(Message.BufferNotFound);
         return 0;
     }
     if (!(bufferObj.s & Flag.Loaded)) {
-        warn(Message.BufferIsNotLoaded);
+        setError(Message.BufferIsNotLoaded);
         return 0;
     }
     if (!bufferObj.data) {
-        warn(Message.BufferNoData);
+        setError(Message.BufferNoData);
         return 0;
     }
     const targetNode = _getBusGain(bus ? bus : DefaultBus);
     if (!targetNode) {
-        warn(Message.BusNotFound);
+        setError(Message.BusNotFound);
         return 0;
     }
-    const voice = createVoiceObj();
+    const voice = createVoiceObj(ctx);
     if (voice === 0) {
-        log(Message.Warning_NoFreeVoices);
+        setError(Message.Warning_NoFreeVoices);
         return 0;
     }
     const voiceObj = _getVoiceObj(voice)!;
@@ -144,9 +146,9 @@ export function voice(buffer: AuphBuffer,
     voiceObj.pan.pan.value = pan / Unit - 1;
 
     if (bufferObj.s & Flag.Stream) {
-        const mes = getNextStreamPlayer(bufferObj.data as string);
+        const mes = getNextStreamPlayer(ctx, bufferObj.data as string);
         if (!mes) {
-            log(Message.Warning_NoFreeStreamPlayers);
+            setError(Message.Warning_NoFreeStreamPlayers);
             return 0;
         }
         voiceObj.stream = mes;
@@ -190,7 +192,7 @@ export function stop(name: Name): void {
                 }
             }
         } else {
-            warn(Message.BufferNotFound);
+            setError(Message.BufferNotFound);
         }
     }
 }

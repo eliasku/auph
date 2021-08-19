@@ -1,5 +1,4 @@
 import {_streamPlayerResume, StreamPlayer, StreamPlayer_stop} from "./StreamPlayer";
-import {getContext} from "./Mixer";
 import {AuphBuffer, AuphBus, AuphVoice, Flag, iMask, Type, u31, Unit} from "../protocol/interface";
 import {nextHandle, Obj} from "./common";
 
@@ -27,7 +26,7 @@ export class VoiceObj implements Obj {
     _e = () => {
         // maybe check is useful
         //if (this.buffer === e.target || (this.stream && this.stream.el === e.target)) {
-            _voiceStop(this);
+        _voiceStop(this);
         //}
     }
 
@@ -162,7 +161,7 @@ export function _getVoiceObj(handle: AuphVoice): VoiceObj | null {
     return (obj && obj.h === handle) ? obj : null;
 }
 
-export function createVoiceObj(): AuphVoice {
+export function createVoiceObj(ctx: AudioContext): AuphVoice {
     for (let i = 1; i < voicePool.length; ++i) {
         const v = voicePool[i]!;
         if (v.s === 0) {
@@ -171,13 +170,10 @@ export function createVoiceObj(): AuphVoice {
     }
     const index = voicePool.length;
     if (index < voicesMaxCount) {
-        const ctx = getContext();
-        if (ctx) {
-            const v = _voiceNew(ctx, index);
-            v.h = Type.Voice | index;
-            voicePool.push(v);
-            return v.h;
-        }
+        const v = _voiceNew(ctx, index);
+        v.h = Type.Voice | index;
+        voicePool.push(v);
+        return v.h;
     }
     return 0;
 }

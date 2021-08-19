@@ -14,8 +14,7 @@
 		A94763E026AEEBBF00EAF28D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A94763DE26AEEBBF00EAF28D /* LaunchScreen.storyboard */; };
 		A94763E326AEEBBF00EAF28D /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = A94763E226AEEBBF00EAF28D /* main.m */; };
 		A94763F126AEED0100EAF28D /* AudioToolbox.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A94763F026AEED0100EAF28D /* AudioToolbox.framework */; };
-		A980DCB626BD81C1009B871A /* auph-all.cpp in Sources */ = {isa = PBXBuildFile; fileRef = A980DCB526BD81C1009B871A /* auph-all.cpp */; settings = {COMPILER_FLAGS = "-x objective-c++"; }; };
-		A980DCC526BD8493009B871A /* assets in Resources */ = {isa = PBXBuildFile; fileRef = A980DCC426BD8492009B871A /* assets */; };
+		A9C4B9FF26CE80610020F69D /* assets in Resources */ = {isa = PBXBuildFile; fileRef = A9C4B9FE26CE80610020F69D /* assets */; };
 		A9EAE5A826B2CEFE001FF76C /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A9EAE5A426B2B3EF001FF76C /* AVFoundation.framework */; };
 /* End PBXBuildFile section */
 
@@ -31,23 +30,10 @@
 		A94763E126AEEBBF00EAF28D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A94763E226AEEBBF00EAF28D /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		A94763F026AEED0100EAF28D /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
-		A980DCA426BD81C1009B871A /* NoisePlaybackExample.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = NoisePlaybackExample.hpp; sourceTree = "<group>"; };
-		A980DCA526BD81C1009B871A /* auph.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = auph.hpp; sourceTree = "<group>"; };
-		A980DCA726BD81C1009B871A /* ThreadWrapper.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ThreadWrapper.hpp; sourceTree = "<group>"; };
-		A980DCA826BD81C1009B871A /* CoreAudio.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = CoreAudio.hpp; sourceTree = "<group>"; };
-		A980DCA926BD81C1009B871A /* AudioDevice_impl.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AudioDevice_impl.hpp; sourceTree = "<group>"; };
-		A980DCAA26BD81C1009B871A /* AudioDevice.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = AudioDevice.hpp; sourceTree = "<group>"; };
-		A980DCAB26BD81C1009B871A /* Oboe.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Oboe.hpp; sourceTree = "<group>"; };
-		A980DCAD26BD81C1009B871A /* RingBuffer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = RingBuffer.hpp; sourceTree = "<group>"; };
-		A980DCAE26BD81C1009B871A /* Fifo.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Fifo.hpp; sourceTree = "<group>"; };
-		A980DCAF26BD81C1009B871A /* Mutex.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Mutex.hpp; sourceTree = "<group>"; };
-		A980DCB126BD81C1009B871A /* Decoders_impl.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Decoders_impl.hpp; sourceTree = "<group>"; };
-		A980DCB226BD81C1009B871A /* Decoders.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = Decoders.hpp; sourceTree = "<group>"; };
-		A980DCB326BD81C1009B871A /* SoundEngine.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = SoundEngine.hpp; sourceTree = "<group>"; };
-		A980DCB426BD81C1009B871A /* auph_impl.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = auph_impl.hpp; sourceTree = "<group>"; };
-		A980DCB526BD81C1009B871A /* auph-all.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = "auph-all.cpp"; sourceTree = "<group>"; };
 		A980DCBF26BD8326009B871A /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
-		A980DCC426BD8492009B871A /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../../../tester/assets; sourceTree = "<group>"; };
+		A9C4B9FE26CE80610020F69D /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../assets; sourceTree = "<group>"; };
+		A9C4BA0126CE80DF0020F69D /* auph */ = {isa = PBXFileReference; lastKnownFileType = folder; path = auph; sourceTree = "<group>"; };
+		A9C4BA0526CE895F0020F69D /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../assets; sourceTree = "<group>"; };
 		A9EAE5A426B2B3EF001FF76C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
@@ -67,7 +53,8 @@
 		A94763C426AEEBBC00EAF28D = {
 			isa = PBXGroup;
 			children = (
-				A980DCC426BD8492009B871A /* assets */,
+				A9C4B9FE26CE80610020F69D /* assets */,
+				A9C4BA0526CE895F0020F69D /* assets */,
 				A980DCA126BD81C1009B871A /* src */,
 				A94763CF26AEEBBC00EAF28D /* auph-ios */,
 				A94763CE26AEEBBC00EAF28D /* Products */,
@@ -112,64 +99,10 @@
 		A980DCA126BD81C1009B871A /* src */ = {
 			isa = PBXGroup;
 			children = (
-				A980DCA226BD81C1009B871A /* auph */,
-				A980DCB526BD81C1009B871A /* auph-all.cpp */,
+				A9C4BA0126CE80DF0020F69D /* auph */,
 			);
 			name = src;
 			path = ../../src;
-			sourceTree = "<group>";
-		};
-		A980DCA226BD81C1009B871A /* auph */ = {
-			isa = PBXGroup;
-			children = (
-				A980DCA326BD81C1009B871A /* examples */,
-				A980DCA526BD81C1009B871A /* auph.hpp */,
-				A980DCA626BD81C1009B871A /* device */,
-				A980DCAC26BD81C1009B871A /* mixer */,
-				A980DCB026BD81C1009B871A /* engine */,
-				A980DCB426BD81C1009B871A /* auph_impl.hpp */,
-			);
-			path = auph;
-			sourceTree = "<group>";
-		};
-		A980DCA326BD81C1009B871A /* examples */ = {
-			isa = PBXGroup;
-			children = (
-				A980DCA426BD81C1009B871A /* NoisePlaybackExample.hpp */,
-			);
-			path = examples;
-			sourceTree = "<group>";
-		};
-		A980DCA626BD81C1009B871A /* device */ = {
-			isa = PBXGroup;
-			children = (
-				A980DCA726BD81C1009B871A /* ThreadWrapper.hpp */,
-				A980DCA826BD81C1009B871A /* CoreAudio.hpp */,
-				A980DCA926BD81C1009B871A /* AudioDevice_impl.hpp */,
-				A980DCAA26BD81C1009B871A /* AudioDevice.hpp */,
-				A980DCAB26BD81C1009B871A /* Oboe.hpp */,
-			);
-			path = device;
-			sourceTree = "<group>";
-		};
-		A980DCAC26BD81C1009B871A /* mixer */ = {
-			isa = PBXGroup;
-			children = (
-				A980DCAD26BD81C1009B871A /* RingBuffer.hpp */,
-				A980DCAE26BD81C1009B871A /* Fifo.hpp */,
-				A980DCAF26BD81C1009B871A /* Mutex.hpp */,
-			);
-			path = mixer;
-			sourceTree = "<group>";
-		};
-		A980DCB026BD81C1009B871A /* engine */ = {
-			isa = PBXGroup;
-			children = (
-				A980DCB126BD81C1009B871A /* Decoders_impl.hpp */,
-				A980DCB226BD81C1009B871A /* Decoders.hpp */,
-				A980DCB326BD81C1009B871A /* SoundEngine.hpp */,
-			);
-			path = engine;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -228,8 +161,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A9C4B9FF26CE80610020F69D /* assets in Resources */,
 				A94763E026AEEBBF00EAF28D /* LaunchScreen.storyboard in Resources */,
-				A980DCC526BD8493009B871A /* assets in Resources */,
 				A94763DD26AEEBBF00EAF28D /* Assets.xcassets in Resources */,
 				A94763DB26AEEBBC00EAF28D /* Main.storyboard in Resources */,
 			);
@@ -243,7 +176,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A94763D826AEEBBC00EAF28D /* ViewController.mm in Sources */,
-				A980DCB626BD81C1009B871A /* auph-all.cpp in Sources */,
 				A94763D226AEEBBC00EAF28D /* AppDelegate.mm in Sources */,
 				A94763E326AEEBBF00EAF28D /* main.m in Sources */,
 			);

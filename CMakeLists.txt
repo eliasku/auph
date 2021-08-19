@@ -29,6 +29,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
     # for macOS: target you should link AudioToolbox and CoreAudio frameworks
     target_link_libraries(${PROJECT_NAME}
+            PUBLIC "-framework AppKit"
             PUBLIC "-framework CoreAudio"
             PUBLIC "-framework AudioToolbox")
 
@@ -57,6 +58,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
     # for macOS: target you should link AudioToolbox and CoreAudio frameworks
     target_link_libraries(${PROJECT_NAME}
+            INTERFACE "-framework AppKit"
             INTERFACE "-framework CoreAudio"
             INTERFACE "-framework AudioToolbox")
 

@@ -8,6 +8,12 @@
 #import "AppDelegate.h"
 #include <auph/auph.hpp>
 
+#define AUPH_WAV
+#define AUPH_MP3
+#define AUPH_OGG
+
+#include <auph/auph_impl.hpp>
+
 @interface AppDelegate ()
 
 @end
@@ -17,6 +23,13 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     auph::init();
+    const char* path = "assets/mp3/FUNKY_HOUSE.mp3";
+    auto music = auph::load(path, auph::Flag_Stream);
+    NSLog(@"%d", music.id);
+    if(music.id) {
+        auto voice = auph::play(music, 1.0f, 0.0f, 1.0f, true, false, auph::Bus_Music);
+        NSLog(@"%d", voice.id);
+    }
     return YES;
 }
 
@@ -31,10 +44,6 @@
 - (void)applicationDidEnterBackground:(UIApplication*)application {
 // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
 // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
-//    AVAudioSession* session = [AVAudioSession sharedInstance];
-//    [session setActive:false error:nil];
-//    AudioQueuePause(_auph_currentAudioQueue);
-    
 }
 
 
@@ -45,10 +54,6 @@
 
 - (void)applicationDidBecomeActive:(UIApplication*)application {
 // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
-//    AVAudioSession* session = [AVAudioSession sharedInstance];
-//    [session setActive:true error:nil];
-//    AudioQueueStart(_auph_currentAudioQueue, NULL);
-    
     auph::resume();
 }
 

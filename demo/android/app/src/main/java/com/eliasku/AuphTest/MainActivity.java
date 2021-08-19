@@ -1,7 +1,8 @@
 package com.eliasku.AuphTest;
 
 import androidx.appcompat.app.AppCompatActivity;
-
+import android.content.res.AssetManager;
+import android.app.Activity;
 import android.os.Bundle;
 
 import com.eliasku.AuphTest.databinding.ActivityMainBinding;
@@ -23,25 +24,24 @@ public class MainActivity extends AppCompatActivity {
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
-        start();
+        start(this, getAssets());
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Auph.onResume(this);
+        auphResume();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        Auph.onPause(this);
+        auphPause();
     }
 
-    /**
-     * A native method that is implemented by the 'native-lib' native library,
-     * which is packaged with this application.
-     */
-    public static native void start();
+    public static native void start(final Activity activity, final AssetManager assetManager);
 
+    public static native void auphResume();
+
+    public static native void auphPause();
 }

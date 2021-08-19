@@ -2,16 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Stress test</title>
+    <title>🔊 Stress Tests</title>
     <script src="dist/auph.js"></script>
 </head>
 <body>
 <button id="start">Start</button>
 <script>
     auph.init();
-    auph.resume();
     const data = auph.load("assets/mp3/CLAP.mp3", false);
-
     document.querySelector("#start").onclick = () => {
         setInterval(() => {
             //for (let i = 0; i < 128; ++i) {

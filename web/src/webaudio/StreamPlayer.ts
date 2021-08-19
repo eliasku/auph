@@ -44,7 +44,7 @@ export function _streamPlayerResume(player: StreamPlayer): void {
 const players: StreamPlayer[] = [];
 const playersMaxCount = 4;
 
-export function getNextStreamPlayer(src: string): StreamPlayer | null {
+export function getNextStreamPlayer(ctx: AudioContext, src: string): StreamPlayer | null {
     for (let i = 0; i < players.length; ++i) {
         const player = players[i];
         if (StreamPlayer_isFree(player)) {
@@ -53,12 +53,9 @@ export function getNextStreamPlayer(src: string): StreamPlayer | null {
         }
     }
     if (players.length < playersMaxCount) {
-        const ctx = getContext();
-        if (ctx) {
-            const mes = StreamPlayer_create(ctx, src);
-            players.push(mes);
-            return mes;
-        }
+        const mes = StreamPlayer_create(ctx, src);
+        players.push(mes);
+        return mes;
     }
     return null;
 }

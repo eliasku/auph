@@ -33,12 +33,7 @@ export function audioContextResume(ctx: AudioContext) {
     ctx.resume().then(() => {
         log(Message.DeviceResumed);
     }).catch((reason) => {
-        if (!unlocked) {
-            log(Message.UserInteractionRequiredToStart);
-            setupUnlockHandler();
-        } else {
-            error(Message.DeviceResumeError, reason);
-        }
+        error(Message.DeviceResumeError, reason);
     });
 }
 
@@ -73,7 +68,6 @@ function newAudioContext(options?: AudioContextOptions): AudioContext | null {
     try {
         const scope: any = window;
         const audioContext: any = scope.AudioContext || scope.webkitAudioContext;
-        //scope.AudioContext = audioContext;
         return new audioContext({
             latencyHint: "interactive",
             sampleRate: 22050
@@ -93,8 +87,9 @@ export function initContext(): AudioContext | null {
         latencyHint: "interactive",
         sampleRate: 22050
     });
-    if (ctx && ctx.state === "running") {
-        audioContextPause(ctx);
+    if (ctx && ctx.state === "suspended") {
+        log(Message.UserInteractionRequiredToStart);
+        setupUnlockHandler();
     }
     return ctx;
 }
