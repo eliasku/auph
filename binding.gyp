@@ -28,6 +28,11 @@
         [
           "OS=='mac'",
           {
+            "xcode_settings": {
+              "OTHER_CFLAGS": [
+                "-x objective-c++"
+              ]
+            },
             "libraries": [
               "-framework CoreAudio",
               "-framework AudioToolbox"
