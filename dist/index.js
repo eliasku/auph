@@ -1,5 +1,7 @@
 /// import * as auph from "auph"
 
+auph.init();
+
 let streamSource = 0;
 let streamVoice = 0;
 

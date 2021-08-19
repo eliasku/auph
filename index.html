@@ -2,169 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>🔊AUPH</title>
     <script src="dist/auph.js"></script>
 </head>
 <body>
+<p>🔊 Tap anywhere to Start playback! 🔊</p>
+<p><a href="./test-api.html">Online Demo</a></p>
+<p><a href="https://github.com/eliasku/auph">Learn more on GitHub!</a></p>
 
-<article>
-    <h2>Auph</h2>
-    <ul>
-        <li>
-            <button id="init" role="button">init</button>
-            -
-            <button id="shutdown" role="button">shutdown</button>
-        </li>
-        <li>
-            <button id="resume" role="button">resume</button>
-            -
-            <button id="pause" role="button">pause</button>
-        </li>
-    </ul>
-</article>
-
-<article>
-    <h2>Info</h2>
-    <div id="info"></div>
-</article>
-
-<article>
-    <h2>Mixer Control</h2>
-    <table>
-        <tr>
-            <td>Master</td>
-            <td><input type="checkbox" id="master-enabled" name="master-enabled" checked/></td>
-            <td><input type="range" id="master-volume" name="volume" min="0" max="1" value="1" step="0.01"/></td>
-        </tr>
-        <tr>
-            <td>SFX</td>
-            <td><input type="checkbox" id="sfx-enabled" name="sfx-enabled" checked/></td>
-            <td><input type="range" id="sfx-volume" name="volume" min="0" max="1" value="1" step="0.01"/></td>
-        </tr>
-        <tr>
-            <td>Music</td>
-            <td><input type="checkbox" id="music-enabled" name="music-enabled" checked/></td>
-            <td><input type="range" id="music-volume" name="volume" min="0" max="1" value="1" step="0.01"/></td>
-        </tr>
-        <tr>
-            <td>Speech</td>
-            <td><input type="checkbox" id="speech-enabled" name="speech-enabled" checked/></td>
-            <td><input type="range" id="speech-volume" name="speech" min="0" max="1" value="1" step="0.01"/></td>
-        </tr>
-    </table>
-</article>
-
-<article>
-    <h2>Audio Stream</h2>
-    <p>
-        <button id="load-stream" role="button">Load Stream</button>
-        <button id="play-stream" role="button">Play Stream</button>
-        <button id="stop-stream" role="button">Stop Stream</button>
-    </p>
-    <table>
-        <tr>
-            <td>Volume</td>
-            <td>
-                <input type="range" id="volume" name="volume" min="0" max="1" value="1" step="0.01"/>
-            </td>
-        </tr>
-        <tr>
-            <td>Pan</td>
-            <td>
-                <input type="range" id="pan" name="pan" min="-1" max="1" value="0" step="0.01" list="pan-markers">
-                <datalist id="pan-markers">
-                    <option>-1</option>
-                    <option>0</option>
-                    <option>1</option>
-                </datalist>
-            </td>
-        </tr>
-        <tr>
-            <td>Pitch</td>
-            <td>
-                <input type="range" id="pitch" name="pitch" min="0.5" max="5" value="1" step="0.01"
-                       list="pitch-markers">
-                <datalist id="pitch-markers">
-                    <option>0.5</option>
-                    <option>1</option>
-                    <option>2</option>
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
-                </datalist>
-            </td>
-        </tr>
-        <tr>
-            <td>Playback</td>
-            <td><span id="stream-playback-info"></span></td>
-        </tr>
-    </table>
-</article>
-
-<article>
-    <h2>Short Stream Looping</h2>
-    <button id="load-short-stream" role="button">Load</button>
-    <button id="play-short-stream" role="button">Play</button>
-    <button id="stop-short-stream" role="button">Stop</button>
-    <label for="loop-short-stream">Loop</label><input type="checkbox" id="loop-short-stream" name="loop-short-stream"
-                                                      checked/>
-</article>
-
-<article>
-    <h2>Audio Buffer</h2>
-    <button id="load-buffer" role="button">Load Buffer</button>
-    <button id="play-buffer" role="button">Play Buffer</button>
-    <button id="stop-buffer" role="button">Stop Buffer</button>
-    <label for="loop-buffer">Loop</label><input type="checkbox" id="loop-buffer" name="loop-buffer" checked/>
-</article>
-
-<article>
-    <h2>Large Buffer</h2>
-    <p>
-        <button id="load-large-buffer" role="button">Load Large Buffer</button>
-        <button id="play-large-buffer" role="button">Play Large Buffer</button>
-        <button id="stop-large-buffer" role="button">Stop Large Buffer</button>
-        <button id="unload-large-buffer" role="button">Unload Large Buffer</button>
-    </p>
-    <table>
-        <tr>
-            <td>Volume</td>
-            <td>
-                <input type="range" id="lb-volume" name="volume" min="0" max="1" value="1" step="0.01"/>
-            </td>
-        </tr>
-        <tr>
-            <td>Pan</td>
-            <td>
-                <input type="range" id="lb-pan" name="pan" min="-1" max="1" value="0" step="0.01"/>
-            </td>
-        </tr>
-        <tr>
-            <td>Pitch</td>
-            <td>
-                <input type="range" id="lb-pitch" name="pitch" min="0.5" max="2" value="1" step="0.01"/>
-            </td>
-        </tr>
-    </table>
-</article>
-
-<article>
-    <h2>Multi shots</h2>
-    <button id="load-multi" role="button">Load Multi</button>
-    <button id="play-multi" role="button">Play Multi</button>
-    <button id="stop-multi" role="button">Stop All Multi</button>
-</article>
-
-<article>
-    <h2>Voice Params Test</h2>
-    <button id="load-clap" role="button">Load Clap</button>
-    <button id="run-random-paused" role="button">Start Paused</button>
-    <button id="run-pitch" role="button">Run Pitch</button>
-    <button id="run-volume" role="button">Run Volume</button>
-    <button id="run-pan" role="button">Run Pan</button>
-</article>
-
-<script type="text/javascript" src="dist/index.js"></script>
-
+<script>
+    auph.init();
+    const clap = auph.load("assets/mp3/CLAP.mp3", 0);
+    const music = auph.load("assets/mp3/FUNKY_HOUSE.mp3", auph.STREAM);
+    let voice = 0;
+    setInterval(() => {
+        if (!auph.isActive(voice)) {
+            voice = auph.play(music, 1, 0, 1, true, false, auph.BUS_MUSIC);
+        }
+        auph.play(clap, 0.1 + 0.4 * Math.random(), 0.0, 0.5 + Math.random());
+    }, 500);
+</script>
 </body>
 </html>
