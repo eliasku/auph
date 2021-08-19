@@ -26,10 +26,10 @@ target_include_directories(${PROJECT_NAME}
         PUBLIC external)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-
+    target_compile_options(${PROJECT_NAME} PUBLIC -x objective-c++)
     # for macOS: target you should link AudioToolbox and CoreAudio frameworks
     target_link_libraries(${PROJECT_NAME}
-            PUBLIC "-framework AppKit"
+            PUBLIC "-framework Foundation"
             PUBLIC "-framework CoreAudio"
             PUBLIC "-framework AudioToolbox")
 
@@ -58,7 +58,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
     # for macOS: target you should link AudioToolbox and CoreAudio frameworks
     target_link_libraries(${PROJECT_NAME}
-            INTERFACE "-framework AppKit"
+            INTERFACE "-framework Foundation"
             INTERFACE "-framework CoreAudio"
             INTERFACE "-framework AudioToolbox")
 
