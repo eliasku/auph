@@ -1,5 +1,11 @@
 # auph
 
+## 0.0.7
+
+### Patch Changes
+
+- 4d063d4: web: fix unlock audio context with user gesture
+
 ## 0.0.6
 
 ### Patch Changes
