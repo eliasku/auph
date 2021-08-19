@@ -2,7 +2,8 @@ import {error, log, warn} from "./debug";
 import {Flag, Message, u31} from "../protocol/interface";
 
 let ctx: AudioContext | null = null;
-const unlockEvents = ["mousedown", "pointerdown", "touchstart"];
+// "touchstart", "touchend", "mousedown", "pointerdown"
+const unlockEvents = ["click", "keydown"];
 let unlocked = false;
 
 export function getContext(): AudioContext | null {
@@ -48,9 +49,8 @@ export function audioContextPause(ctx: AudioContext) {
 
 function unlock() {
     unlocked = true;
-    const removeEventListener = document.removeEventListener;
     for (let i = 0; i < unlockEvents.length; ++i) {
-        removeEventListener(unlockEvents[i], unlock);
+        document.removeEventListener(unlockEvents[i], unlock, true);
     }
     if (ctx && ctx.state === "suspended") {
         audioContextResume(ctx);
@@ -58,9 +58,8 @@ function unlock() {
 }
 
 function setupUnlockHandler() {
-    const addEventListener = document.addEventListener;
     for (let i = 0; i < unlockEvents.length; ++i) {
-        addEventListener(unlockEvents[i], unlock);
+        document.addEventListener(unlockEvents[i], unlock, true);
     }
 }
 
@@ -68,10 +67,7 @@ function newAudioContext(options?: AudioContextOptions): AudioContext | null {
     try {
         const scope: any = window;
         const audioContext: any = scope.AudioContext || scope.webkitAudioContext;
-        return new audioContext({
-            latencyHint: "interactive",
-            sampleRate: 22050
-        });
+        return new audioContext(options);
     } catch {
         error(Message.NotSupported);
     }
