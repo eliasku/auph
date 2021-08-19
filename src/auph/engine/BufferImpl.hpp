@@ -22,6 +22,10 @@
 
 #endif
 
+#ifdef __ANDROID__
+#include <android/asset_manager.h>
+#endif
+
 namespace auph {
 
 BufferObj::~BufferObj() {
@@ -38,6 +42,17 @@ void BufferObj::unload() {
     data = {};
     sourceBufferData = nullptr;
 }
+
+#ifdef __APPLE__
+
+const char* getFilePathFromBundle(const char* filepath) {
+    NSString * pathToAsset = [NSString stringWithUTF8String: filepath];
+    NSString * pathFromBundle = [[NSBundle mainBundle] pathForResource:pathToAsset ofType:nil];
+    const char* filepathFromBundle = [pathFromBundle cStringUsingEncoding:NSASCIIStringEncoding];
+    return filepathFromBundle ? filepathFromBundle : filepath;
+}
+
+#endif
 
 const char* getExtension(const char* filepath) {
     const char* lastDot = filepath;
@@ -118,7 +133,24 @@ bool loadMemoryToBuffer(BufferDataSource* dataSource, const void* data, uint32_t
 }
 
 bool BufferObj::load(const char* filepath, int flags) {
-    const bool result = loadToBuffer(&data, filepath, flags & Flag_Stream);
+#ifdef __ANDROID__
+    if(_androidAssetManager) {
+        AAsset *asset = AAssetManager_open(_androidAssetManager, filepath, AASSET_MODE_BUFFER);
+        if (asset) {
+            auto dataBuffer = static_cast<const uint8_t *>(AAsset_getBuffer(asset));
+            auto size = AAsset_getLength(asset);
+            auto result = loadFromMemory(dataBuffer, size, flags | Flag_Copy);
+            AAsset_close(asset);
+            return result;
+        }
+    }
+#endif
+
+#ifdef __APPLE__
+    filepath = getFilePathFromBundle(filepath);
+#endif
+
+    const bool result = loadToBuffer(&data, filepath, flags);
     if (result) {
         state = Flag_Active | Flag_Loaded;
         if (flags & Flag_Stream) {

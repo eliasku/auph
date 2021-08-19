@@ -90,6 +90,7 @@ export const enum Flag {
 }
 
 export const enum Message {
+    OK = 0,
     NotSupported,
     InvalidState,
 
@@ -116,6 +117,8 @@ export const enum Message {
 
     UserInteractionRequiredToStart,
 
-    BusNotFound
+    BusNotFound,
+    InvalidArguments,
+    InvalidMixerState,
 }
 

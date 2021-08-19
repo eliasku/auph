@@ -33,6 +33,7 @@ android {
     }
     sourceSets {
         main.java.srcDirs += ['../../../android/java']
+        main.assets.srcDirs += ['../../assets']
     }
     externalNativeBuild {
         cmake {

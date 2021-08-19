@@ -10,23 +10,18 @@ target_link_libraries(${PROJECT_NAME} PUBLIC auph)
 
 #target_include_directories(${PROJECT_NAME} PUBLIC auph)
 
-#if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-#
-#    # for Apple targets you should link AudioToolbox framework
-#    target_link_libraries(${PROJECT_NAME}
-##            PUBLIC "-framework CoreAudio"
-#            PUBLIC "-framework AudioToolbox")
-#
-#    # for iOS also add `AVFoundation.framework` and `AudioToolbox.framework`
-#
-#elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
-#
-#elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-#
-#endif ()
-#
-if (EMSCRIPTEN)
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    #PUBLIC -fobjc-arc
+    target_compile_options(${PROJECT_NAME}
+            PUBLIC -x objective-c++
+            )
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+
+endif ()
+
+if (EMSCRIPTEN)
     set(EM_COMMON_FLAGS
             -s FETCH=1
             -s WASM=1

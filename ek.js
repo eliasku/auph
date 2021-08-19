@@ -1,15 +1,15 @@
 const path = require('path');
 
-module.exports = (ctx) => {
-    ctx.addModule({
+module.exports = (project) => {
+    project.addModule({
         name: "auph",
         path: __dirname,
-        cpp: [
+        cpp_include_path: [
             path.join(__dirname, "src"),
             path.join(__dirname, "external")
         ],
         android: {
-            cpp: [
+            cpp_include_path: [
                 path.join(__dirname, "android/oboe/src"),
                 path.join(__dirname, "android/oboe/include")
             ],
@@ -21,6 +21,11 @@ module.exports = (ctx) => {
                     path.join(__dirname, "src/auph-all.cpp")
                 ],
                 flags: "-x objective-c++"
+            },
+            xcode: {
+                frameworks: [
+                    "AudioToolbox", "CoreAudio"
+                ]
             }
         },
         ios: {
@@ -42,5 +47,4 @@ module.exports = (ctx) => {
         windows: {},
         linux: {}
     });
-
 };

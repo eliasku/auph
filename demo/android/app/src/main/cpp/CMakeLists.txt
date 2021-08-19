@@ -3,9 +3,6 @@ project(native-lib)
 
 add_library(${PROJECT_NAME} SHARED
         native-lib.cpp
-
-        ../../../../../../src/auph-all.cpp
-        ../../../../../../android/oboe/src/oboe_all.cpp
         )
 
 target_include_directories(${PROJECT_NAME}
@@ -20,4 +17,5 @@ find_library(log-lib log)
 target_link_libraries(${PROJECT_NAME}
         PUBLIC ${log-lib}
         PUBLIC OpenSLES
+        PUBLIC android
         )

@@ -6,6 +6,14 @@
 
 #if TARGET_OS_IOS
 #include <AVFoundation/AVFoundation.h>
+//#include <UIKit/UIKit.h>
+//#define APPLE_ApplicationWillResignActiveNotification UIApplicationWillResignActiveNotification
+//#define APPLE_ApplicationDidBecomeActiveNotification UIApplicationDidBecomeActiveNotification
+#else
+//#include <AppKit/AppKit.h>
+//#define APPLE_ApplicationWillResignActiveNotification NSApplicationWillResignActiveNotification
+//#define APPLE_ApplicationDidBecomeActiveNotification NSApplicationDidBecomeActiveNotification
+#endif
 
 #if __has_feature(objc_arc)
 #define _AUPH_OBJC_RELEASE(obj) { obj = nil; }
@@ -13,9 +21,13 @@
 #define _AUPH_OBJC_RELEASE(obj) { [obj release]; obj = nil; }
 #endif
 
-void startInterruptionHandler();
-void stopInterruptionHandler();
+#if TARGET_OS_IOS
+@interface AudioAppEventsHandler : NSObject {}
+- (void)startInterruptionHandler;
+- (void)stopInterruptionHandler;
+@end
 
+AudioAppEventsHandler* _audioAppEventsHandler = nullptr;
 #endif
 
 namespace auph {
@@ -32,22 +44,6 @@ bool checkError(OSStatus status) {
     return false;
 }
 
-//Float64 getDeviceSampleRate(AudioDeviceID deviceID) {
-//    AudioObjectPropertyAddress propertyAddress = {
-//            .mSelector  = kAudioDevicePropertyNominalSampleRate,
-//            .mScope     = kAudioObjectPropertyScopeGlobal,
-//            .mElement   = 0
-//    };
-//
-//    UInt32 dataSize = sizeof(Float64);
-//    Float64 sampleRate = 0;
-//    OSStatus status = AudioObjectGetPropertyData(deviceID, &propertyAddress, 0, nullptr, &dataSize, &sampleRate);
-//    if (status != kAudioHardwareNoError) {
-//        return 0;
-//    }
-//    return sampleRate;
-//}
-
 class AudioDevice {
 public:
     static constexpr unsigned BufferFrames = 2048;
@@ -63,85 +59,54 @@ public:
 
     AudioDevice() {
         AudioDevice::instance = this;
+        #if TARGET_OS_IOS
+        _audioAppEventsHandler = [AudioAppEventsHandler new];
+        #endif
     }
 
-//    void refreshDevices() {
-//        AudioObjectPropertyAddress propertyAddress = {
-//                .mSelector  = kAudioHardwarePropertyDefaultOutputDevice,
-//                .mScope     = kAudioObjectPropertyScopeGlobal,
-//                .mElement   = kAudioObjectPropertyElementWildcard
-//        };
-//
-//        UInt32 dataSize = 0;
-//        OSStatus result = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &propertyAddress, 0, NULL,
-//                                                         &dataSize);
-//        if (result != kAudioHardwareNoError) {
-//            return;
-//        }
-//
-//        AudioObjectID* deviceIDs = (AudioObjectID*) malloc(dataSize);
-//        if (!deviceIDs) {
-//            return;
-//        }
-//
-//        result = AudioObjectGetPropertyData(kAudioObjectSystemObject, &propertyAddress, 0, NULL, &dataSize, deviceIDs);
-//        if (kAudioHardwareNoError != result) {
-//            free(deviceIDs);
-//            return;
-//        }
-//
-//        const auto devicesCount = dataSize / sizeof(AudioObjectID);
-//        for (int i = 0; i < devicesCount; ++i) {
-//            const auto deviceID = deviceIDs[i];
-//            if (deviceID != kAudioObjectUnknown) {
-//                printf("Output Device: %d\n", deviceID);
-//                printf(" - Sample Rate: %0.2f", getDeviceSampleRate(deviceID));
-//            }
-//        }
-//
-//        free(deviceIDs);
-//    }
-
     bool start() {
-        //refreshDevices();
-#if TARGET_OS_IOS
-        startInterruptionHandler();
-#endif // TARGET_OS_IOS
-
         if (!createAudioQueue(&audioQueue, this)) {
             return false;
         }
         if (checkError(AudioQueueStart(audioQueue, nullptr))) {
+            checkError(AudioQueueDispose(audioQueue, false));
+            audioQueue = nullptr;
             return false;
         }
+
+        #if TARGET_OS_IOS
+        [_audioAppEventsHandler startInterruptionHandler];
+        #endif
+
         return true;
     }
 
     bool stop() {
         if (audioQueue != nullptr) {
-            if (checkError(AudioQueueStop(audioQueue, true))) {
+            auto* queue = audioQueue;
+            if (checkError(AudioQueueStop(queue, true))) {
                 return false;
             }
-//            for (unsigned i = 0; i < BuffersCountMax; ++i) {
-//                checkError(AudioQueueFreeBuffer(audioQueue, buffers[i]));
-//            }
-            if (checkError(AudioQueueDispose(audioQueue, false))) {
-                return false;
+
+            if (checkError(AudioQueueDispose(queue, false))) {
+            //    return false;
             }
+
             audioQueue = nullptr;
+            #if TARGET_OS_IOS
+            [_audioAppEventsHandler stopInterruptionHandler];
+            #endif
         }
-
-#if TARGET_OS_IOS
-        stopInterruptionHandler();
-#endif
-
         return true;
     }
 
     ~AudioDevice() {
+        stop();
+        #if TARGET_OS_IOS
+        _AUPH_OBJC_RELEASE(_audioAppEventsHandler);
+        #endif
         userData = nullptr;
         onPlayback = nullptr;
-        stop();
         instance = nullptr;
     }
 };
@@ -211,31 +176,49 @@ AudioDevice* AudioDevice::instance = nullptr;
 }
 
 #if TARGET_OS_IOS
-@interface _ios_interruption_handler : NSObject { }
-@end
 
-@implementation _ios_interruption_handler
+@implementation AudioAppEventsHandler
 
 -(id)init {
     self = [super init];
+
+    //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationWillResign:) name:APPLE_ApplicationWillResignActiveNotification object:NULL];
+    //[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(applicationDidBecomeActive:) name:APPLE_ApplicationDidBecomeActiveNotification object:NULL];
+
+    #if TARGET_OS_IOS
     AVAudioSession* session = [AVAudioSession sharedInstance];
-    NSNotificationCenter* center = [NSNotificationCenter defaultCenter];
-    [center addObserver:self selector:@selector(handle_interruption:) name:AVAudioSessionInterruptionNotification object:session];
+    assert(session != nil);
+    if(![session setCategory: AVAudioSessionCategoryAmbient
+                           error:nil]) {
+        NSLog(@"failed to activate audio session");
+    }
+    if(![session setActive:true error:nil]) {
+        NSLog(@"failed to activate audio session");
+    }
+    #endif
     return self;
 }
 
 -(void)dealloc {
-    [self remove_handler];
+    //[[NSNotificationCenter defaultCenter] removeObserver:self name:APPLE_ApplicationWillResignActiveNotification object:NULL];
+    //[[NSNotificationCenter defaultCenter] removeObserver:self name:APPLE_ApplicationDidBecomeActiveNotification object:NULL];
+
 #if !__has_feature(objc_arc)
     [super dealloc];
 #endif
 }
 
--(void)remove_handler {
+-(void)startInterruptionHandler {
+    AVAudioSession* session = [AVAudioSession sharedInstance];
+    NSNotificationCenter* center = [NSNotificationCenter defaultCenter];
+    [center addObserver:self selector:@selector(onInterruption:) name:AVAudioSessionInterruptionNotification object:session];
+}
+
+-(void)stopInterruptionHandler {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:AVAudioSessionInterruptionNotification object:nil];
 }
 
--(void)handle_interruption:(NSNotification*)notification {
+-(void)onInterruption:(NSNotification*)notification {
     auto* device = auph::AudioDevice::instance;
     NSLog(@"handle_interruption");
     AVAudioSession* session = [AVAudioSession sharedInstance];
@@ -263,39 +246,15 @@ AudioDevice* AudioDevice::instance = nullptr;
             break;
     }
 }
+
+//-(void)applicationWillResign:(NSNotification*)notification {
+//    auph::AudioDevice::instance->stop();
+//}
+//
+//-(void)applicationDidBecomeActive:(NSNotification*)notification {
+//    auph::AudioDevice::instance->start();
+//}
+
 @end
-
-_ios_interruption_handler* currentInterruptionHandler = nullptr;
-
-void startInterruptionHandler() {
-    if(currentInterruptionHandler == nil) {
-        /* activate audio session */
-        AVAudioSession* session = [AVAudioSession sharedInstance];
-        assert(session != nil);
-        if(![session setCategory: AVAudioSessionCategoryAmbient
-                           error:nil]) {
-            NSLog(@"failed to activate audio session");
-        }
-        if(![session setActive:true error:nil]) {
-            NSLog(@"failed to activate audio session");
-        }
-
-        /* create interruption handler */
-        currentInterruptionHandler = [_ios_interruption_handler new];
-    }
-}
-
-void stopInterruptionHandler() {
-    if(currentInterruptionHandler != nil) {
-        if (currentInterruptionHandler != nil) {
-            [currentInterruptionHandler remove_handler];
-            _AUPH_OBJC_RELEASE(currentInterruptionHandler);
-        }
-        /* deactivate audio session */
-        AVAudioSession* session = [AVAudioSession sharedInstance];
-        assert(session != nil);
-        [session setActive:false error:nil];;
-    }
-}
 
 #endif
