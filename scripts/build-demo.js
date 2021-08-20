@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const {copyFolderRecursiveSync} = require("./common");
 
 const files = [
     "auph.js",
@@ -14,8 +15,6 @@ try {
 } catch {
 }
 
-for (const file of files) {
-    fs.copyFileSync(path.join(srcPath, file), path.join(dstPath, file));
-}
+copyFolderRecursiveSync(srcPath, dstPath);
 
 fs.copyFileSync(path.resolve(__dirname, "../demo/index.js"), path.join(dstPath, "index.js"));

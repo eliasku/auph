@@ -57,5 +57,26 @@
   "gypfile": true,
   "engines": {
     "node": "~10 >=10.20 || >=12.17"
-  }
+  },
+  "keywords": [
+    "auph",
+    "auph.js",
+    "audio",
+    "sound",
+    "web audio",
+    "webaudio",
+    "c++",
+    "nodejs",
+    "coreaudio",
+    "oboe",
+    "aaudio",
+    "android",
+    "ios",
+    "opensles",
+    "xcode",
+    "audiosession",
+    "macos",
+    "native",
+    "audio mixer"
+  ]
 }

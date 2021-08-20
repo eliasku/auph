@@ -1,10 +1,10 @@
 import {error, log, warn} from "./debug";
 import {Flag, Message, u31} from "../protocol/interface";
+import {unlock} from "./Unlock";
 
 let ctx: AudioContext | null = null;
-// "touchstart", "touchend", "mousedown", "pointerdown"
-const unlockEvents = ["click", "keydown"];
-let unlocked = false;
+export let emptyAudioBuffer: AudioBuffer | null = null;
+const defaultSampleRate = 22050;
 
 export function getContext(): AudioContext | null {
     if (!ctx || ctx.state === "closed") {
@@ -47,22 +47,6 @@ export function audioContextPause(ctx: AudioContext) {
     });
 }
 
-function unlock() {
-    unlocked = true;
-    for (let i = 0; i < unlockEvents.length; ++i) {
-        document.removeEventListener(unlockEvents[i], unlock, true);
-    }
-    if (ctx && ctx.state === "suspended") {
-        audioContextResume(ctx);
-    }
-}
-
-function setupUnlockHandler() {
-    for (let i = 0; i < unlockEvents.length; ++i) {
-        document.addEventListener(unlockEvents[i], unlock, true);
-    }
-}
-
 function newAudioContext(options?: AudioContextOptions): AudioContext | null {
     try {
         const scope: any = window;
@@ -81,18 +65,26 @@ export function initContext(): AudioContext | null {
     }
     ctx = newAudioContext({
         latencyHint: "interactive",
-        sampleRate: 22050
+        sampleRate: defaultSampleRate
     });
-    if (ctx && ctx.state === "suspended") {
-        log(Message.UserInteractionRequiredToStart);
-        setupUnlockHandler();
+    if (ctx) {
+        if (!emptyAudioBuffer) {
+            emptyAudioBuffer = ctx.createBuffer(1, 1, defaultSampleRate);
+        }
+        unlock(():boolean => {
+            if (ctx!.state === "suspended") {
+                audioContextResume(ctx!);
+                return false;
+            }
+            return true;
+        });
     }
     return ctx;
 }
 
-export function closeContext(_notNullCtx: AudioContext) {
+export function closeContext(context: AudioContext) {
     log(Message.DeviceClosing);
-    _notNullCtx.close().then(() => {
+    context.close().then(() => {
         log(Message.DeviceClosed);
     }).catch((reason) => {
         error(Message.DeviceCloseError, reason);

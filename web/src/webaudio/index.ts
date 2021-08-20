@@ -1,4 +1,3 @@
-import {_streamPlayerResume, destroyStreamPlayersPool, getNextStreamPlayer} from "./StreamPlayer";
 import {
     _setAudioParam,
     audioContextPause,
@@ -11,10 +10,10 @@ import {
 } from "./Mixer";
 import {
     _getVoiceObj,
+    _voiceApplyPitch,
     _voiceChangeDestination,
     _voicePrepareBuffer,
     _voiceSetLoop,
-    _voiceSetPitch,
     _voiceSetRunning,
     _voiceStartBuffer,
     _voiceStop,
@@ -54,7 +53,6 @@ export function shutdown(): void {
         termBusPool();
         voicePool.length = 1;
         buffers.length = 1;
-        destroyStreamPlayersPool();
         closeContext(ctx);
     }
 }
@@ -62,8 +60,13 @@ export function shutdown(): void {
 export function load(filepath: string, flags: u31): AuphBuffer {
     let handle = getNextBufferObj();
     if (handle) {
+        const ctx = getAudioContextObject();
+        if (!ctx) {
+            setError(Message.NotInitialized);
+            return 0;
+        }
         const obj = buffers[handle & iMask]!;
-        _bufferLoad(obj, filepath, flags);
+        _bufferLoad(obj, ctx, filepath, flags);
     }
     return handle;
 }
@@ -71,8 +74,13 @@ export function load(filepath: string, flags: u31): AuphBuffer {
 export function loadMemory(data: Uint8Array, flags: u31): AuphBuffer {
     let handle = getNextBufferObj();
     if (handle) {
+        const ctx = getAudioContextObject();
+        if (!ctx) {
+            setError(Message.NotInitialized);
+            return 0;
+        }
         const obj = buffers[handle & iMask]!;
-        _bufferMemory(obj, data, flags);
+        _bufferMemory(obj, ctx, data, flags);
     }
     return handle;
 }
@@ -121,7 +129,7 @@ export function voice(buffer: AuphBuffer,
         setError(Message.BufferIsNotLoaded);
         return 0;
     }
-    if (!bufferObj.data) {
+    if (!bufferObj.b) {
         setError(Message.BufferNoData);
         return 0;
     }
@@ -139,35 +147,22 @@ export function voice(buffer: AuphBuffer,
 
     voiceObj.s = Flag.Active | flags;
     voiceObj.data = buffer;
-    voiceObj._rate = rate;
     voiceObj._gain = gain;
     voiceObj._pan = pan;
+    voiceObj._rate = rate;
     voiceObj.gain.gain.value = gain / Unit;
     voiceObj.pan.pan.value = pan / Unit - 1;
 
-    if (bufferObj.s & Flag.Stream) {
-        const mes = getNextStreamPlayer(ctx, bufferObj.data as string);
-        if (!mes) {
-            setError(Message.Warning_NoFreeStreamPlayers);
-            return 0;
-        }
-        voiceObj.stream = mes;
-        mes.el.loop = !!(flags & Flag.Loop);
-        mes.node.connect(voiceObj.pan);
-        mes.el.onended = voiceObj._e;
-        if (flags & Flag.Running) {
-            _streamPlayerResume(mes);
-        }
-    } else {
-        _voicePrepareBuffer(voiceObj, ctx, bufferObj.data as AudioBuffer);
-        if (flags & Flag.Running) {
-            _voiceStartBuffer(voiceObj);
-        }
+    // TODO: streamed decoding
+    //if (bufferObj.s & Flag.Stream) {
+    _voicePrepareBuffer(voiceObj, ctx, bufferObj.b as AudioBuffer);
+    if (flags & Flag.Running) {
+        _voiceStartBuffer(voiceObj);
     }
 
     // maybe we need to set target before `startBuffer()`
     _voiceChangeDestination(voiceObj, targetNode);
-    _voiceSetPitch(voiceObj, rate);
+    _voiceApplyPitch(voiceObj, rate);
     return voice;
 }
 
@@ -239,7 +234,10 @@ export function set(name: Name, param: Param, value: u31): void {
                         }
                         break;
                     case Param.Rate:
-                        _voiceSetPitch(obj, value);
+                        if (obj._rate !== value) {
+                            obj._rate = value;
+                            _voiceApplyPitch(obj, value);
+                        }
                         break;
                     case Param.CurrentTime:
                         // TODO:
@@ -313,8 +311,6 @@ export function get(name: Name, param: u31): u31 {
                     let d = 0.0;
                     if (obj.buffer && obj.buffer.buffer) {
                         d = obj.buffer.buffer.duration * Unit;
-                    } else if (obj.stream) {
-                        d = obj.stream.el.duration * Unit;
                     }
                     return (d * Unit) | 0;
                 }
@@ -322,8 +318,6 @@ export function get(name: Name, param: u31): u31 {
                     let d = 0.0;
                     if (obj.buffer && obj.buffer.buffer) {
                         // TODO: :(
-                    } else if (obj.stream) {
-                        d = obj.stream.el.currentTime;
                     }
                     return (d * Unit) | 0;
                 }
@@ -355,11 +349,8 @@ export function get(name: Name, param: u31): u31 {
                     return obj.s;
                 case Param.Duration: {
                     let d = 0.0;
-                    if (obj.s & Flag.Stream) {
-                        // TODO: :(
-                        warn(Message.NotSupported);
-                    } else if (obj.data) {
-                        d = (obj.data as AudioBuffer).duration;
+                    if (obj.b) {
+                        d = (obj.b as AudioBuffer).duration;
                     }
                     return (d * Unit) | 0;
                 }
