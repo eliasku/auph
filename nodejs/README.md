@@ -21,6 +21,6 @@ auph.play(clap);
 auph.play(music);
 
 setTimeout(() => {
-    Auph.shutdown();
+    auph.shutdown();
 }, 2000);
 ```

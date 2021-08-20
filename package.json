@@ -25,6 +25,7 @@
     "android",
     "nodejs",
     "CMakeLists.txt",
+    "auph-static.cpp",
     "ek.js",
     "binding.gyp",
     "web/dist",
