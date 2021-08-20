@@ -1,6 +1,6 @@
-import {_streamPlayerResume, StreamPlayer, StreamPlayer_stop} from "./StreamPlayer";
 import {AuphBuffer, AuphBus, AuphVoice, Flag, iMask, Type, u31, Unit} from "../protocol/interface";
 import {nextHandle, Obj} from "./common";
+import {emptyAudioBuffer} from "./Mixer";
 
 export class VoiceObj implements Obj {
     // handle passport
@@ -14,14 +14,12 @@ export class VoiceObj implements Obj {
     data: AuphBuffer = 0;
     bus: AuphBus = 0;
 
-    stream: StreamPlayer | null = null;
-
     // static buffer playback
     _started = false;
     buffer: AudioBufferSourceNode | null = null;
 
-    // common nodes
-    target: AudioNode | null = null;
+    // connected destination audio node
+    out: AudioNode | null = null;
 
     _e = () => {
         // maybe check is useful
@@ -45,12 +43,12 @@ export function _voiceNew(ctx: AudioContext, index: u31) {
 }
 
 export function _voiceChangeDestination(v: VoiceObj, target: AudioNode) {
-    if (target !== v.target) {
+    if (target !== v.out) {
         const gain = v.gain;
-        if (v.target) {
-            gain.disconnect(v.target);
+        if (v.out) {
+            gain.disconnect(v.out);
         }
-        v.target = target;
+        v.out = target;
         if (target) {
             gain.connect(target);
         }
@@ -58,26 +56,25 @@ export function _voiceChangeDestination(v: VoiceObj, target: AudioNode) {
 }
 
 export function _voiceResetDestination(v: VoiceObj) {
-    if (v.target) {
-        v.gain.disconnect(v.target);
-        v.target = null;
+    if (v.out) {
+        v.gain.disconnect(v.out);
+        v.out = null;
     }
 }
 
 export function _voiceStop(v: VoiceObj) {
-    // stop stream
-    if (v.stream) {
-        StreamPlayer_stop(v.stream);
-        v.stream = null;
-    }
-
     // stop buffer
     const buffer = v.buffer;
     if (buffer) {
         if ((v.s & Flag.Running) !== 0) {
             buffer.stop();
         }
+        buffer.onended = null;
         buffer.disconnect();
+        try {
+            buffer.buffer = emptyAudioBuffer;
+        } catch {
+        }
         v.buffer = null;
     }
 
@@ -111,10 +108,7 @@ export function _voiceSetLoop(v: VoiceObj, value: boolean): void {
     const current = (v.s & Flag.Loop) !== 0;
     if (value !== current) {
         v.s ^= Flag.Loop;
-
-        if (v.stream) {
-            v.stream.el.loop = value;
-        } else if (v.buffer) {
+        if (v.buffer) {
             v.buffer.loop = value;
         }
     }
@@ -124,14 +118,9 @@ export function _voiceSetRunning(v: VoiceObj, value: boolean): void {
     const current = !!(v.s & Flag.Running);
     if (value !== current) {
         v.s ^= Flag.Running;
-        if (v.stream) {
-            if (value) {
-                _streamPlayerResume(v.stream);
-            } else {
-                v.stream.el.pause();
-            }
-        } else if (v.buffer) {
-            v.buffer.playbackRate.value = value ? (v._rate / Unit) : 0.0;
+        const playbackRate = value ? (v._rate / Unit) : 0.0;
+        if (v.buffer) {
+            v.buffer.playbackRate.value = playbackRate;
             if (value) {
                 // restart if play called in pause mode
                 _voiceStartBuffer(v);
@@ -140,15 +129,11 @@ export function _voiceSetRunning(v: VoiceObj, value: boolean): void {
     }
 }
 
-export function _voiceSetPitch(v: VoiceObj, value: u31): void {
-    if (v._rate !== value) {
-        v._rate = value;
-        if (v.stream) {
-            v.stream.el.playbackRate = value / Unit;
-        } else if (v.buffer) {
-            if ((v.s & Flag.Running) !== 0) {
-                v.buffer.playbackRate.value = value / Unit;
-            }
+export function _voiceApplyPitch(v: VoiceObj, value: u31): void {
+    if ((v.s & Flag.Running) !== 0) {
+        const playbackRate = value / Unit;
+        if (v.buffer) {
+            v.buffer.playbackRate.value = playbackRate;
         }
     }
 }

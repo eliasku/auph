@@ -40,7 +40,7 @@ $("#shutdown").addEventListener("click", () => {
 
 $("#load-stream").addEventListener("click", () => {
     if (!auph.isActive(streamSource)) {
-        streamSource = auph.load("assets/mp3/Kalimba.mp3", auph.STREAM);
+        streamSource = auph.load("assets/mp3/Kalimba-fixed.mp3", auph.STREAM);
         $("#play-stream").innerText = "Play";
     }
 });
@@ -194,7 +194,7 @@ setInterval(() => {
 <tr><td>Looped Voices</td><td>${auph.get(auph.VOICE, auph.COUNT | auph.ACTIVE | auph.LOOP)}</td></tr>
 
 <tr><td>Active Buffers</td><td>${auph.get(auph.BUFFER, auph.COUNT | auph.ACTIVE)}</td></tr>
-<tr><td>Stream Buffers</td><td>${auph.get(auph.BUFFER, auph.COUNT | auph.ACTIVE | auph.STREAM)}</td></tr>
+<tr><td>Stream Buffers</td><td>${auph.get(auph.BUFFER, auph.COUNT | auph.ACTIVE | auph.STREAM)} (for web all streams are static)</td></tr>
 
 </table>`;
 
@@ -289,7 +289,8 @@ let largeBufferVoice = 0;
 
 $("#load-large-buffer").addEventListener("click", () => {
     if (!auph.isActive(largeBufferSource)) {
-        largeBufferSource = auph.load("assets/ogg/sample1.ogg", 0);
+        largeBufferSource = auph.load("assets/mp3/Kalimba-fixed.mp3", 0);
+        //largeBufferSource = auph.load("assets/ogg/sample1.ogg", 0);
     }
 });
 

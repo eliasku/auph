@@ -120,5 +120,6 @@ export const enum Message {
     BusNotFound,
     InvalidArguments,
     InvalidMixerState,
+    NotInitialized,
 }
 
