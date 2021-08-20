@@ -6,7 +6,7 @@
 - [sts-mixer](https://github.com/kieselsteini/sts/blob/master/sts_mixer.h)
 - [dr-libs](https://github.com/mackron/dr_libs) ⭐ single header libraries for decoding FLAC / WAV / MP3
 - collection of single header libraries [audio section](https://github.com/nothings/single_file_libs#audio)
-- [minimp3](https://github.com/lieff/minimp3)
+- [minimp3](https://github.com/lieff/minimp3) ⭐ core is used by `dr_mp3`
 - [stb](https://github.com/nothings/stb) ⭐ `stb_vorbis.h` single header library for OGG decoding
 - [SoLoud](https://github.com/jarikomppa/soloud) ⭐
 - [halley-audio](https://github.com/amzeratul/halley/tree/develop/src/engine/audio) ref

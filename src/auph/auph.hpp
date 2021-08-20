@@ -80,6 +80,11 @@ inline bool isActive(int name) {
     return !!(get(name, Param_State) & Flag_Active);
 }
 
+inline bool isBufferLoaded(Buffer buffer) {
+    const int mask = Flag_Active | Flag_Loaded;
+    return (get(buffer.id, Param_State) & mask) == mask;
+}
+
 /** Methods for Buffer **/
 inline float getDuration(int bufferOrVoice) {
     return (float) get(bufferOrVoice, Param_Duration) / Unit;

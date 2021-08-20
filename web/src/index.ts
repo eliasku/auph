@@ -2,17 +2,15 @@ import {AuphBuffer, AuphBus, AuphMixer, AuphVoice, f32, Flag, IAuph, Mixer, Para
 import * as Null from "./null/index";
 import * as Browser from "./webaudio/index";
 
-declare const auwa: IAuph;
+function haveWebAudio(): boolean {
+    return typeof window !== "undefined" && !!(window.AudioContext || (window as any).webkitAudioContext);
+}
 
 function loadDriver(): IAuph {
     if (typeof process !== "undefined") {
-        //return require(__dirname + "/../../../nodejs/index");
         return require("bindings")("auph");
-    } else if (typeof auwa !== "undefined") {
-        return auwa;
-    } else if (typeof AudioContext !== "undefined") {
-        //  || typeof webkitAudioContext !== "undefined"
-        (window as any).auwa = Browser;
+    }
+    if (haveWebAudio()) {
         return Browser;
     }
     return Null;
@@ -105,6 +103,11 @@ export function getCurrentTime(voice: AuphVoice | AuphMixer): number {
 
 export function isActive(name: AuphVoice | AuphBus | AuphBuffer | AuphMixer): boolean {
     return !!(get(name, Param.State) & Flag.Active);
+}
+
+export function isBufferLoaded(name: AuphBuffer): boolean {
+    const mask = Flag.Active | Flag.Loaded;
+    return (get(name, Param.State) & mask) === mask;
 }
 
 export function getDuration(name: AuphBuffer | AuphVoice): number {
