@@ -25,4 +25,5 @@ export declare function getPause(voice: AuphVoice): boolean;
 export declare function getLoop(voice: AuphVoice): boolean;
 export declare function getCurrentTime(voice: AuphVoice | AuphMixer): number;
 export declare function isActive(name: AuphVoice | AuphBus | AuphBuffer | AuphMixer): boolean;
+export declare function isBufferLoaded(name: AuphBuffer): boolean;
 export declare function getDuration(name: AuphBuffer | AuphVoice): number;
