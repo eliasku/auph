@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>🔊AUPH</title>
-    <script src="dist/auph.js"></script>
+    <script src="dist/browser/auph.debug.js"></script>
 </head>
 <body>
 <p>🔊 Tap anywhere to Start playback! 🔊</p>
@@ -16,10 +16,12 @@
     const music = auph.load("assets/mp3/FUNKY_HOUSE.mp3", auph.STREAM);
     let voice = 0;
     setInterval(() => {
-        if (!auph.isActive(voice)) {
+        if (!auph.isActive(voice) && auph.isBufferLoaded(music)) {
             voice = auph.play(music, 1, 0, 1, true, false, auph.BUS_MUSIC);
         }
-        auph.play(clap, 0.1 + 0.4 * Math.random(), 0.0, 0.5 + Math.random());
+        if(auph.isBufferLoaded(clap)) {
+            auph.play(clap, 0.1 + 0.4 * Math.random(), 0.0, 0.5 + Math.random());
+        }
     }, 500);
 </script>
 </body>
