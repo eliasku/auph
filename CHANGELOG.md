@@ -1,5 +1,12 @@
 # auph
 
+## 0.0.8
+
+### Patch Changes
+
+- 9dba54b: add isBufferLoaded function
+- 9dba54b: simplify js loader, add missing source file
+
 ## 0.0.7
 
 ### Patch Changes
