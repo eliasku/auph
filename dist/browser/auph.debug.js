@@ -105,13 +105,19 @@ function audioContextPause(ctx) {
     });
 }
 function newAudioContext(options) {
+    var scope = window;
+    var audioContext = scope.AudioContext || scope.webkitAudioContext;
+    // TODO: set sample rate could lead to wrong playback on safari mobile (maybe it should be recreated after unlock?)
+    //try {
+    //    return new audioContext(options);
+    //} catch (err) {
+    //    error(Message.WebAudio_TryDefaultOptions, err);
+    //}
     try {
-        var scope = window;
-        var audioContext = scope.AudioContext || scope.webkitAudioContext;
-        return new audioContext(options);
+        return new audioContext();
     }
-    catch (_a) {
-        error(1 /* NotSupported */);
+    catch (err) {
+        error(1 /* NotSupported */, err);
     }
     return null;
 }
@@ -120,10 +126,7 @@ function initContext() {
         warn(14 /* Warning_AlreadyInitialized */);
         return ctx;
     }
-    ctx = newAudioContext({
-        latencyHint: "interactive",
-        sampleRate: defaultSampleRate
-    });
+    ctx = newAudioContext();
     if (ctx) {
         if (!emptyAudioBuffer) {
             emptyAudioBuffer = ctx.createBuffer(1, 1, defaultSampleRate);
@@ -389,8 +392,19 @@ function _getBufferObj(buffer) {
     }
     return null;
 }
-function _fetchURL(filepath, cb) {
-    return fetch(new Request(filepath)).then(cb);
+function _decodeAudioData(ctx, obj, buffer) {
+    var timeDecoding = measure(0);
+    var success = function (audioBuffer) {
+        obj.s |= 2 /* Loaded */;
+        obj.b = audioBuffer;
+        log("decoding time: " + (measure(timeDecoding) | 0) + " ms.");
+    };
+    var fail = function (err) {
+        error("Error decode audio buffer", err);
+        _bufferDestroy(obj);
+    };
+    // TODO: maybe callbacks will be deprecated?
+    ctx.decodeAudioData(buffer, success, fail);
 }
 function _bufferMemory(obj, ctx, data, flags) {
     obj.s |= 1 /* Active */;
@@ -398,30 +412,19 @@ function _bufferMemory(obj, ctx, data, flags) {
     // TODO:
     // if (flags & Flag.Stream) {
     //     obj.s |= Flag.Stream;
-    ctx.decodeAudioData(buffer).then(function (audioBuffer) {
-        obj.s |= 2 /* Loaded */;
-        obj.b = audioBuffer;
-    }).catch(function (reason) {
-        error("Error decode audio buffer", reason);
-    });
+    _decodeAudioData(ctx, obj, buffer);
 }
 function _bufferLoad(obj, ctx, filepath, flags) {
     obj.s |= 1 /* Active */;
     // TODO:
     //if (flags & Flag.Stream) {
     //obj.s |= Flag.Stream;
-    var timeDecoding = 0;
-    _fetchURL(filepath, function (response) { return response.arrayBuffer(); }).then(function (buffer) {
-        timeDecoding = measure(0);
-        return ctx.decodeAudioData(buffer);
-    }).then(function (buffer) {
-        obj.b = buffer;
-        if (buffer) {
-            log("decoding time: " + (measure(timeDecoding) | 0) + " ms.");
-            obj.s |= 2 /* Loaded */;
-        }
-    }).catch(function (reason) {
-        error("Error decoding audio buffer", reason);
+    fetch(new Request(filepath))
+        .then(function (response) { return response.arrayBuffer(); })
+        .then(function (buffer) { return _decodeAudioData(ctx, obj, buffer); })
+        .catch(function (reason) {
+        error("Error load file", reason);
+        _bufferDestroy(obj);
     });
 }function init$1() {
     var ctx = initContext();
