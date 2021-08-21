@@ -1,5 +1,13 @@
 # auph
 
+## 0.0.9
+
+### Patch Changes
+
+- ea1ae60: web: decodeAudioData with callbacks (mobile safari)
+- ea1ae60: web: init audio context fallback to default sample rate
+- 56e00b0: web: remove audio-element streaming cuz of auto-play policy
+
 ## 0.0.8
 
 ### Patch Changes
