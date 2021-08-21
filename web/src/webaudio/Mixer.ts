@@ -48,13 +48,22 @@ export function audioContextPause(ctx: AudioContext) {
 }
 
 function newAudioContext(options?: AudioContextOptions): AudioContext | null {
+    const scope: any = window;
+    const audioContext: any = scope.AudioContext || scope.webkitAudioContext;
+
+    // TODO: set sample rate could lead to wrong playback on safari mobile (maybe it should be recreated after unlock?)
+    //try {
+    //    return new audioContext(options);
+    //} catch (err) {
+    //    error(Message.WebAudio_TryDefaultOptions, err);
+    //}
+
     try {
-        const scope: any = window;
-        const audioContext: any = scope.AudioContext || scope.webkitAudioContext;
-        return new audioContext(options);
-    } catch {
-        error(Message.NotSupported);
+        return new audioContext();
+    } catch (err) {
+        error(Message.NotSupported, err);
     }
+
     return null;
 }
 
@@ -71,7 +80,7 @@ export function initContext(): AudioContext | null {
         if (!emptyAudioBuffer) {
             emptyAudioBuffer = ctx.createBuffer(1, 1, defaultSampleRate);
         }
-        unlock(():boolean => {
+        unlock((): boolean => {
             if (ctx!.state === "suspended") {
                 audioContextResume(ctx!);
                 return false;

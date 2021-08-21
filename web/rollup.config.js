@@ -15,17 +15,16 @@ function createGlobalPlugins(release) {
 export default [
     {
         input: "./web/dist/module/webaudio/index.js",
-        // input: "./web/dist/module/null/index.js",
         output: {
             // support core api for emscripten implementation
             file: "./web/dist/emscripten/auph.js",
             format: "iife",
             name: "auph",
             compact: true,
-            // plugins: [terser()],
+            plugins: [terser()],
             sourcemap: true
         },
-        plugins: createGlobalPlugins(false)
+        plugins: createGlobalPlugins(true)
     },
     {
         input: "./web/dist/module/index.js",
