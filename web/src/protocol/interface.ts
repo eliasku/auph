@@ -121,5 +121,7 @@ export const enum Message {
     InvalidArguments,
     InvalidMixerState,
     NotInitialized,
+
+    WebAudio_TryDefaultOptions
 }
 

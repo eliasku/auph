@@ -1,6 +1,5 @@
 import {AuphBuffer, Flag, iMask, Type, u31} from "../protocol/interface";
 import {error, log, measure} from "./debug";
-import {getContext} from "./Mixer";
 import {nextHandle, Obj} from "./common";
 
 export type BufferData = string | AudioBuffer | null;
@@ -49,8 +48,19 @@ export function _getBufferObj(buffer: AuphBuffer): BufferObj | null {
     return null;
 }
 
-function _fetchURL<T>(filepath: string, cb: (response: Response) => Promise<T>): Promise<T> {
-    return fetch(new Request(filepath)).then(cb);
+function _decodeAudioData(ctx: AudioContext, obj: BufferObj, buffer: ArrayBuffer) {
+    let timeDecoding = measure(0);
+    const success = (audioBuffer: AudioBuffer): void => {
+        obj.s |= Flag.Loaded;
+        obj.b = audioBuffer;
+        log("decoding time: " + (measure(timeDecoding) | 0) + " ms.");
+    };
+    const fail = (err?: DOMException): void => {
+        error("Error decode audio buffer", err);
+        _bufferDestroy(obj);
+    };
+    // TODO: maybe callbacks will be deprecated?
+    ctx.decodeAudioData(buffer, success, fail);
 }
 
 export function _bufferMemory(obj: BufferObj, ctx: AudioContext, data: Uint8Array, flags: u31) {
@@ -59,12 +69,7 @@ export function _bufferMemory(obj: BufferObj, ctx: AudioContext, data: Uint8Arra
     // TODO:
     // if (flags & Flag.Stream) {
     //     obj.s |= Flag.Stream;
-    ctx.decodeAudioData(buffer).then((audioBuffer) => {
-        obj.s |= Flag.Loaded;
-        obj.b = audioBuffer;
-    }).catch((reason) => {
-        error("Error decode audio buffer", reason);
-    });
+    _decodeAudioData(ctx, obj, buffer);
 }
 
 export function _bufferLoad(obj: BufferObj, ctx: AudioContext, filepath: string, flags: u31) {
@@ -72,17 +77,12 @@ export function _bufferLoad(obj: BufferObj, ctx: AudioContext, filepath: string,
     // TODO:
     //if (flags & Flag.Stream) {
     //obj.s |= Flag.Stream;
-    let timeDecoding = 0;
-    _fetchURL(filepath, (response) => response.arrayBuffer()).then((buffer) => {
-        timeDecoding = measure(0);
-        return ctx.decodeAudioData(buffer);
-    }).then((buffer) => {
-        obj.b = buffer;
-        if (buffer) {
-            log("decoding time: " + (measure(timeDecoding) | 0) + " ms.");
-            obj.s |= Flag.Loaded;
-        }
-    }).catch((reason) => {
-        error("Error decoding audio buffer", reason);
-    });
+
+    fetch(new Request(filepath))
+        .then(response => response.arrayBuffer())
+        .then(buffer => _decodeAudioData(ctx, obj, buffer))
+        .catch((reason) => {
+            error("Error load file", reason);
+            _bufferDestroy(obj);
+        });
 }
