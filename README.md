@@ -35,3 +35,13 @@ Trivial audio mixer API for native and web targets. [Online Demo](https://eliask
 
 - **Play**: open voice object, associate it with *Audio Data* and start playback. If **Paused** flag is set on **Play**, voice is alive, but will being on pause.
 - **Stop**: stop and close voice object.
+
+## Notes
+
+### Decoding MP3 audio files
+
+It's recommended to re-encode all foreign MP3 audio files to fix `Safari` issues. For example, you could use `ffmpeg` tooling:
+
+```shell
+ffmpeg -i broken.mp3 -c:a copy -c:v copy fixed.mp3
+```
