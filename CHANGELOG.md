@@ -1,5 +1,11 @@
 # auph
 
+## 0.0.10
+
+### Patch Changes
+
+- d7b6d25: fix node objc++ compilation, rename package name for java android device reconnect handler, external headers path to main src path
+
 ## 0.0.9
 
 ### Patch Changes
