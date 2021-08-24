@@ -323,8 +323,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 696L2V4X5J;
 				HEADER_SEARCH_PATHS = (
-					../../src,
-					../../external,
+					../../src
 				);
 				INFOPLIST_FILE = "auph-ios/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -345,8 +344,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 696L2V4X5J;
 				HEADER_SEARCH_PATHS = (
-					../../src,
-					../../external,
+					../../src
 				);
 				INFOPLIST_FILE = "auph-ios/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -5,20 +5,22 @@ module.exports = (project) => {
         name: "auph",
         path: __dirname,
         cpp_include_path: [
-            path.join(__dirname, "src"),
-            path.join(__dirname, "external")
+            path.join(__dirname, "src")
         ],
         android: {
             cpp_include_path: [
                 path.join(__dirname, "android/oboe/src"),
                 path.join(__dirname, "android/oboe/include")
             ],
-            java: [path.join(__dirname, "android/java")]
+            java: [path.join(__dirname, "android/java")],
+            cppLibs: ["android", "log", "OpenSLES"]
         },
         macos: {
             cpp_flags: {
+                // TODO: this file is local compiled to static lib,
+                // need to migrate flags to implementor module
                 files: [
-                    path.join(__dirname, "src/auph-all.cpp")
+                    path.join(__dirname, "auph-static.cpp")
                 ],
                 flags: "-x objective-c++"
             },
@@ -30,8 +32,10 @@ module.exports = (project) => {
         },
         ios: {
             cpp_flags: {
+                // TODO: this file is local compiled to static lib,
+                // need to migrate flags to implementor module
                 files: [
-                    path.join(__dirname, "src/auph-all.cpp")
+                    path.join(__dirname, "auph-static.cpp")
                 ],
                 flags: "-x objective-c++"
             },

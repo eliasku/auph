@@ -21,9 +21,7 @@ if(AUPH_OGG)
     target_compile_definitions(${PROJECT_NAME} PUBLIC AUPH_OGG)
 endif()
 
-target_include_directories(${PROJECT_NAME}
-        PUBLIC src
-        PUBLIC external)
+target_include_directories(${PROJECT_NAME} PUBLIC src)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_compile_options(${PROJECT_NAME} PUBLIC -x objective-c++)
@@ -50,9 +48,7 @@ endif ()
 project(auph)
 add_library(${PROJECT_NAME} INTERFACE)
 
-target_include_directories(${PROJECT_NAME}
-        INTERFACE src
-        INTERFACE external)
+target_include_directories(${PROJECT_NAME} INTERFACE src)
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 

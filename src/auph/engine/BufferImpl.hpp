@@ -22,8 +22,12 @@
 
 #endif
 
-#ifdef __ANDROID__
+#if defined(__ANDROID__)
 #include <android/asset_manager.h>
+#endif
+
+#if defined(__APPLE__)
+#include <Foundation/Foundation.h>
 #endif
 
 namespace auph {
@@ -43,7 +47,7 @@ void BufferObj::unload() {
     sourceBufferData = nullptr;
 }
 
-#ifdef __APPLE__
+#if defined(__APPLE__)
 
 const char* getFilePathFromBundle(const char* filepath) {
     NSString * pathToAsset = [NSString stringWithUTF8String: filepath];
@@ -161,11 +165,14 @@ bool BufferObj::load(const char* filepath, int flags) {
 }
 
 bool BufferObj::loadFromMemory(const void* pData, uint32_t size, int flags) {
-    if ((flags & Flag_Copy) && (flags & Flag_Stream)) {
+    // check if we need to preserve loaded data, for example we need to read encoded data continuously while playing
+    const int flagsToCopy = Flag_Stream | Flag_Copy;
+    if ((flags & flagsToCopy) == flagsToCopy) {
         sourceBufferData = malloc(size);
         memcpy(sourceBufferData, pData, size);
         pData = sourceBufferData;
     }
+
     const bool result = loadMemoryToBuffer(&data, pData, size, flags);
     if (result) {
         state = Flag_Active | Flag_Loaded;
