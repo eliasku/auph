@@ -13,7 +13,6 @@
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "external",
         "src"
       ],
       "defines": [
@@ -30,7 +29,8 @@
           {
             "xcode_settings": {
               "OTHER_CFLAGS": [
-                "-x objective-c++"
+                "-x objective-c++",
+                "-ObjC++"
               ]
             },
             "libraries": [

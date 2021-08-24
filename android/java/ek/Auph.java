@@ -1,4 +1,4 @@
-package com.eliasku.auph;
+package ek;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -26,14 +26,18 @@ public class Auph {
      * mode only while in focus. This allows other apps to reclaim exclusive stream mode.
      */
     static void start(final Activity activity) {
-        pluginReceiver = new PluginBroadcastReceiver();
-        IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
-        activity.registerReceiver(pluginReceiver, filter);
+        if (pluginReceiver == null) {
+            pluginReceiver = new PluginBroadcastReceiver();
+            IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
+            activity.registerReceiver(pluginReceiver, filter);
+        }
     }
 
     static void stop(final Activity activity) {
-        activity.unregisterReceiver(pluginReceiver);
-        pluginReceiver = null;
+        if (pluginReceiver != null) {
+            activity.unregisterReceiver(pluginReceiver);
+            pluginReceiver = null;
+        }
     }
 
     native static int restart();

@@ -13,39 +13,25 @@
 // implement oboe-lib:
 #include <oboe-all.cpp>
 
-#undef LOGV
-#undef LOGD
-#undef LOGI
-#undef LOGW
-#undef LOGE
-#undef LOGF
-#undef ASSERT
+#if defined(NDEBUG)
 
-#if 1
-
-#ifdef MODULE_NAME
-#undef MODULE_NAME
-#endif
-
-#define MODULE_NAME  "AUPH"
-
-#define LOGV(...) __android_log_print(ANDROID_LOG_VERBOSE,MODULE_NAME,__VA_ARGS__)
-#define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG,MODULE_NAME,__VA_ARGS__)
-#define LOGI(...) __android_log_print(ANDROID_LOG_INFO,MODULE_NAME,__VA_ARGS__)
-#define LOGW(...) __android_log_print(ANDROID_LOG_WARN,MODULE_NAME,__VA_ARGS__)
-#define LOGE(...) __android_log_print(ANDROID_LOG_ERROR,MODULE_NAME,__VA_ARGS__)
-#define LOGF(...) __android_log_print(ANDROID_LOG_FATAL,MODULE_NAME,__VA_ARGS__)
-#define ASSERT(cond, ...) if (!(cond)) {__android_log_assert(#cond,MODULE_NAME,__VA_ARGS__);}
+#define AUPH_ALOGV(...)
+#define AUPH_ALOGD(...)
+#define AUPH_ALOGI(...)
+#define AUPH_ALOGW(...)
+#define AUPH_ALOGE(...)
+#define AUPH_ALOGF(...)
+#define AUPH_AASSERT(cond, ...)
 
 #else
 
-#define LOGV(...)
-#define LOGD(...)
-#define LOGI(...)
-#define LOGW(...)
-#define LOGE(...)
-#define LOGF(...)
-#define ASSERT(cond, ...)
+#define AUPH_ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE,"AUPH",__VA_ARGS__)
+#define AUPH_ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG,"AUPH",__VA_ARGS__)
+#define AUPH_ALOGI(...) __android_log_print(ANDROID_LOG_INFO,"AUPH",__VA_ARGS__)
+#define AUPH_ALOGW(...) __android_log_print(ANDROID_LOG_WARN,"AUPH",__VA_ARGS__)
+#define AUPH_ALOGE(...) __android_log_print(ANDROID_LOG_ERROR,"AUPH",__VA_ARGS__)
+#define AUPH_ALOGF(...) __android_log_print(ANDROID_LOG_FATAL,"AUPH",__VA_ARGS__)
+#define AUPH_AASSERT(cond, ...) if (!(cond)) {__android_log_assert(#cond,"AUPH",__VA_ARGS__);}
 
 #endif
 
@@ -95,10 +81,10 @@ public:
         // Restart the stream if the error is a disconnect, otherwise do nothing and log the error
         // reason.
         if (error == oboe::Result::ErrorDisconnected) {
-            LOGI("Restarting AudioStream");
+            AUPH_ALOGI("Restarting AudioStream");
             _restartStream();
         } else {
-            LOGE("Error was %s", oboe::convertToText(error));
+            AUPH_ALOGE("Error was %s", oboe::convertToText(error));
         }
     }
 
@@ -143,7 +129,7 @@ public:
 
         oboe::Result result = builder.openStream(&audioStream);
         if (result != oboe::Result::OK) {
-            LOGE("Failed to create stream. Error: %s", oboe::convertToText(result));
+            AUPH_ALOGE("Failed to create stream. Error: %s", oboe::convertToText(result));
             return;
         }
 
@@ -159,23 +145,23 @@ public:
         if (audioStream != nullptr) {
             auto result = audioStream->requestStart();
             if (result != oboe::Result::OK) {
-                LOGE("Error starting playback stream. Error: %s", oboe::convertToText(result));
+                AUPH_ALOGE("Error starting playback stream. Error: %s", oboe::convertToText(result));
                 audioStream->requestStop();
                 audioStream = nullptr;
                 return false;
             }
 
             if (_jniEnv && _androidActivity) {
-                jclass cls = _jniEnv->FindClass("com/eliasku/auph/Auph");
+                jclass cls = _jniEnv->FindClass("ek/Auph");
                 if (cls) {
                     jmethodID fn = _jniEnv->GetStaticMethodID(cls, "start", "(Landroid/app/Activity;)V");
                     if (fn) {
                         _jniEnv->CallStaticVoidMethod(cls, fn, _androidActivity);
                     } else {
-                        LOGE("Error cannot get start() function");
+                        AUPH_ALOGE("Error cannot get start() function");
                     }
                 } else {
-                    LOGE("Error cannot find Auph class");
+                    AUPH_ALOGE("Error cannot find Auph class");
                 }
             }
             return true;
@@ -186,16 +172,16 @@ public:
     bool stop() {
         if (audioStream != nullptr) {
             if (_jniEnv && _androidActivity) {
-                jclass cls = _jniEnv->FindClass("com/eliasku/auph/Auph");
+                jclass cls = _jniEnv->FindClass("ek/Auph");
                 if (cls) {
                     jmethodID fn = _jniEnv->GetStaticMethodID(cls, "stop", "(Landroid/app/Activity;)V");
                     if (fn) {
                         _jniEnv->CallStaticVoidMethod(cls, fn, _androidActivity);
                     } else {
-                        LOGE("Error cannot get stop() function");
+                        AUPH_ALOGE("Error cannot get stop() function");
                     }
                 } else {
-                    LOGE("Error cannot find Auph class");
+                    AUPH_ALOGE("Error cannot find Auph class");
                 }
             }
 
@@ -219,7 +205,7 @@ AudioDevice* AudioDevice::instance = nullptr;
 }
 
 extern "C" JNIEXPORT jint
-JNICALL Java_com_eliasku_auph_Auph_restart(JNIEnv* env, jclass clazz) {
+JNICALL Java_ek_Auph_restart(JNIEnv* env, jclass clazz) {
     auto* device = auph::AudioDevice::instance;
     if (device) {
         if (device->stop()) {
