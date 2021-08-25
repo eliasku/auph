@@ -9,22 +9,37 @@ option(AUPH_OGG "Auph OGG format support" ON)
 
 add_library(${PROJECT_NAME} STATIC auph-static.cpp)
 
-if(AUPH_WAV)
+if (AUPH_WAV)
     target_compile_definitions(${PROJECT_NAME} PUBLIC AUPH_WAV)
-endif()
+endif ()
 
-if(AUPH_MP3)
+if (AUPH_MP3)
     target_compile_definitions(${PROJECT_NAME} PUBLIC AUPH_MP3)
-endif()
+endif ()
 
-if(AUPH_OGG)
+if (AUPH_OGG)
     target_compile_definitions(${PROJECT_NAME} PUBLIC AUPH_OGG)
-endif()
+endif ()
 
 target_include_directories(${PROJECT_NAME} PUBLIC src)
 
+target_compile_options(${PROJECT_NAME}
+        PUBLIC -Os
+        PUBLIC -ffast-math
+        PUBLIC -fno-exceptions
+        PUBLIC -fno-rtti
+        PUBLIC -Wall
+        PUBLIC -Wextra
+        )
+
+target_link_options(${PROJECT_NAME}
+        PUBLIC -Os
+        )
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
-    target_compile_options(${PROJECT_NAME} PUBLIC -x objective-c++)
+    target_compile_options(${PROJECT_NAME}
+            PUBLIC -x objective-c++
+            )
     # for macOS: target you should link AudioToolbox and CoreAudio frameworks
     target_link_libraries(${PROJECT_NAME}
             PUBLIC "-framework Foundation"
@@ -50,7 +65,23 @@ add_library(${PROJECT_NAME} INTERFACE)
 
 target_include_directories(${PROJECT_NAME} INTERFACE src)
 
+target_compile_options(${PROJECT_NAME}
+        INTERFACE -Os
+        INTERFACE -ffast-math
+        INTERFACE -fno-exceptions
+        INTERFACE -fno-rtti
+        INTERFACE -Wall
+        INTERFACE -Wextra
+        )
+
+target_link_options(${PROJECT_NAME}
+        INTERFACE -Os
+        )
+
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    target_compile_options(${PROJECT_NAME}
+            INTERFACE -x objective-c++
+            )
 
     # for macOS: target you should link AudioToolbox and CoreAudio frameworks
     target_link_libraries(${PROJECT_NAME}

@@ -47,22 +47,23 @@ EM_BOOL raf(double time, void* userData) {
 #endif
 
 struct Buf {
-    void* buffer = nullptr;
+    void *buffer = nullptr;
     size_t size = 0;
 };
 
-Buf readFile(const char* filepath) {
+Buf readFile(const char *filepath) {
     auto f = fopen(filepath, "r");
     Buf buf{};
     if (f) {
-        fpos_t size{};
+        fpos_t pos{};
         fseek(f, 0, SEEK_END);
-        fgetpos(f, &size);
+        fgetpos(f, &pos);
         fseek(f, 0, SEEK_SET);
-        if (size > 0) {
-            void* buffer = malloc(size);
+        if (pos > 0) {
+            const auto size = (size_t) pos;
+            void *buffer = malloc(size);
             const size_t read = fread(buffer, 1, size, f);
-            if (size == read) {
+            if ((size_t) size == read) {
                 buf.buffer = buffer;
                 buf.size = size;
             } else {

@@ -71,13 +71,18 @@ public:
     std::mutex mLock{};
 
     bool onError(oboe::AudioStream* stream, oboe::Result error) {
+        (void)stream;
+        (void)error;
         return false;
     }
 
     void onErrorBeforeClose(oboe::AudioStream* stream, oboe::Result error) {
+        (void)stream;
+        (void)error;
     }
 
     void onErrorAfterClose(oboe::AudioStream* stream, oboe::Result error) {
+        (void)stream;
         // Restart the stream if the error is a disconnect, otherwise do nothing and log the error
         // reason.
         if (error == oboe::Result::ErrorDisconnected) {
@@ -89,6 +94,11 @@ public:
     }
 
     oboe::DataCallbackResult onAudioReady(oboe::AudioStream* stream, void* audioData, int32_t numFrames) {
+        // prevent OpenSLES case, `audioData` could be null or no frames are required
+        // https://github.com/google/oboe/issues/559
+        if(audioData == nullptr || numFrames <= 0) {
+            return oboe::DataCallbackResult::Continue;
+        }
         if (onPlayback) {
             AudioDeviceCallbackData data;
             data.data = audioData;
@@ -117,7 +127,7 @@ public:
         audioStream = nullptr;
         //std::lock_guard<std::mutex> lock(mLock);
         oboe::AudioStreamBuilder builder{};
-//        builder.setAudioApi(oboe::AudioApi::OpenSLES);
+        //builder.setAudioApi(oboe::AudioApi::OpenSLES);
         builder.setDirection(oboe::Direction::Output);
         builder.setPerformanceMode(oboe::PerformanceMode::LowLatency);
         builder.setSharingMode(oboe::SharingMode::Exclusive);
@@ -125,7 +135,7 @@ public:
         builder.setChannelCount(oboe::ChannelCount::Stereo);
         builder.setDataCallback(this);
         builder.setErrorCallback(this);
-//        builder.setFramesPerDataCallback(128);
+        //builder.setFramesPerDataCallback(128);
 
         oboe::Result result = builder.openStream(&audioStream);
         if (result != oboe::Result::OK) {
@@ -206,6 +216,8 @@ AudioDevice* AudioDevice::instance = nullptr;
 
 extern "C" JNIEXPORT jint
 JNICALL Java_ek_Auph_restart(JNIEnv* env, jclass clazz) {
+    (void)env;
+    (void)clazz;
     auto* device = auph::AudioDevice::instance;
     if (device) {
         if (device->stop()) {

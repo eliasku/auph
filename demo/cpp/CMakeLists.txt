@@ -6,15 +6,30 @@ add_subdirectory(../.. auph)
 set(CMAKE_CXX_STANDARD 17)
 
 add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC auph)
 
-#target_include_directories(${PROJECT_NAME} PUBLIC auph)
+target_link_libraries(${PROJECT_NAME}
+        PUBLIC auph
+        )
+
+target_compile_options(${PROJECT_NAME}
+        PUBLIC -Os
+        PUBLIC -ffast-math
+        PUBLIC -fno-exceptions
+        PUBLIC -fno-rtti
+        PUBLIC -Wall
+        PUBLIC -Wextra
+        )
+
+target_link_options(${PROJECT_NAME}
+        PUBLIC -Os
+        )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     #PUBLIC -fobjc-arc
     target_compile_options(${PROJECT_NAME}
             PUBLIC -x objective-c++
             )
+
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")

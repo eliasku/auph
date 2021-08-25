@@ -46,8 +46,8 @@ bool checkError(OSStatus status) {
 
 class AudioDevice {
 public:
-    static constexpr unsigned BufferFrames = 2048;
-    static constexpr unsigned BuffersCountMax = 3;
+    static constexpr int BufferFrames = 2048;
+    static constexpr int BuffersCountMax = 3;
 
     static AudioDevice* instance;
 
