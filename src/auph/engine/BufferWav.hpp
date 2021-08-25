@@ -57,7 +57,7 @@ static MixSample* readStreamWav(MixSample* mix,
                                 const BufferDataSource* dataSource,
                                 MixSample volume) {
     auto* stream = (StreamWav*) dataSource->streamData;
-    const auto channels = dataSource->channels;
+    const auto channels = (int)dataSource->channels;
     static const int BufferFloatsMax = 2048 * 10;
     float buffer[BufferFloatsMax];
     dataSource->data.buffer = buffer;

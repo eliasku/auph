@@ -145,8 +145,8 @@ void renderVoices(VoiceObj* voices, BusObj* busline, uint32_t voicesCount, MixSa
 
 class Mixer {
 public:
-    static constexpr uint32_t VoicesMaxCount = 64;
-    static constexpr uint32_t ScratchBufferSize = 2048;
+    static constexpr int VoicesMaxCount = 64;
+    static constexpr int ScratchBufferSize = 2048;
     VoiceObj* voices = nullptr;
     BusObj* busLine = nullptr;
     MixSample scratch[ScratchBufferSize]{};

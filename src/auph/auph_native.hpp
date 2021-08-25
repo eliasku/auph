@@ -7,7 +7,7 @@
 
 namespace auph {
 
-constexpr uint32_t BuffersMaxCount = 128;
+constexpr int BuffersMaxCount = 128;
 
 struct Context {
     AudioDevice device{};
