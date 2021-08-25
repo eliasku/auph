@@ -1,5 +1,11 @@
 # auph
 
+## 0.0.11
+
+### Patch Changes
+
+- 0444230: Fix Oboe OpenSLES nullptr audio data
+
 ## 0.0.10
 
 ### Patch Changes
