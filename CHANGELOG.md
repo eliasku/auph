@@ -1,5 +1,14 @@
 # auph
 
+## 0.0.12
+
+### Patch Changes
+
+- d0eec4d: android: fixes and jni env getter callback
+- 682b5ac: update module config (ek build)
+- d0eec4d: update dr_mp3 to v0.6.31
+- d0eec4d: cmake: remove interface options for headers-only target
+
 ## 0.0.11
 
 ### Patch Changes
