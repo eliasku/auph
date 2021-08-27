@@ -12,33 +12,43 @@ import androidx.annotation.Keep;
 public class Auph {
 
     // Receive a broadcast Intent when a headset is plugged in or unplugged
-    static class PluginBroadcastReceiver extends BroadcastReceiver {
+    static class HeadsetBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
             restart();
         }
     }
 
-    static PluginBroadcastReceiver pluginReceiver;
+    static HeadsetBroadcastReceiver headsetReceiver;
 
     /*
      * Creating engine in onResume() and destroying in onPause() so the stream retains exclusive
      * mode only while in focus. This allows other apps to reclaim exclusive stream mode.
      */
+    @Keep
     static void start(final Activity activity) {
-        if (pluginReceiver == null) {
-            pluginReceiver = new PluginBroadcastReceiver();
-            IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
-            activity.registerReceiver(pluginReceiver, filter);
+        if (headsetReceiver == null) {
+            headsetReceiver = new HeadsetBroadcastReceiver();
+            final IntentFilter filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
+            final Intent intent = activity.registerReceiver(headsetReceiver, filter);
+            if (intent == null) {
+                headsetReceiver = null;
+            }
         }
     }
 
+    @Keep
     static void stop(final Activity activity) {
-        if (pluginReceiver != null) {
-            activity.unregisterReceiver(pluginReceiver);
-            pluginReceiver = null;
+        if (headsetReceiver != null) {
+            try {
+                activity.unregisterReceiver(headsetReceiver);
+            } catch (Exception exception) {
+                // just skip and clear receiver
+            }
+            headsetReceiver = null;
         }
     }
 
+    @Keep
     native static int restart();
 }

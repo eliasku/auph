@@ -1,54 +1,41 @@
-const path = require('path');
-
-module.exports = (project) => {
+/**
+ *
+ * @param {Project} project
+ */
+function setup(project) {
     project.addModule({
         name: "auph",
         path: __dirname,
-        cpp_include_path: [
-            path.join(__dirname, "src")
-        ],
+        cpp_include: ["src"],
         android: {
-            cpp_include_path: [
-                path.join(__dirname, "android/oboe/src"),
-                path.join(__dirname, "android/oboe/include")
+            cpp_include: [
+                "android/oboe/src",
+                "android/oboe/include"
             ],
-            java: [path.join(__dirname, "android/java")],
-            cppLibs: ["android", "log", "OpenSLES"]
+            cpp_lib: ["android", "log", "OpenSLES"],
+            android_java: "android/java"
+        },
+        apple: {
+            cpp_flags: {
+                // TODO: this file is local compiled to static lib,
+                // need to migrate flags to implementor module
+                files: ["auph-static.cpp"],
+                flags: "-x objective-c++"
+            },
+            xcode_framework: "AudioToolbox"
         },
         macos: {
-            cpp_flags: {
-                // TODO: this file is local compiled to static lib,
-                // need to migrate flags to implementor module
-                files: [
-                    path.join(__dirname, "auph-static.cpp")
-                ],
-                flags: "-x objective-c++"
-            },
-            xcode: {
-                frameworks: [
-                    "AudioToolbox", "CoreAudio"
-                ]
-            }
+            xcode_framework: "CoreAudio"
         },
         ios: {
-            cpp_flags: {
-                // TODO: this file is local compiled to static lib,
-                // need to migrate flags to implementor module
-                files: [
-                    path.join(__dirname, "auph-static.cpp")
-                ],
-                flags: "-x objective-c++"
-            },
-            xcode: {
-                frameworks: [
-                    "AudioToolbox", "AVFoundation"
-                ]
-            }
+            xcode_framework: "AVFoundation"
         },
         web: {
-            pre_js: [path.resolve(__dirname, "web/dist/emscripten")]
+            js_pre: "web/dist/emscripten"
         },
         windows: {},
         linux: {}
     });
-};
+}
+
+module.exports = setup;

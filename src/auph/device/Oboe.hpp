@@ -13,17 +13,17 @@
 // implement oboe-lib:
 #include <oboe-all.cpp>
 
-#if defined(NDEBUG)
-
-#define AUPH_ALOGV(...)
-#define AUPH_ALOGD(...)
-#define AUPH_ALOGI(...)
-#define AUPH_ALOGW(...)
-#define AUPH_ALOGE(...)
-#define AUPH_ALOGF(...)
-#define AUPH_AASSERT(cond, ...)
-
-#else
+//#if defined(NDEBUG)
+//
+//#define AUPH_ALOGV(...)
+//#define AUPH_ALOGD(...)
+//#define AUPH_ALOGI(...)
+//#define AUPH_ALOGW(...)
+//#define AUPH_ALOGE(...)
+//#define AUPH_ALOGF(...)
+//#define AUPH_AASSERT(cond, ...)
+//
+//#else
 
 #define AUPH_ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE,"AUPH",__VA_ARGS__)
 #define AUPH_ALOGD(...) __android_log_print(ANDROID_LOG_DEBUG,"AUPH",__VA_ARGS__)
@@ -33,25 +33,31 @@
 #define AUPH_ALOGF(...) __android_log_print(ANDROID_LOG_FATAL,"AUPH",__VA_ARGS__)
 #define AUPH_AASSERT(cond, ...) if (!(cond)) {__android_log_assert(#cond,"AUPH",__VA_ARGS__);}
 
-#endif
+//#endif
 
 namespace auph {
 
 static jobject _androidAssetManagerRef = nullptr;
-static AAssetManager* _androidAssetManager = nullptr;
+static AAssetManager *_androidAssetManager = nullptr;
 static jobject _androidActivity = nullptr;
-static JNIEnv* _jniEnv = nullptr;
 
-void setAndroidActivity(JNIEnv* env, jobject activity, jobject assetManager) {
-    _jniEnv = env;
-    if(_jniEnv) {
-        if(activity) {
-            _androidActivity = env->NewGlobalRef(activity);
-        }
-        if(assetManager) {
-            _androidAssetManagerRef = env->NewGlobalRef(assetManager);
-            if(_androidAssetManagerRef) {
-                _androidAssetManager = AAssetManager_fromJava(env, _androidAssetManagerRef);
+typedef JNIEnv *(*GetJNIEnv)();
+
+static GetJNIEnv _getJNIEnv = nullptr;
+
+void setAndroidActivity(GetJNIEnv getJNIEnv, jobject activity, jobject assetManager) {
+    _getJNIEnv = getJNIEnv;
+    if (getJNIEnv) {
+        auto *env = getJNIEnv();
+        if (env) {
+            if (activity) {
+                _androidActivity = env->NewGlobalRef(activity);
+            }
+            if (assetManager) {
+                _androidAssetManagerRef = env->NewGlobalRef(assetManager);
+                if (_androidAssetManagerRef) {
+                    _androidAssetManager = AAssetManager_fromJava(env, _androidAssetManagerRef);
+                }
             }
         }
     }
@@ -62,41 +68,44 @@ class AudioDevice :
         public oboe::AudioStreamErrorCallback {
 
 public:
-    static AudioDevice* instance;
+    static AudioDevice *instance;
 
-    oboe::AudioStream* audioStream = nullptr;
+    oboe::AudioStream *audioStream = nullptr;
     AudioDeviceCallback onPlayback = nullptr;
-    void* userData = nullptr;
+    void *userData = nullptr;
     AudioStreamInfo playbackStreamInfo{};
     std::mutex mLock{};
 
-    bool onError(oboe::AudioStream* stream, oboe::Result error) {
-        (void)stream;
-        (void)error;
+    bool onError(oboe::AudioStream *stream, oboe::Result error) {
+        (void) stream;
+        (void) error;
         return false;
     }
 
-    void onErrorBeforeClose(oboe::AudioStream* stream, oboe::Result error) {
-        (void)stream;
-        (void)error;
+    void onErrorBeforeClose(oboe::AudioStream *stream, oboe::Result error) {
+        (void) stream;
+        (void) error;
     }
 
-    void onErrorAfterClose(oboe::AudioStream* stream, oboe::Result error) {
-        (void)stream;
+    void onErrorAfterClose(oboe::AudioStream *stream, oboe::Result error) {
+        (void) stream;
         // Restart the stream if the error is a disconnect, otherwise do nothing and log the error
         // reason.
         if (error == oboe::Result::ErrorDisconnected) {
-            AUPH_ALOGI("Restarting AudioStream");
-            _restartStream();
+            AUPH_ALOGI("AudioStream disconnected. Restart if is active currently");
+            if (audioStream != nullptr) {
+                AUPH_ALOGI("Restart disconnected AudioStream, because stream should be active");
+                _reopenAndStartStream();
+            }
         } else {
             AUPH_ALOGE("Error was %s", oboe::convertToText(error));
         }
     }
 
-    oboe::DataCallbackResult onAudioReady(oboe::AudioStream* stream, void* audioData, int32_t numFrames) {
+    oboe::DataCallbackResult onAudioReady(oboe::AudioStream *stream, void *audioData, int32_t numFrames) {
         // prevent OpenSLES case, `audioData` could be null or no frames are required
         // https://github.com/google/oboe/issues/559
-        if(audioData == nullptr || numFrames <= 0) {
+        if (audioData == nullptr || numFrames <= 0) {
             return oboe::DataCallbackResult::Continue;
         }
         if (onPlayback) {
@@ -116,11 +125,20 @@ public:
         AudioDevice::instance = this;
     }
 
-    void _restartStream() {
+    bool _reopenAndStartStream() {
         _openStream();
-        if (audioStream != nullptr) {
-            audioStream->requestStart();
+        if (audioStream == nullptr) {
+            return false;
         }
+        const auto result = audioStream->requestStart();
+        if (result != oboe::Result::OK) {
+            AUPH_ALOGE("Error starting playback stream after disconnection. Error: %s",
+                       oboe::convertToText(result));
+            audioStream->close();
+            audioStream = nullptr;
+            return false;
+        }
+        return true;
     }
 
     void _openStream() {
@@ -140,6 +158,7 @@ public:
         oboe::Result result = builder.openStream(&audioStream);
         if (result != oboe::Result::OK) {
             AUPH_ALOGE("Failed to create stream. Error: %s", oboe::convertToText(result));
+            audioStream = nullptr;
             return;
         }
 
@@ -156,22 +175,26 @@ public:
             auto result = audioStream->requestStart();
             if (result != oboe::Result::OK) {
                 AUPH_ALOGE("Error starting playback stream. Error: %s", oboe::convertToText(result));
-                audioStream->requestStop();
+                audioStream->close();
                 audioStream = nullptr;
                 return false;
             }
 
-            if (_jniEnv && _androidActivity) {
-                jclass cls = _jniEnv->FindClass("ek/Auph");
-                if (cls) {
-                    jmethodID fn = _jniEnv->GetStaticMethodID(cls, "start", "(Landroid/app/Activity;)V");
-                    if (fn) {
-                        _jniEnv->CallStaticVoidMethod(cls, fn, _androidActivity);
+            if (_getJNIEnv && _androidActivity) {
+                auto *env = _getJNIEnv();
+                if (env) {
+                    jclass cls = env->FindClass("ek/Auph");
+                    if (cls) {
+                        jmethodID fn = env->GetStaticMethodID(cls, "start",
+                                                              "(Landroid/app/Activity;)V");
+                        if (fn) {
+                            env->CallStaticVoidMethod(cls, fn, _androidActivity);
+                        } else {
+                            AUPH_ALOGE("Error cannot get start() function");
+                        }
                     } else {
-                        AUPH_ALOGE("Error cannot get start() function");
+                        AUPH_ALOGE("Error cannot find Auph class");
                     }
-                } else {
-                    AUPH_ALOGE("Error cannot find Auph class");
                 }
             }
             return true;
@@ -181,17 +204,21 @@ public:
 
     bool stop() {
         if (audioStream != nullptr) {
-            if (_jniEnv && _androidActivity) {
-                jclass cls = _jniEnv->FindClass("ek/Auph");
-                if (cls) {
-                    jmethodID fn = _jniEnv->GetStaticMethodID(cls, "stop", "(Landroid/app/Activity;)V");
-                    if (fn) {
-                        _jniEnv->CallStaticVoidMethod(cls, fn, _androidActivity);
+            if (_getJNIEnv && _androidActivity) {
+                auto *env = _getJNIEnv();
+                if (env) {
+                    jclass cls = env->FindClass("ek/Auph");
+                    if (cls) {
+                        jmethodID fn = env->GetStaticMethodID(cls, "stop",
+                                                              "(Landroid/app/Activity;)V");
+                        if (fn) {
+                            env->CallStaticVoidMethod(cls, fn, _androidActivity);
+                        } else {
+                            AUPH_ALOGE("Error cannot get stop() function");
+                        }
                     } else {
-                        AUPH_ALOGE("Error cannot get stop() function");
+                        AUPH_ALOGE("Error cannot find Auph class");
                     }
-                } else {
-                    AUPH_ALOGE("Error cannot find Auph class");
                 }
             }
 
@@ -210,18 +237,21 @@ public:
     }
 };
 
-AudioDevice* AudioDevice::instance = nullptr;
+AudioDevice *AudioDevice::instance = nullptr;
 
 }
 
 extern "C" JNIEXPORT jint
-JNICALL Java_ek_Auph_restart(JNIEnv* env, jclass clazz) {
-    (void)env;
-    (void)clazz;
-    auto* device = auph::AudioDevice::instance;
+
+JNICALL Java_ek_Auph_restart(JNIEnv *env, jclass clazz) {
+    (void) env;
+    (void) clazz;
+    auto *device = auph::AudioDevice::instance;
     if (device) {
-        if (device->stop()) {
-            if (device->start()) {
+        auto *stream = device->audioStream;
+        if (stream != nullptr) {
+            stream->close();
+            if (device->_reopenAndStartStream()) {
                 return 0;
             }
             return 1;
