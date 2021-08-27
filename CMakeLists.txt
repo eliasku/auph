@@ -65,19 +65,6 @@ add_library(${PROJECT_NAME} INTERFACE)
 
 target_include_directories(${PROJECT_NAME} INTERFACE src)
 
-#target_compile_options(${PROJECT_NAME}
-#        INTERFACE -Os
-#        INTERFACE -ffast-math
-#        INTERFACE -fno-exceptions
-#        INTERFACE -fno-rtti
-#        INTERFACE -Wall
-#        INTERFACE -Wextra
-#        )
-#
-#target_link_options(${PROJECT_NAME}
-#        INTERFACE -Os
-#        )
-
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_compile_options(${PROJECT_NAME}
             INTERFACE -x objective-c++
