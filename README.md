@@ -1,5 +1,9 @@
 # 🔊 auph 🎧
 
+[![Build](https://github.com/eliasku/auph/actions/workflows/build.yml/badge.svg)](https://github.com/eliasku/auph/actions/workflows/build.yml)
+[![Version](https://img.shields.io/npm/v/auph)](https://www.npmjs.com/package/auph)
+[![Downloads](https://img.shields.io/npm/dw/auph)](https://www.npmjs.com/package/auph)
+
 Trivial audio mixer API for native and web targets. [Online Demo](https://eliasku.github.io/auph/)
 
 > ⚠️ Work in progress!
