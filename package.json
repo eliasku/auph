@@ -6,7 +6,8 @@
   "module": "web/dist/module/index.js",
   "types": "web/dist/types/index.d.ts",
   "scripts": {
-    "postinstall": "npx npm-cmake || exit 0",
+    "install": "npx npm-cmake || exit 0",
+    "postinstall": "node-gyp configure && node-gyp build",
     "watch": "tsc -w -p web/tsconfig.json & rollup -w -c web/rollup.config.js",
     "build": "tsc -p web/tsconfig.json && rollup -c web/rollup.config.js",
     "build-cmake": "node scripts/build-cmake",
