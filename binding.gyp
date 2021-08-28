@@ -13,8 +13,8 @@
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "<!@(node -p \"require('./node-include')('@ekx/stb')\")",
-        "<!@(node -p \"require('./node-include')('@ekx/dr-libs')\")",
+        "<!@(node -p \"require('./node-include.js')('@ekx/stb')\")",
+        "<!@(node -p \"require('./node-include.js')('@ekx/dr-libs')\")",
         "include"
       ],
       "defines": [
