@@ -1,5 +1,12 @@
 # auph
 
+## 0.0.13
+
+### Patch Changes
+
+- b6ce2cb: native: rename src to include (headers-only)
+- b6ce2cb: add npm dependencies to dr-libs and stb
+
 ## 0.0.12
 
 ### Patch Changes
