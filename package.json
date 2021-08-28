@@ -7,6 +7,8 @@
   "types": "web/dist/types/index.d.ts",
   "scripts": {
     "install": "npx npm-cmake || exit 0",
+    "check1": "node -p \"require('./node-include.js')('@ekx/stb')\"",
+    "check2": "node -p \"require('./node-include.js')('@ekx/dr-libs')\"",
     "postinstall": "node-gyp configure && node-gyp build",
     "watch": "tsc -w -p web/tsconfig.json & rollup -w -c web/rollup.config.js",
     "build": "tsc -p web/tsconfig.json && rollup -c web/rollup.config.js",
