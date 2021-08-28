@@ -1,5 +1,11 @@
 # auph
 
+## 0.0.14
+
+### Patch Changes
+
+- d9a9f20: Update configuration
+
 ## 0.0.13
 
 ### Patch Changes
