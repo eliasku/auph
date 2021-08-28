@@ -13,8 +13,8 @@
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "<!@(node -p \"require('path').dirname(require.resolve('@ekx/stb/package.json')) + '/include'\")",
-        "<!@(node -p \"require('path').dirname(require.resolve('@ekx/dr-libs/package.json')) + '/include'\")",
+        "<!@(node -p \"require('./node-include')('@ekx/stb')\")",
+        "<!@(node -p \"require('./node-include')('@ekx/dr-libs')\")",
         "include"
       ],
       "defines": [
