@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
+
+include(npm.cmake)
+
 project(auph-static)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -21,7 +24,7 @@ if (AUPH_OGG)
     target_compile_definitions(${PROJECT_NAME} PUBLIC AUPH_OGG)
 endif ()
 
-target_include_directories(${PROJECT_NAME} PUBLIC src)
+target_include_directories(${PROJECT_NAME} PUBLIC include)
 
 target_compile_options(${PROJECT_NAME}
         PUBLIC -Os
@@ -34,6 +37,11 @@ target_compile_options(${PROJECT_NAME}
 
 target_link_options(${PROJECT_NAME}
         PUBLIC -Os
+        )
+
+target_link_libraries(${PROJECT_NAME}
+        PUBLIC dr-libs
+        PUBLIC stb
         )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
@@ -63,7 +71,12 @@ endif ()
 project(auph)
 add_library(${PROJECT_NAME} INTERFACE)
 
-target_include_directories(${PROJECT_NAME} INTERFACE src)
+target_include_directories(${PROJECT_NAME} INTERFACE include)
+
+target_link_libraries(${PROJECT_NAME}
+        INTERFACE dr-libs
+        INTERFACE stb
+        )
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_compile_options(${PROJECT_NAME}

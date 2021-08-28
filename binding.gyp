@@ -13,7 +13,9 @@
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "src"
+        "<!@(node -p \"require('path').dirname(require.resolve('@ekx/stb/package.json')) + '/include'\")",
+        "<!@(node -p \"require('path').dirname(require.resolve('@ekx/dr-libs/package.json')) + '/include'\")",
+        "include"
       ],
       "defines": [
         "NAPI_DISABLE_CPP_EXCEPTIONS"

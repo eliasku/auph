@@ -6,7 +6,7 @@ add_library(${PROJECT_NAME} SHARED
         )
 
 target_include_directories(${PROJECT_NAME}
-        PUBLIC ../../../../../../src
+        PUBLIC ../../../../../../include
         PUBLIC ../../../../../../android/oboe/include
         PRIVATE ../../../../../../android/oboe/src
         )
