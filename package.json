@@ -1,6 +1,6 @@
 {
   "name": "auph",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "browser": "web/dist/browser/auph.js",
   "main": "web/dist/cjs/index.js",
   "module": "web/dist/module/index.js",
