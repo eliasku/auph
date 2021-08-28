@@ -83,5 +83,6 @@
     "macos",
     "native",
     "audio mixer"
-  ]
+  ],
+  "homepage": "https://eliasku.github.io/auph"
 }
