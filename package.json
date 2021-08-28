@@ -26,10 +26,10 @@
   "files": [
     "include",
     "android",
-    "nodejs",
     "CMakeLists.txt",
     "auph-static.cpp",
     "ek.js",
+    "nodejs",
     "binding.gyp",
     "web/dist",
     "README.md",
