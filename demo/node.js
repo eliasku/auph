@@ -6,6 +6,9 @@ const path = require("path");
 // initialize mixer and run
 auph.init();
 
+// console application become active
+auph.resume();
+
 // load clap sound
 const clap = auph.load(path.resolve(__dirname, "assets/mp3/CLAP.mp3"), 0);
 console.info(clap);

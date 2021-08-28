@@ -79,7 +79,10 @@ int main() {
     printf("AUPH!\nAUPH!\n\n\n");
 
     auph::init();
+
+    // console application became active at start
     auph::resume();
+
     //music = auph::load("../../assets/wav/KickDrum.wav", 0);
     //music = auph::load("../../assets/wav/KickDrum.wav", auph::Flag_Stream);
 

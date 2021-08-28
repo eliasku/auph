@@ -214,6 +214,16 @@
     human-id "^1.0.2"
     prettier "^1.19.1"
 
+"@ekx/dr-libs@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@ekx/dr-libs/-/dr-libs-0.0.2.tgz#b4df03ea8fcbf0f0f1e222e7dac3b38fe3f3039f"
+  integrity sha512-DXW3dXot6qDe4A0Rp/HGh0XJmhgaN7E1xJZUfoEbH0KtoJkW6qDCzZun7LC0Ct0Trkf6wrkupICU0k4WMhGILw==
+
+"@ekx/stb@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@ekx/stb/-/stb-0.0.6.tgz#36f158a14b5f2826d89fd08a74efd09f63260393"
+  integrity sha512-lsWrp6pFO5ndmienkOZ58YKv+vvkIx6AmKDdRbZA6pEQDXvcJozX9jxGAWbiqP6q1WjVF5hl5SYDae1ylJTv/g==
+
 "@manypkg/find-root@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@manypkg/find-root/-/find-root-1.1.0.tgz#a62d8ed1cd7e7d4c11d9d52a8397460b5d4ad29f"
@@ -1079,9 +1089,9 @@ mixme@^0.5.0:
   integrity sha512-NaeZIckeBFT7i0XBEpGyFcAE0/bLcQ9MHErTpnU3bLWVE5WZbxG5Y3fDsMxYGifTo5khDA42OquXCC2ngKJB+g==
 
 node-addon-api@^4.0.0:
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-4.0.0.tgz#ac128f43eff7fac4b5f5ef2f39d6d7c2709efead"
-  integrity sha512-ALmRVBFzfwldBfk3SbKfl6+PVMXiCPKZBEfsJqB/EjXAMAI+MfFrEHR+GMRBuI162DihZ1QjEZ8ieYKuRCJ8Hg==
+  version "4.1.0"
+  resolved "https://registry.yarnpkg.com/node-addon-api/-/node-addon-api-4.1.0.tgz#f1722f1f60793584632ffffb79e12ca042c48bd0"
+  integrity sha512-Zz1o1BDX2VtduiAt6kgiUl8jX1Vm3NMboljFYKQJ6ee8AGfiTvM2mlZFI3xPbqjs80rCQgiVJI/DjQ/1QJ0HwA==
 
 normalize-package-data@^2.5.0:
   version "2.5.0"
@@ -1621,9 +1631,9 @@ type-fest@^0.8.1:
   integrity sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==
 
 typescript@^4.3.5:
-  version "4.3.5"
-  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.3.5.tgz#4d1c37cc16e893973c45a06886b7113234f119f4"
-  integrity sha512-DqQgihaQ9cUrskJo9kIyW/+g0Vxsk8cDtZ52a3NGh0YNTfpUSArXSohyUGnvbPazEPLu398C0UxmKSOrPumUzA==
+  version "4.4.2"
+  resolved "https://registry.yarnpkg.com/typescript/-/typescript-4.4.2.tgz#6d618640d430e3569a1dfb44f7d7e600ced3ee86"
+  integrity sha512-gzP+t5W4hdy4c+68bfcv0t400HVJMMd2+H9B7gae1nQlBzCqvrXX+6GL/b3GAgyTH966pzrZ70/fRjwAtZksSQ==
 
 universalify@^0.1.0:
   version "0.1.2"

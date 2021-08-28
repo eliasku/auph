@@ -13,7 +13,7 @@
     "build-demo": "node scripts/build-demo",
     "build-pages": "node scripts/build-demo && node scripts/build-pages",
     "build-node": "node-gyp rebuild",
-    "start-node": "node demo/node.js",
+    "start-node": "cd demo && node node.js",
     "update-cpp-deps": "node scripts/update-cpp-deps.js",
     "release": "changeset publish",
     "version": "changeset version && yarn run update-lock",
@@ -21,7 +21,7 @@
     "clean": "rimraf ./build ./pages ./web/dist"
   },
   "files": [
-    "src",
+    "include",
     "android",
     "nodejs",
     "CMakeLists.txt",
@@ -44,15 +44,17 @@
     "@changesets/cli": "^2.16.0",
     "@rollup/plugin-replace": "^3.0.0",
     "follow-redirects": "^1.14.2",
+    "rimraf": "^3.0.2",
     "rollup": "^2.56.3",
     "rollup-plugin-terser": "^7.0.2",
-    "typescript": "^4.3.5",
-    "rimraf": "^3.0.2"
+    "typescript": "^4.3.5"
   },
   "dependencies": {
     "bindings": "^1.5.0",
     "node-addon-api": "^4.0.0",
-    "npm-cmake": "^0.1.0"
+    "npm-cmake": "^0.1.0",
+    "@ekx/stb": "^0.0.6",
+    "@ekx/dr-libs": "^0.0.2"
   },
   "gypfile": true,
   "engines": {

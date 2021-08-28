@@ -36,6 +36,9 @@ function setup(project) {
         windows: {},
         linux: {}
     });
+
+    project.importModule("@ekx/stb", __dirname);
+    project.importModule("@ekx/dr-libs", __dirname);
 }
 
 module.exports = setup;
