@@ -6,7 +6,7 @@ function setup(project) {
     project.addModule({
         name: "auph",
         path: __dirname,
-        cpp_include: ["src"],
+        cpp_include: "include",
         android: {
             cpp_include: [
                 "android/oboe/src",
