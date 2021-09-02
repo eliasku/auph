@@ -130,10 +130,9 @@ export function _voiceSetRunning(v: VoiceObj, value: boolean): void {
 }
 
 export function _voiceApplyPitch(v: VoiceObj, value: u31): void {
-    if ((v.s & Flag.Running) !== 0) {
-        const playbackRate = value / Unit;
+    if (!!(v.s & Flag.Running)) {
         if (v.buffer) {
-            v.buffer.playbackRate.value = playbackRate;
+            v.buffer.playbackRate.value = value / Unit;
         }
     }
 }
