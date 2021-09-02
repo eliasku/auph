@@ -149,11 +149,6 @@ function closeContext(context) {
         error(11 /* DeviceCloseError */, reason);
     });
     ctx = null;
-}
-function _setAudioParam(param, value) {
-    if (param.value !== value) {
-        param.value = value;
-    }
 }function nextHandle(h) {
     return ((h + vIncr) & vMask) | (h & (tMask | iMask));
 }var VoiceObj = /** @class */ (function () {
@@ -272,10 +267,9 @@ function _voiceSetRunning(v, value) {
     }
 }
 function _voiceApplyPitch(v, value) {
-    if ((v.s & 2 /* Running */) !== 0) {
-        var playbackRate = value / Unit;
+    if (!!(v.s & 2 /* Running */)) {
         if (v.buffer) {
-            v.buffer.playbackRate.value = playbackRate;
+            v.buffer.playbackRate.value = value / Unit;
         }
     }
 }
@@ -596,13 +590,13 @@ function set$1(name, param, value) {
                     case 1 /* Gain */:
                         if (obj._gain !== value) {
                             obj._gain = value;
-                            _setAudioParam(obj.gain.gain, value / Unit);
+                            obj.gain.gain.value = value / Unit;
                         }
                         break;
                     case 2 /* Pan */:
                         if (obj._pan !== value) {
                             obj._pan = value;
-                            _setAudioParam(obj.pan.pan, value / Unit - 1);
+                            obj.pan.pan.value = value / Unit - 1;
                         }
                         break;
                     case 3 /* Rate */:
@@ -627,7 +621,8 @@ function set$1(name, param, value) {
                 switch (param) {
                     case 1 /* Gain */:
                         if (obj._gain !== value) {
-                            _setAudioParam(obj.gain.gain, value / Unit);
+                            obj.gain.gain.value = value / Unit;
+                            obj._gain = value;
                         }
                         break;
                 }
