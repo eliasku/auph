@@ -100,9 +100,3 @@ export function closeContext(context: AudioContext) {
     });
     ctx = null;
 }
-
-export function _setAudioParam(param: AudioParam, value: number) {
-    if (param.value !== value) {
-        param.value = value;
-    }
-}

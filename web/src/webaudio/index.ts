@@ -1,5 +1,4 @@
 import {
-    _setAudioParam,
     audioContextPause,
     audioContextResume,
     closeContext,
@@ -224,13 +223,13 @@ export function set(name: Name, param: Param, value: u31): void {
                     case Param.Gain:
                         if (obj._gain !== value) {
                             obj._gain = value;
-                            _setAudioParam(obj.gain.gain, value / Unit);
+                            obj.gain.gain.value = value / Unit;
                         }
                         break;
                     case Param.Pan:
                         if (obj._pan !== value) {
                             obj._pan = value;
-                            _setAudioParam(obj.pan.pan, value / Unit - 1);
+                            obj.pan.pan.value = value / Unit - 1;
                         }
                         break;
                     case Param.Rate:
@@ -258,7 +257,8 @@ export function set(name: Name, param: Param, value: u31): void {
                 switch (param) {
                     case Param.Gain:
                         if (obj._gain !== value) {
-                            _setAudioParam(obj.gain.gain, value / Unit);
+                            obj.gain.gain.value = value / Unit;
+                            obj._gain = value;
                         }
                         break;
                     default:
