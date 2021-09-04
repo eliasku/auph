@@ -1,5 +1,12 @@
 # auph
 
+## 0.0.16
+
+### Patch Changes
+
+- 36e1927: web: fix set bus gain
+- 0293675: fix ek config include path
+
 ## 0.0.15
 
 ### Patch Changes
