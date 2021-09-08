@@ -48,23 +48,43 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_compile_options(${PROJECT_NAME}
             PUBLIC -x objective-c++
             )
-    # for macOS: target you should link AudioToolbox and CoreAudio frameworks
     target_link_libraries(${PROJECT_NAME}
-            PUBLIC "-framework Foundation"
             PUBLIC "-framework CoreAudio"
-            PUBLIC "-framework AudioToolbox")
-
-    # for iOS: `AVFoundation.framework` and `AudioToolbox.framework`
-
+            PUBLIC "-framework AudioToolbox"
+            )
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    target_compile_options(${PROJECT_NAME}
+            PUBLIC -x objective-c++
+            )
+    target_link_libraries(${PROJECT_NAME}
+            PUBLIC "-framework AVFoundation"
+            PUBLIC "-framework AudioToolbox"
+            )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
+    target_include_directories(${PROJECT_NAME}
+            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/android/oboe/include
+            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/android/oboe/src
+            )
+    target_link_libraries(${PROJECT_NAME}
+            INTERFACE log
+            )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 endif ()
 
 if (EMSCRIPTEN)
-    target_link_options(${PROJECT_NAME} PUBLIC
-            --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/emscripten/auph.js
+    target_link_options(${PROJECT_NAME}
+            PUBLIC SHELL:--pre-js ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/emscripten/auph.js
+            )
+elseif (ANDROID)
+    target_include_directories(${PROJECT_NAME}
+            PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/android/oboe/include
+            PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/android/oboe/src
+            )
+    target_link_libraries(${PROJECT_NAME}
+            PUBLIC log
             )
 endif ()
 
@@ -82,23 +102,34 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
     target_compile_options(${PROJECT_NAME}
             INTERFACE -x objective-c++
             )
-
-    # for macOS: target you should link AudioToolbox and CoreAudio frameworks
     target_link_libraries(${PROJECT_NAME}
-            INTERFACE "-framework Foundation"
             INTERFACE "-framework CoreAudio"
-            INTERFACE "-framework AudioToolbox")
-
-    # for iOS: `AVFoundation.framework` and `AudioToolbox.framework`
-
+            INTERFACE "-framework AudioToolbox"
+            )
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
+    target_compile_options(${PROJECT_NAME}
+            INTERFACE -x objective-c++
+            )
+    target_link_libraries(${PROJECT_NAME}
+            INTERFACE "-framework AVFoundation"
+            INTERFACE "-framework AudioToolbox"
+            )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Android")
+    target_include_directories(${PROJECT_NAME}
+            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/android/oboe/include
+            INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/android/oboe/src
+            )
+    target_link_libraries(${PROJECT_NAME}
+            INTERFACE log
+            )
 elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
 
 endif ()
 
 if (EMSCRIPTEN)
-    target_link_options(${PROJECT_NAME} INTERFACE
-            --pre-js ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/emscripten/auph.js
+    target_link_options(${PROJECT_NAME}
+            INTERFACE SHELL:--pre-js ${CMAKE_CURRENT_SOURCE_DIR}/web/dist/emscripten/auph.js
             )
 endif ()
