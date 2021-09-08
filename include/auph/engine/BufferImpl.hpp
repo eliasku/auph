@@ -32,6 +32,20 @@
 
 namespace auph {
 
+/**
+ * Small JS snippet to get FourCC code from 4-char string
+ * ```javascript
+ * fourCC = s => "0x" + [...s].reduce((v,c,i) => v | c.charCodeAt() << ((3 - i) << 3), 0).toString(16);
+ * fourCC("OggS") === "0x4f676753"
+ * ```
+ */
+enum FourCC {
+    FourCC_OggS = 0x4f676753,
+    FourCC_RIFF = 0x52494646,
+    FourCC_WAVE = 0x57415645,
+    FourCC_ID3 = 0x49443300
+};
+
 BufferObj::~BufferObj() {
     unload();
 }
@@ -106,33 +120,33 @@ bool loadMemoryToBuffer(BufferDataSource* dataSource, const void* data, uint32_t
     }
     const auto* u8 = (const uint8_t*) data;
     const uint32_t fourCC = (u8[0] << 24) | (u8[1] << 16) | (u8[2] << 8) | u8[3];
-#ifdef AUPH_OGG
 
-    const uint32_t OggS = 'OggS';
-    if (fourCC == OggS) {
+#ifdef AUPH_OGG
+    if (fourCC == FourCC_OggS) {
         return loadMemoryOgg(data, size, dataSource, !!(flags & Flag_Stream));
     }
 #endif
 
 #ifdef AUPH_WAV
-    if (fourCC == 'RIFF' || fourCC == 'WAVE') {
+    if (fourCC == FourCC_RIFF || fourCC == FourCC_WAVE) {
         if (flags & Flag_Stream) {
             return openMemoryStreamWav(data, size, dataSource);
         } else {
             return loadMemoryWav(data, size, dataSource);
         }
     }
-#endif // AUPH_WAV
+#endif
 
 #ifdef AUPH_MP3
-    if ((fourCC & 0xFFFFFF00) == 'ID3\0' || (fourCC & 0xFFE00000) == 0xFFE00000 /* 11-bit sync */) {
+    if ((fourCC & 0xFFFFFF00) == FourCC_ID3 || (fourCC & 0xFFE00000) == 0xFFE00000 /* 11-bit sync */) {
         if (flags & Flag_Stream) {
             return openMemoryStreamMp3(data, size, dataSource);
         } else {
             return loadMemoryMp3(data, size, dataSource);
         }
     }
-#endif // AUPH_MP3
+#endif
+
     return false;
 }
 

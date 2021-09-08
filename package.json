@@ -15,7 +15,6 @@
     "build-pages": "node scripts/build-demo && node scripts/build-pages",
     "build-node": "node-gyp rebuild",
     "start-node": "cd demo && node node.js",
-    "update-cpp-deps": "node scripts/update-cpp-deps.js",
     "release": "changeset publish",
     "version": "changeset version && yarn run update-lock",
     "update-lock": "yarn && git add yarn.lock",
@@ -48,7 +47,8 @@
     "rimraf": "^3.0.2",
     "rollup": "^2.56.3",
     "rollup-plugin-terser": "^7.0.2",
-    "typescript": "^4.3.5"
+    "typescript": "^4.3.5",
+    "cmake-build": "0.0.1"
   },
   "dependencies": {
     "bindings": "^1.5.0",
