@@ -1,5 +1,13 @@
 # auph
 
+## 0.0.17
+
+### Patch Changes
+
+- d0cf12a: use cmake-build for native build script
+- d0cf12a: native: fix fourCC compile warning
+- d0cf12a: cmake: fix emscripten and android targets
+
 ## 0.0.16
 
 ### Patch Changes
