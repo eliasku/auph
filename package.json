@@ -6,7 +6,7 @@
   "module": "web/dist/module/index.js",
   "types": "web/dist/types/index.d.ts",
   "scripts": {
-    "install": "npx npm-cmake || exit 0",
+    "install": "npx cmake-build || exit 0",
     "postinstall": "node-gyp configure && node-gyp build",
     "watch": "tsc -w -p web/tsconfig.json & rollup -w -c web/rollup.config.js",
     "build": "tsc -p web/tsconfig.json && rollup -c web/rollup.config.js",
@@ -47,15 +47,14 @@
     "rimraf": "^3.0.2",
     "rollup": "^2.56.3",
     "rollup-plugin-terser": "^7.0.2",
-    "typescript": "^4.3.5",
-    "cmake-build": "0.0.1"
+    "typescript": "^4.3.5"
   },
   "dependencies": {
+    "@ekx/dr-libs": "^0.0.3",
+    "@ekx/stb": "^0.0.7",
     "bindings": "^1.5.0",
-    "node-addon-api": "^4.0.0",
-    "npm-cmake": "^0.1.0",
-    "@ekx/stb": "^0.0.6",
-    "@ekx/dr-libs": "^0.0.2"
+    "cmake-build": "0.0.3",
+    "node-addon-api": "^4.0.0"
   },
   "gypfile": true,
   "engines": {
