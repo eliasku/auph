@@ -54,7 +54,7 @@
     "@ekx/stb": "^0.0.7",
     "bindings": "^1.5.0",
     "cmake-build": "0.0.3",
-    "node-addon-api": "^4.0.0"
+    "node-addon-api": "^4.1.0"
   },
   "gypfile": true,
   "engines": {
