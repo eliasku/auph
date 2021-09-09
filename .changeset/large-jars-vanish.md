@@ -2,4 +2,4 @@
 "auph": patch
 ---
 
-fix fourCC compile warning
+native: fix fourCC compile warning
