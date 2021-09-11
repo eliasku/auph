@@ -101,6 +101,7 @@ void init() {
 }
 
 void shutdown() {
+    ctx->device.stop();
     ctx->state = 0;
     delete ctx;
     ctx = nullptr;

@@ -151,7 +151,7 @@ public:
     BusObj* busLine = nullptr;
     MixSample scratch[ScratchBufferSize]{};
 
-    void mix(MixSample* dest, uint32_t frames, uint32_t sampleRate) {
+    void mix(MixSample* dest, uint32_t frames, uint32_t sampleRate) const {
         const uint32_t samples = frames << 1;
         clear((float*) dest, samples);
         renderVoices(voices, busLine, VoicesMaxCount, dest, frames, sampleRate);

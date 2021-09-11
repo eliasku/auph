@@ -76,18 +76,18 @@ public:
     AudioStreamInfo playbackStreamInfo{};
     std::mutex mLock{};
 
-    bool onError(oboe::AudioStream *stream, oboe::Result error) {
+    bool onError(oboe::AudioStream *stream, oboe::Result error) override {
         (void) stream;
         (void) error;
         return false;
     }
 
-    void onErrorBeforeClose(oboe::AudioStream *stream, oboe::Result error) {
+    void onErrorBeforeClose(oboe::AudioStream *stream, oboe::Result error) override {
         (void) stream;
         (void) error;
     }
 
-    void onErrorAfterClose(oboe::AudioStream *stream, oboe::Result error) {
+    void onErrorAfterClose(oboe::AudioStream *stream, oboe::Result error) override {
         (void) stream;
         // Restart the stream if the error is a disconnect, otherwise do nothing and log the error
         // reason.
@@ -102,7 +102,7 @@ public:
         }
     }
 
-    oboe::DataCallbackResult onAudioReady(oboe::AudioStream *stream, void *audioData, int32_t numFrames) {
+    oboe::DataCallbackResult onAudioReady(oboe::AudioStream *stream, void *audioData, int32_t numFrames) override {
         // prevent OpenSLES case, `audioData` could be null or no frames are required
         // https://github.com/google/oboe/issues/559
         if (audioData == nullptr || numFrames <= 0) {
@@ -229,7 +229,7 @@ public:
         return false;
     }
 
-    ~AudioDevice() {
+    ~AudioDevice() override {
         userData = nullptr;
         onPlayback = nullptr;
         stop();
@@ -241,9 +241,7 @@ AudioDevice *AudioDevice::instance = nullptr;
 
 }
 
-extern "C" JNIEXPORT jint
-
-JNICALL Java_ek_Auph_restart(JNIEnv *env, jclass clazz) {
+extern "C" JNIEXPORT jint JNICALL Java_ek_Auph_restart(JNIEnv *env, jclass clazz) {
     (void) env;
     (void) clazz;
     auto *device = auph::AudioDevice::instance;
