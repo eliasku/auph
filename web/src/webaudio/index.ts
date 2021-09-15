@@ -38,6 +38,7 @@ import {
     Unit
 } from "../protocol/interface";
 import {_bufferDestroy, _bufferLoad, _bufferMemory, _getBufferObj, buffers, getNextBufferObj} from "./Buffer";
+import {len, resize, setAudioParamValue} from "./common";
 
 export function init(): void {
     const ctx = initContext();
@@ -50,8 +51,8 @@ export function shutdown(): void {
     const ctx = getContext();
     if (ctx) {
         termBusPool();
-        voicePool.length = 1;
-        buffers.length = 1;
+        resize(voicePool, 1);
+        resize(buffers, 1);
         closeContext(ctx);
     }
 }
@@ -145,12 +146,12 @@ export function voice(buffer: AuphBuffer,
     const voiceObj = _getVoiceObj(voice)!;
 
     voiceObj.s = Flag.Active | flags;
-    voiceObj.data = buffer;
-    voiceObj._gain = gain;
-    voiceObj._pan = pan;
-    voiceObj._rate = rate;
-    voiceObj.gain.gain.value = gain / Unit;
-    voiceObj.pan.pan.value = pan / Unit - 1;
+    voiceObj.bf = buffer;
+    voiceObj.G = gain;
+    voiceObj.P = pan;
+    voiceObj.R = rate;
+    setAudioParamValue(voiceObj.g.gain, gain / Unit);
+    setAudioParamValue(voiceObj.p.pan, pan / Unit - 1);
 
     // TODO: streamed decoding
     //if (bufferObj.s & Flag.Stream) {
@@ -179,9 +180,9 @@ export function stop(name: Name): void {
     } else if (type === Type.Buffer) {
         const obj = _getBufferObj(name);
         if (obj) {
-            for (let i = 1; i < voicePool.length; ++i) {
+            for (let i = 1; i < len(voicePool); ++i) {
                 const v = voicePool[i]!;
-                if (v.data === name) {
+                if (v.bf === name) {
                     _voiceStop(v);
                 }
             }
@@ -219,30 +220,23 @@ export function set(name: Name, param: Param, value: u31): void {
                     _voiceSetLoop(obj, enabled);
                 }
             } else {
-                switch (param) {
-                    case Param.Gain:
-                        if (obj._gain !== value) {
-                            obj._gain = value;
-                            obj.gain.gain.value = value / Unit;
-                        }
-                        break;
-                    case Param.Pan:
-                        if (obj._pan !== value) {
-                            obj._pan = value;
-                            obj.pan.pan.value = value / Unit - 1;
-                        }
-                        break;
-                    case Param.Rate:
-                        if (obj._rate !== value) {
-                            obj._rate = value;
-                            _voiceApplyPitch(obj, value);
-                        }
-                        break;
-                    case Param.CurrentTime:
-                        // TODO:
-                        break;
-                    default:
-                        break;
+                if (param === Param.Gain) {
+                    if (obj.G !== value) {
+                        obj.G = value;
+                        setAudioParamValue(obj.g.gain, value / Unit);
+                    }
+                } else if (param === Param.Pan) {
+                    if (obj.P !== value) {
+                        obj.P = value;
+                        setAudioParamValue(obj.p.pan, value / Unit - 1);
+                    }
+                } else if (param === Param.Rate) {
+                    if (obj.R !== value) {
+                        obj.R = value;
+                        _voiceApplyPitch(obj, value);
+                    }
+                } else if (param === Param.CurrentTime) {
+                    // TODO:
                 }
             }
         }
@@ -254,15 +248,13 @@ export function set(name: Name, param: Param, value: u31): void {
                     _setBusConnected(obj, !!value);
                 }
             } else {
-                switch (param) {
-                    case Param.Gain:
-                        if (obj._gain !== value) {
-                            obj.gain.gain.value = value / Unit;
-                            obj._gain = value;
-                        }
-                        break;
-                    default:
-                        break;
+                if (param === Param.Gain) {
+                    if (obj.G !== value) {
+                        setAudioParamValue(obj.g.gain, value / Unit);
+                        obj.G = value;
+                    }
+                } else {
+
                 }
             }
         }
@@ -270,104 +262,95 @@ export function set(name: Name, param: Param, value: u31): void {
 }
 
 export function get(name: Name, param: u31): u31 {
+    let result = 0;
+
     if (name === Mixer) {
         const ctx = getAudioContextObject();
         if (ctx) {
             if (param === Param.State) {
-                return getContextState(ctx);
+                result = getContextState(ctx);
             } else if (param === Param.SampleRate) {
-                return ctx.sampleRate | 0;
+                result = ctx.sampleRate | 0;
             }
         }
-        return 0;
+        return result;
     }
 
     const type = name & tMask;
     if ((param & Param.Count) && !(name & iMask)) {
         const stateMask = param & Param.StateMask;
         if (type === Type.Voice) {
-            return _countObjectsWithFlags(voicePool, stateMask);
+            result = _countObjectsWithFlags(voicePool, stateMask);
         } else if (type === Type.Bus) {
-            return _countObjectsWithFlags(busLine, stateMask);
+            result = _countObjectsWithFlags(busLine, stateMask);
         } else if (type === Type.Buffer) {
-            return _countObjectsWithFlags(buffers, stateMask);
+            result = _countObjectsWithFlags(buffers, stateMask);
         }
-        return 0;
+        return result;
     }
 
     if (type === Type.Voice) {
         const obj = _getVoiceObj(name);
         if (obj) {
-            switch (param) {
-                case Param.State:
-                    return obj.s;
-                case Param.Gain:
-                    return obj._gain;
-                case Param.Pan:
-                    return obj._pan;
-                case Param.Rate:
-                    return obj._rate;
-                case Param.Duration: {
-                    let d = 0.0;
-                    if (obj.buffer && obj.buffer.buffer) {
-                        d = obj.buffer.buffer.duration * Unit;
-                    }
-                    return (d * Unit) | 0;
+            if (param === Param.State) {
+                result = obj.s;
+            } else if (param === Param.Gain) {
+                result = obj.G;
+            } else if (param === Param.Pan) {
+                result = obj.P;
+            } else if (param === Param.Rate) {
+                result = obj.R;
+            } else if (param === Param.Duration) {
+                if (obj.sn && obj.sn.buffer) {
+                    result = (obj.sn.buffer.duration * Unit) | 0;
                 }
-                case Param.CurrentTime: {
-                    let d = 0.0;
-                    if (obj.buffer && obj.buffer.buffer) {
-                        // TODO: :(
-                    }
-                    return (d * Unit) | 0;
+            } else if (param === Param.CurrentTime) {
+                if (obj.sn && obj.sn.buffer) {
+                    // TODO: :(
                 }
-                default:
-                    warn(Message.NotSupported);
-                    break;
+            } else {
+                warn(Message.NotSupported);
             }
         }
-        return 0;
-    } else if (type === Type.Bus) {
+        return result;
+    }
+
+    if (type === Type.Bus) {
         const obj = _getBus(name);
         if (obj) {
-            switch (param) {
-                case Param.State:
-                    return obj.s;
-                case Param.Gain:
-                    return obj._gain;
-                default:
-                    warn(Message.NotSupported);
-                    break;
+            if (param === Param.State) {
+                result = obj.s;
+            } else if (param === Param.Gain) {
+                result = obj.G;
+            } else {
+                warn(Message.NotSupported);
             }
         }
-        return 0;
-    } else if (type === Type.Buffer) {
+        return result;
+    }
+
+    if (type === Type.Buffer) {
         const obj = _getBufferObj(name);
         if (obj) {
-            switch (param) {
-                case Param.State:
-                    return obj.s;
-                case Param.Duration: {
-                    let d = 0.0;
-                    if (obj.b) {
-                        d = (obj.b as AudioBuffer).duration;
-                    }
-                    return (d * Unit) | 0;
+            if (param === Param.State) {
+                result = obj.s;
+            } else if (param === Param.Duration) {
+                if (obj.b) {
+                    result = ((obj.b as AudioBuffer).duration * Unit) | 0;
                 }
-                default:
-                    warn(Message.NotSupported);
-                    break;
+            } else {
+                warn(Message.NotSupported);
             }
         }
-        return 0;
     }
-    return 0;
+    return result;
 }
 
 /** private helpers **/
 function _countObjectsWithFlags(arr: ({ s: u31 } | null)[], mask: u31): u31 {
     let cnt = 0;
-    for (let i = 1; i < arr.length; ++i) {
+    const size = len(arr);
+    for (let i = 1; i < size; ++i) {
         const obj = arr[i];
         if (obj && (obj.s & mask) === mask) {
             ++cnt;

@@ -1,7 +1,9 @@
+import {len} from "./common";
+
 export function unlock(unlocked: () => boolean) {
     // "touchstart", "touchend", "mousedown", "pointerdown"
     const events = ["touchstart", "touchend", "mousedown", "click", "keydown"];
-    const num = events.length;
+    const num = len(events);
     const doc = document;
     const handle = () => {
         if(unlocked()) {
