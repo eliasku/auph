@@ -1,39 +1,39 @@
 import {getAudioContextObject} from "./Mixer";
 import {AuphBus, Flag, iMask, Type, Unit} from "../protocol/interface";
-import {Obj} from "./common";
+import {add, connectAudioNode, disconnectAudioNode, len, Obj, resize} from "./common";
 
 export class BusObj implements Obj {
     h = 0;
     s = Flag.Active | Flag.Running;
-    _gain = Unit;
+    G = Unit;
 
-    constructor(readonly gain: GainNode) {
+    constructor(readonly g: GainNode) {
     }
 }
 
 export const busLine: BusObj[] = [];
 
 export function createBusObj(ctx: AudioContext): BusObj {
-    const next = busLine.length;
+    const next = len(busLine);
     const obj = new BusObj(ctx.createGain());
     obj.h = next | Type.Bus;
-    busLine.push(obj);
+    add(busLine, obj);
     return obj;
 }
 
 export function initBusPool(ctx: AudioContext) {
-    const master = createBusObj(ctx).gain;
-    master.connect(ctx.destination);
-    createBusObj(ctx).gain.connect(master);
-    createBusObj(ctx).gain.connect(master);
-    createBusObj(ctx).gain.connect(master);
+    const master = createBusObj(ctx).g;
+    connectAudioNode(master, ctx.destination);
+    connectAudioNode(createBusObj(ctx).g, master);
+    connectAudioNode(createBusObj(ctx).g, master);
+    connectAudioNode(createBusObj(ctx).g, master);
 }
 
 export function termBusPool() {
-    for (let i = 0; i < busLine.length; ++i) {
-        busLine[i].gain.disconnect();
+    for (let i = 0; i < len(busLine); ++i) {
+        disconnectAudioNode(busLine[i].g);
     }
-    busLine.length = 0;
+    resize(busLine, 0);
 }
 
 export function _getBus(bus: AuphBus): BusObj | null {
@@ -43,18 +43,18 @@ export function _getBus(bus: AuphBus): BusObj | null {
 
 export function _getBusGain(handle: AuphBus): GainNode | undefined {
     const obj = _getBus(handle);
-    return obj ? obj.gain : undefined;
+    return obj ? obj.g : undefined;
 }
 
 export function _setBusConnected(bus: BusObj, connected: boolean): void {
     const flag = !!(bus.s & Flag.Running);
     if (flag !== connected) {
         const master = busLine[0];
-        const dest = bus === master ? getAudioContextObject()!.destination : master.gain;
+        const dest = bus === master ? getAudioContextObject()!.destination : master.g;
         if (connected) {
-            bus.gain.connect(dest);
+            connectAudioNode(bus.g, dest);
         } else {
-            bus.gain.disconnect(dest);
+            disconnectAudioNode(bus.g, dest);
         }
         bus.s ^= Flag.Running;
     }

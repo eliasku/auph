@@ -114,6 +114,8 @@ export const enum Message {
     BufferNotFound,
     BufferIsNotLoaded,
     BufferNoData,
+    BufferDecodeError,
+    BufferLoadError,
 
     UserInteractionRequiredToStart,
 

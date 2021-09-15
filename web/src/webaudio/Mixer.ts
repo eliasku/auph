@@ -2,19 +2,18 @@ import {error, log, warn} from "./debug";
 import {Flag, Message, u31} from "../protocol/interface";
 import {unlock} from "./Unlock";
 
-let ctx: AudioContext | null = null;
-export let emptyAudioBuffer: AudioBuffer | null = null;
+let ctx: AudioContext | undefined | null;
+export let emptyAudioBuffer!: AudioBuffer;
 const defaultSampleRate = 22050;
 
-export function getContext(): AudioContext | null {
-    if (!ctx || ctx.state === "closed") {
-        warn(Message.InvalidState);
-        return null;
+export function getContext(): AudioContext | null | undefined {
+    if (ctx && ctx.state !== "closed") {
+        return ctx;
     }
-    return ctx;
+    warn(Message.InvalidState);
 }
 
-export function getAudioContextObject(): AudioContext | null {
+export function getAudioContextObject(): AudioContext | null | undefined {
     return ctx;
 }
 
@@ -47,7 +46,7 @@ export function audioContextPause(ctx: AudioContext) {
     });
 }
 
-function newAudioContext(options?: AudioContextOptions): AudioContext | null {
+function newAudioContext(options?: AudioContextOptions): AudioContext | null | undefined {
     const scope: any = window;
     const audioContext: any = scope.AudioContext || scope.webkitAudioContext;
 
@@ -63,11 +62,9 @@ function newAudioContext(options?: AudioContextOptions): AudioContext | null {
     } catch (err) {
         error(Message.NotSupported, err);
     }
-
-    return null;
 }
 
-export function initContext(): AudioContext | null {
+export function initContext(): AudioContext | null | undefined {
     if (ctx) {
         warn(Message.Warning_AlreadyInitialized);
         return ctx;
@@ -77,9 +74,7 @@ export function initContext(): AudioContext | null {
         sampleRate: defaultSampleRate
     });
     if (ctx) {
-        if (!emptyAudioBuffer) {
-            emptyAudioBuffer = ctx.createBuffer(1, 1, defaultSampleRate);
-        }
+        emptyAudioBuffer = ctx.createBuffer(1, 1, defaultSampleRate);
         unlock((): boolean => {
             if (ctx!.state === "suspended") {
                 audioContextResume(ctx!);
@@ -98,5 +93,5 @@ export function closeContext(context: AudioContext) {
     }).catch((reason) => {
         error(Message.DeviceCloseError, reason);
     });
-    ctx = null;
+    ctx = undefined;
 }

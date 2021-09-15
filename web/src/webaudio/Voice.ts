@@ -1,5 +1,5 @@
 import {AuphBuffer, AuphBus, AuphVoice, Flag, iMask, Type, u31, Unit} from "../protocol/interface";
-import {nextHandle, Obj} from "./common";
+import {connectAudioNode, disconnectAudioNode, len, nextHandle, Obj, setAudioParamValue} from "./common";
 import {emptyAudioBuffer} from "./Mixer";
 
 export class VoiceObj implements Obj {
@@ -8,18 +8,29 @@ export class VoiceObj implements Obj {
     // Control Flags
     s = 0;
 
-    _gain = Unit;
-    _pan = Unit;
-    _rate = Unit;
-    data: AuphBuffer = 0;
-    bus: AuphBus = 0;
+    // Gain
+    G = Unit;
 
-    // static buffer playback
-    _started = false;
-    buffer: AudioBufferSourceNode | null = null;
+    // Pan
+    P = Unit;
 
-    // connected destination audio node
-    out: AudioNode | null = null;
+    // Rate
+    R = Unit;
+
+    // Source auph Buffer
+    bf: AuphBuffer = 0;
+
+    // Destination auph Bus
+    bs: AuphBus = 0;
+
+    // is source-node started: static buffer playback
+    _s = 0;
+
+    // Source-Node
+    sn: AudioBufferSourceNode | null = null;
+
+    // Destination-Node: connected destination audio node
+    dn: AudioNode | null = null;
 
     _e = () => {
         // maybe check is useful
@@ -28,8 +39,8 @@ export class VoiceObj implements Obj {
         //}
     }
 
-    constructor(readonly gain: GainNode,
-                readonly pan: StereoPannerNode,
+    constructor(readonly g: GainNode,
+                readonly p: StereoPannerNode,
                 index: u31) {
         this.h = Type.Voice | index;
     }
@@ -38,78 +49,78 @@ export class VoiceObj implements Obj {
 export function _voiceNew(ctx: AudioContext, index: u31) {
     const gain = ctx.createGain();
     const pan = ctx.createStereoPanner();
-    pan.connect(gain);
+    connectAudioNode(pan, gain);
     return new VoiceObj(gain, pan, index);
 }
 
 export function _voiceChangeDestination(v: VoiceObj, target: AudioNode) {
-    if (target !== v.out) {
-        const gain = v.gain;
-        if (v.out) {
-            gain.disconnect(v.out);
+    if (target !== v.dn) {
+        const gain = v.g;
+        if (v.dn) {
+            disconnectAudioNode(gain, v.dn);
         }
-        v.out = target;
+        v.dn = target;
         if (target) {
-            gain.connect(target);
+            connectAudioNode(gain, target);
         }
     }
 }
 
 export function _voiceResetDestination(v: VoiceObj) {
-    if (v.out) {
-        v.gain.disconnect(v.out);
-        v.out = null;
+    if (v.dn) {
+        disconnectAudioNode(v.g, v.dn);
+        v.dn = null;
     }
 }
 
 export function _voiceStop(v: VoiceObj) {
     // stop buffer
-    const buffer = v.buffer;
+    const buffer = v.sn;
     if (buffer) {
         if ((v.s & Flag.Running) !== 0) {
             buffer.stop();
         }
         buffer.onended = null;
-        buffer.disconnect();
+        disconnectAudioNode(buffer);
         try {
             buffer.buffer = emptyAudioBuffer;
         } catch {
         }
-        v.buffer = null;
+        v.sn = null;
     }
 
     _voiceResetDestination(v);
-    v.data = 0;
-    v.bus = 0;
+    v.bf = 0;
+    v.bs = 0;
     v.s = 0;
     v.h = nextHandle(v.h);
 }
 
 export function _voiceStartBuffer(v: VoiceObj) {
-    const source = v.buffer;
-    if (source && !v._started) {
+    const source = v.sn;
+    if (source && !v._s) {
         //source.addEventListener("ended", v._e, {once: true});
         source.onended = v._e;
         source.loop = (v.s & Flag.Loop) !== 0;
         source.start();
-        v._started = true;
+        v._s = 1;
     }
 }
 
 export function _voicePrepareBuffer(v: VoiceObj, ctx: AudioContext, audioBuffer: AudioBuffer) {
     const source = ctx.createBufferSource();
     source.buffer = audioBuffer;
-    source.connect(v.pan);
-    v.buffer = source;
-    v._started = false;
+    connectAudioNode(source, v.p);
+    v.sn = source;
+    v._s = 0;
 }
 
 export function _voiceSetLoop(v: VoiceObj, value: boolean): void {
     const current = (v.s & Flag.Loop) !== 0;
     if (value !== current) {
         v.s ^= Flag.Loop;
-        if (v.buffer) {
-            v.buffer.loop = value;
+        if (v.sn) {
+            v.sn.loop = value;
         }
     }
 }
@@ -118,9 +129,9 @@ export function _voiceSetRunning(v: VoiceObj, value: boolean): void {
     const current = !!(v.s & Flag.Running);
     if (value !== current) {
         v.s ^= Flag.Running;
-        const playbackRate = value ? (v._rate / Unit) : 0.0;
-        if (v.buffer) {
-            v.buffer.playbackRate.value = playbackRate;
+        const playbackRate = value ? (v.R / Unit) : 0.0;
+        if (v.sn) {
+            setAudioParamValue(v.sn.playbackRate, playbackRate);
             if (value) {
                 // restart if play called in pause mode
                 _voiceStartBuffer(v);
@@ -131,8 +142,8 @@ export function _voiceSetRunning(v: VoiceObj, value: boolean): void {
 
 export function _voiceApplyPitch(v: VoiceObj, value: u31): void {
     if (!!(v.s & Flag.Running)) {
-        if (v.buffer) {
-            v.buffer.playbackRate.value = value / Unit;
+        if (v.sn) {
+            setAudioParamValue(v.sn.playbackRate, value / Unit);
         }
     }
 }
@@ -146,16 +157,16 @@ export function _getVoiceObj(handle: AuphVoice): VoiceObj | null {
 }
 
 export function createVoiceObj(ctx: AudioContext): AuphVoice {
-    for (let i = 1; i < voicePool.length; ++i) {
+    const next = len(voicePool);
+    for (let i = 1; i < next; ++i) {
         const v = voicePool[i]!;
         if (v.s === 0) {
             return v.h;
         }
     }
-    const index = voicePool.length;
-    if (index < voicesMaxCount) {
-        const v = _voiceNew(ctx, index);
-        v.h = Type.Voice | index;
+    if (next < voicesMaxCount) {
+        const v = _voiceNew(ctx, next);
+        v.h = Type.Voice | next;
         voicePool.push(v);
         return v.h;
     }
