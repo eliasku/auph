@@ -29,31 +29,50 @@ function set$2(name, param, value) {
 }
 function get$2(name, param) {
     return 0;
-}var Null=/*#__PURE__*/Object.freeze({__proto__:null,init: init$2,shutdown: shutdown$2,load: load$2,loadMemory: loadMemory$2,unload: unload$2,voice: voice$1,stop: stop$2,set: set$2,get: get$2});var TAG = "[AUPH]";
+}var Null=/*#__PURE__*/Object.freeze({__proto__:null,init: init$2,shutdown: shutdown$2,load: load$2,loadMemory: loadMemory$2,unload: unload$2,voice: voice$1,stop: stop$2,set: set$2,get: get$2});var TAG = "auph";
 function log(message) {
     {
         console.log(TAG, message);
     }
 }
 function warn(message) {
-    console.warn(TAG, message);
+    {
+        console.warn(TAG, message);
+    }
 }
 function error(message, reason) {
-    console.error(TAG, message, reason);
+    {
+        console.error(TAG, message, reason);
+    }
 }
 function setError(status, context) {
     {
         error(status, context);
     }
+}function nextHandle(h) {
+    return ((h + vIncr) & vMask) | (h & (tMask | iMask));
 }
-function measure(ts) {
-    {
-        return performance.now() - ts;
-    }
+function connectAudioNode(node, dest) {
+    node.connect(dest);
+}
+function disconnectAudioNode(node, dest) {
+    node.disconnect(dest);
+}
+function setAudioParamValue(param, value) {
+    param.value = value;
+}
+function len(a) {
+    return a.length;
+}
+function resize(a, length) {
+    a.length = length;
+}
+function add(a, e) {
+    a.push(e);
 }function unlock(unlocked) {
     // "touchstart", "touchend", "mousedown", "pointerdown"
     var events = ["touchstart", "touchend", "mousedown", "click", "keydown"];
-    var num = events.length;
+    var num = len(events);
     var doc = document;
     var handle = function () {
         if (unlocked()) {
@@ -65,15 +84,14 @@ function measure(ts) {
     for (var i = 0; i < num; ++i) {
         doc.addEventListener(events[i], handle, true);
     }
-}var ctx = null;
-var emptyAudioBuffer = null;
+}var ctx;
+var emptyAudioBuffer;
 var defaultSampleRate = 22050;
 function getContext() {
-    if (!ctx || ctx.state === "closed") {
-        warn(2 /* InvalidState */);
-        return null;
+    if (ctx && ctx.state !== "closed") {
+        return ctx;
     }
-    return ctx;
+    warn(2 /* InvalidState */);
 }
 function getAudioContextObject() {
     return ctx;
@@ -119,7 +137,6 @@ function newAudioContext(options) {
     catch (err) {
         error(1 /* NotSupported */, err);
     }
-    return null;
 }
 function initContext() {
     if (ctx) {
@@ -128,9 +145,7 @@ function initContext() {
     }
     ctx = newAudioContext();
     if (ctx) {
-        if (!emptyAudioBuffer) {
-            emptyAudioBuffer = ctx.createBuffer(1, 1, defaultSampleRate);
-        }
+        emptyAudioBuffer = ctx.createBuffer(1, 1, defaultSampleRate);
         unlock(function () {
             if (ctx.state === "suspended") {
                 audioContextResume(ctx);
@@ -148,28 +163,32 @@ function closeContext(context) {
     }).catch(function (reason) {
         error(11 /* DeviceCloseError */, reason);
     });
-    ctx = null;
-}function nextHandle(h) {
-    return ((h + vIncr) & vMask) | (h & (tMask | iMask));
+    ctx = undefined;
 }var VoiceObj = /** @class */ (function () {
-    function VoiceObj(gain, pan, index) {
+    function VoiceObj(g, p, index) {
         var _this = this;
-        this.gain = gain;
-        this.pan = pan;
+        this.g = g;
+        this.p = p;
         // handle passport
         this.h = 0;
         // Control Flags
         this.s = 0;
-        this._gain = Unit;
-        this._pan = Unit;
-        this._rate = Unit;
-        this.data = 0;
-        this.bus = 0;
-        // static buffer playback
-        this._started = false;
-        this.buffer = null;
-        // connected destination audio node
-        this.out = null;
+        // Gain
+        this.G = Unit;
+        // Pan
+        this.P = Unit;
+        // Rate
+        this.R = Unit;
+        // Source auph Buffer
+        this.bf = 0;
+        // Destination auph Bus
+        this.bs = 0;
+        // is source-node started: static buffer playback
+        this._s = 0;
+        // Source-Node
+        this.sn = null;
+        // Destination-Node: connected destination audio node
+        this.dn = null;
         this._e = function () {
             // maybe check is useful
             //if (this.buffer === e.target || (this.stream && this.stream.el === e.target)) {
@@ -183,72 +202,72 @@ function closeContext(context) {
 function _voiceNew(ctx, index) {
     var gain = ctx.createGain();
     var pan = ctx.createStereoPanner();
-    pan.connect(gain);
+    connectAudioNode(pan, gain);
     return new VoiceObj(gain, pan, index);
 }
 function _voiceChangeDestination(v, target) {
-    if (target !== v.out) {
-        var gain = v.gain;
-        if (v.out) {
-            gain.disconnect(v.out);
+    if (target !== v.dn) {
+        var gain = v.g;
+        if (v.dn) {
+            disconnectAudioNode(gain, v.dn);
         }
-        v.out = target;
+        v.dn = target;
         if (target) {
-            gain.connect(target);
+            connectAudioNode(gain, target);
         }
     }
 }
 function _voiceResetDestination(v) {
-    if (v.out) {
-        v.gain.disconnect(v.out);
-        v.out = null;
+    if (v.dn) {
+        disconnectAudioNode(v.g, v.dn);
+        v.dn = null;
     }
 }
 function _voiceStop(v) {
     // stop buffer
-    var buffer = v.buffer;
+    var buffer = v.sn;
     if (buffer) {
         if ((v.s & 2 /* Running */) !== 0) {
             buffer.stop();
         }
         buffer.onended = null;
-        buffer.disconnect();
+        disconnectAudioNode(buffer);
         try {
             buffer.buffer = emptyAudioBuffer;
         }
         catch (_a) {
         }
-        v.buffer = null;
+        v.sn = null;
     }
     _voiceResetDestination(v);
-    v.data = 0;
-    v.bus = 0;
+    v.bf = 0;
+    v.bs = 0;
     v.s = 0;
     v.h = nextHandle(v.h);
 }
 function _voiceStartBuffer(v) {
-    var source = v.buffer;
-    if (source && !v._started) {
+    var source = v.sn;
+    if (source && !v._s) {
         //source.addEventListener("ended", v._e, {once: true});
         source.onended = v._e;
         source.loop = (v.s & 4 /* Loop */) !== 0;
         source.start();
-        v._started = true;
+        v._s = 1;
     }
 }
 function _voicePrepareBuffer(v, ctx, audioBuffer) {
     var source = ctx.createBufferSource();
     source.buffer = audioBuffer;
-    source.connect(v.pan);
-    v.buffer = source;
-    v._started = false;
+    connectAudioNode(source, v.p);
+    v.sn = source;
+    v._s = 0;
 }
 function _voiceSetLoop(v, value) {
     var current = (v.s & 4 /* Loop */) !== 0;
     if (value !== current) {
         v.s ^= 4 /* Loop */;
-        if (v.buffer) {
-            v.buffer.loop = value;
+        if (v.sn) {
+            v.sn.loop = value;
         }
     }
 }
@@ -256,9 +275,9 @@ function _voiceSetRunning(v, value) {
     var current = !!(v.s & 2 /* Running */);
     if (value !== current) {
         v.s ^= 2 /* Running */;
-        var playbackRate = value ? (v._rate / Unit) : 0.0;
-        if (v.buffer) {
-            v.buffer.playbackRate.value = playbackRate;
+        var playbackRate = value ? (v.R / Unit) : 0.0;
+        if (v.sn) {
+            setAudioParamValue(v.sn.playbackRate, playbackRate);
             if (value) {
                 // restart if play called in pause mode
                 _voiceStartBuffer(v);
@@ -268,8 +287,8 @@ function _voiceSetRunning(v, value) {
 }
 function _voiceApplyPitch(v, value) {
     if (!!(v.s & 2 /* Running */)) {
-        if (v.buffer) {
-            v.buffer.playbackRate.value = value / Unit;
+        if (v.sn) {
+            setAudioParamValue(v.sn.playbackRate, value / Unit);
         }
     }
 }
@@ -280,49 +299,49 @@ function _getVoiceObj(handle) {
     return (obj && obj.h === handle) ? obj : null;
 }
 function createVoiceObj(ctx) {
-    for (var i = 1; i < voicePool.length; ++i) {
+    var next = len(voicePool);
+    for (var i = 1; i < next; ++i) {
         var v = voicePool[i];
         if (v.s === 0) {
             return v.h;
         }
     }
-    var index = voicePool.length;
-    if (index < voicesMaxCount) {
-        var v = _voiceNew(ctx, index);
-        v.h = 805306368 /* Voice */ | index;
+    if (next < voicesMaxCount) {
+        var v = _voiceNew(ctx, next);
+        v.h = 805306368 /* Voice */ | next;
         voicePool.push(v);
         return v.h;
     }
     return 0;
 }var BusObj = /** @class */ (function () {
-    function BusObj(gain) {
-        this.gain = gain;
+    function BusObj(g) {
+        this.g = g;
         this.h = 0;
         this.s = 1 /* Active */ | 2 /* Running */;
-        this._gain = Unit;
+        this.G = Unit;
     }
     return BusObj;
 }());
 var busLine = [];
 function createBusObj(ctx) {
-    var next = busLine.length;
+    var next = len(busLine);
     var obj = new BusObj(ctx.createGain());
     obj.h = next | 268435456 /* Bus */;
-    busLine.push(obj);
+    add(busLine, obj);
     return obj;
 }
 function initBusPool(ctx) {
-    var master = createBusObj(ctx).gain;
-    master.connect(ctx.destination);
-    createBusObj(ctx).gain.connect(master);
-    createBusObj(ctx).gain.connect(master);
-    createBusObj(ctx).gain.connect(master);
+    var master = createBusObj(ctx).g;
+    connectAudioNode(master, ctx.destination);
+    connectAudioNode(createBusObj(ctx).g, master);
+    connectAudioNode(createBusObj(ctx).g, master);
+    connectAudioNode(createBusObj(ctx).g, master);
 }
 function termBusPool() {
-    for (var i = 0; i < busLine.length; ++i) {
-        busLine[i].gain.disconnect();
+    for (var i = 0; i < len(busLine); ++i) {
+        disconnectAudioNode(busLine[i].g);
     }
-    busLine.length = 0;
+    resize(busLine, 0);
 }
 function _getBus(bus) {
     var obj = busLine[bus & iMask];
@@ -330,18 +349,18 @@ function _getBus(bus) {
 }
 function _getBusGain(handle) {
     var obj = _getBus(handle);
-    return obj ? obj.gain : undefined;
+    return obj ? obj.g : undefined;
 }
 function _setBusConnected(bus, connected) {
     var flag = !!(bus.s & 2 /* Running */);
     if (flag !== connected) {
         var master = busLine[0];
-        var dest = bus === master ? getAudioContextObject().destination : master.gain;
+        var dest = bus === master ? getAudioContextObject().destination : master.g;
         if (connected) {
-            bus.gain.connect(dest);
+            connectAudioNode(bus.g, dest);
         }
         else {
-            bus.gain.disconnect(dest);
+            disconnectAudioNode(bus.g, dest);
         }
         bus.s ^= 2 /* Running */;
     }
@@ -356,16 +375,16 @@ function _setBusConnected(bus, connected) {
 var buffers = [null];
 var buffersMaxCount = 128;
 function getNextBufferObj() {
-    for (var i = 1; i < buffers.length; ++i) {
+    var next = len(buffers);
+    for (var i = 1; i < next; ++i) {
         var buffer = buffers[i];
         if (buffer.s === 0) {
             return buffer.h;
         }
     }
-    var next = buffers.length;
     if (next < buffersMaxCount) {
         var b = new BufferObj(next | 536870912 /* Buffer */, 0, null);
-        buffers.push(b);
+        add(buffers, b);
         return b.h;
     }
     return 0;
@@ -387,14 +406,12 @@ function _getBufferObj(buffer) {
     return null;
 }
 function _decodeAudioData(ctx, obj, buffer) {
-    var timeDecoding = measure(0);
     var success = function (audioBuffer) {
         obj.s |= 2 /* Loaded */;
         obj.b = audioBuffer;
-        log("decoding time: " + (measure(timeDecoding) | 0) + " ms.");
     };
     var fail = function (err) {
-        error("Error decode audio buffer", err);
+        error(18 /* BufferDecodeError */, err);
         _bufferDestroy(obj);
     };
     // TODO: maybe callbacks will be deprecated?
@@ -403,21 +420,21 @@ function _decodeAudioData(ctx, obj, buffer) {
 function _bufferMemory(obj, ctx, data, flags) {
     obj.s |= 1 /* Active */;
     var buffer = data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength);
-    // TODO:
+    // TODO: streaming
     // if (flags & Flag.Stream) {
     //     obj.s |= Flag.Stream;
     _decodeAudioData(ctx, obj, buffer);
 }
 function _bufferLoad(obj, ctx, filepath, flags) {
     obj.s |= 1 /* Active */;
-    // TODO:
+    // TODO: streaming
     //if (flags & Flag.Stream) {
     //obj.s |= Flag.Stream;
     fetch(new Request(filepath))
         .then(function (response) { return response.arrayBuffer(); })
         .then(function (buffer) { return _decodeAudioData(ctx, obj, buffer); })
         .catch(function (reason) {
-        error("Error load file", reason);
+        error(19 /* BufferLoadError */, reason);
         _bufferDestroy(obj);
     });
 }function init$1() {
@@ -430,8 +447,8 @@ function shutdown$1() {
     var ctx = getContext();
     if (ctx) {
         termBusPool();
-        voicePool.length = 1;
-        buffers.length = 1;
+        resize(voicePool, 1);
+        resize(buffers, 1);
         closeContext(ctx);
     }
 }
@@ -440,7 +457,7 @@ function load$1(filepath, flags) {
     if (handle) {
         var ctx = getAudioContextObject();
         if (!ctx) {
-            setError(22 /* NotInitialized */);
+            setError(24 /* NotInitialized */);
             return 0;
         }
         var obj = buffers[handle & iMask];
@@ -453,7 +470,7 @@ function loadMemory$1(data, flags) {
     if (handle) {
         var ctx = getAudioContextObject();
         if (!ctx) {
-            setError(22 /* NotInitialized */);
+            setError(24 /* NotInitialized */);
             return 0;
         }
         var obj = buffers[handle & iMask];
@@ -480,13 +497,13 @@ function unload$1(name) {
 function voice(buffer, gain, pan, rate, flags, bus) {
     // arguments check debug
     if (flags & ~(2 /* Running */ | 4 /* Loop */)) {
-        setError(20 /* InvalidArguments */);
+        setError(22 /* InvalidArguments */);
         return 0;
     }
     ///
     var ctx = getAudioContextObject();
     if (!ctx || ctx.state !== "running") {
-        setError(21 /* InvalidMixerState */, ctx === null || ctx === void 0 ? void 0 : ctx.state);
+        setError(23 /* InvalidMixerState */, ctx === null || ctx === void 0 ? void 0 : ctx.state);
         return 0;
     }
     var bufferObj = _getBufferObj(buffer);
@@ -504,7 +521,7 @@ function voice(buffer, gain, pan, rate, flags, bus) {
     }
     var targetNode = _getBusGain(bus ? bus : DefaultBus);
     if (!targetNode) {
-        setError(19 /* BusNotFound */);
+        setError(21 /* BusNotFound */);
         return 0;
     }
     var voice = createVoiceObj(ctx);
@@ -514,12 +531,12 @@ function voice(buffer, gain, pan, rate, flags, bus) {
     }
     var voiceObj = _getVoiceObj(voice);
     voiceObj.s = 1 /* Active */ | flags;
-    voiceObj.data = buffer;
-    voiceObj._gain = gain;
-    voiceObj._pan = pan;
-    voiceObj._rate = rate;
-    voiceObj.gain.gain.value = gain / Unit;
-    voiceObj.pan.pan.value = pan / Unit - 1;
+    voiceObj.bf = buffer;
+    voiceObj.G = gain;
+    voiceObj.P = pan;
+    voiceObj.R = rate;
+    setAudioParamValue(voiceObj.g.gain, gain / Unit);
+    setAudioParamValue(voiceObj.p.pan, pan / Unit - 1);
     // TODO: streamed decoding
     //if (bufferObj.s & Flag.Stream) {
     _voicePrepareBuffer(voiceObj, ctx, bufferObj.b);
@@ -545,9 +562,9 @@ function stop$1(name) {
     else if (type === 536870912 /* Buffer */) {
         var obj = _getBufferObj(name);
         if (obj) {
-            for (var i = 1; i < voicePool.length; ++i) {
+            for (var i = 1; i < len(voicePool); ++i) {
                 var v = voicePool[i];
-                if (v.data === name) {
+                if (v.bf === name) {
                     _voiceStop(v);
                 }
             }
@@ -586,26 +603,25 @@ function set$1(name, param, value) {
                 }
             }
             else {
-                switch (param) {
-                    case 1 /* Gain */:
-                        if (obj._gain !== value) {
-                            obj._gain = value;
-                            obj.gain.gain.value = value / Unit;
-                        }
-                        break;
-                    case 2 /* Pan */:
-                        if (obj._pan !== value) {
-                            obj._pan = value;
-                            obj.pan.pan.value = value / Unit - 1;
-                        }
-                        break;
-                    case 3 /* Rate */:
-                        if (obj._rate !== value) {
-                            obj._rate = value;
-                            _voiceApplyPitch(obj, value);
-                        }
-                        break;
+                if (param === 1 /* Gain */) {
+                    if (obj.G !== value) {
+                        obj.G = value;
+                        setAudioParamValue(obj.g.gain, value / Unit);
+                    }
                 }
+                else if (param === 2 /* Pan */) {
+                    if (obj.P !== value) {
+                        obj.P = value;
+                        setAudioParamValue(obj.p.pan, value / Unit - 1);
+                    }
+                }
+                else if (param === 3 /* Rate */) {
+                    if (obj.R !== value) {
+                        obj.R = value;
+                        _voiceApplyPitch(obj, value);
+                    }
+                }
+                else ;
             }
         }
     }
@@ -618,117 +634,111 @@ function set$1(name, param, value) {
                 }
             }
             else {
-                switch (param) {
-                    case 1 /* Gain */:
-                        if (obj._gain !== value) {
-                            obj.gain.gain.value = value / Unit;
-                            obj._gain = value;
-                        }
-                        break;
+                if (param === 1 /* Gain */) {
+                    if (obj.G !== value) {
+                        setAudioParamValue(obj.g.gain, value / Unit);
+                        obj.G = value;
+                    }
                 }
             }
         }
     }
 }
 function get$1(name, param) {
+    var result = 0;
     if (name === Mixer) {
         var ctx = getAudioContextObject();
         if (ctx) {
             if (param === 0 /* State */) {
-                return getContextState(ctx);
+                result = getContextState(ctx);
             }
             else if (param === 5 /* SampleRate */) {
-                return ctx.sampleRate | 0;
+                result = ctx.sampleRate | 0;
             }
         }
-        return 0;
+        return result;
     }
     var type = name & tMask;
     if ((param & 256 /* Count */) && !(name & iMask)) {
         var stateMask = param & 127 /* StateMask */;
         if (type === 805306368 /* Voice */) {
-            return _countObjectsWithFlags(voicePool, stateMask);
+            result = _countObjectsWithFlags(voicePool, stateMask);
         }
         else if (type === 268435456 /* Bus */) {
-            return _countObjectsWithFlags(busLine, stateMask);
+            result = _countObjectsWithFlags(busLine, stateMask);
         }
         else if (type === 536870912 /* Buffer */) {
-            return _countObjectsWithFlags(buffers, stateMask);
+            result = _countObjectsWithFlags(buffers, stateMask);
         }
-        return 0;
+        return result;
     }
     if (type === 805306368 /* Voice */) {
         var obj = _getVoiceObj(name);
         if (obj) {
-            switch (param) {
-                case 0 /* State */:
-                    return obj.s;
-                case 1 /* Gain */:
-                    return obj._gain;
-                case 2 /* Pan */:
-                    return obj._pan;
-                case 3 /* Rate */:
-                    return obj._rate;
-                case 6 /* Duration */: {
-                    var d = 0.0;
-                    if (obj.buffer && obj.buffer.buffer) {
-                        d = obj.buffer.buffer.duration * Unit;
-                    }
-                    return (d * Unit) | 0;
+            if (param === 0 /* State */) {
+                result = obj.s;
+            }
+            else if (param === 1 /* Gain */) {
+                result = obj.G;
+            }
+            else if (param === 2 /* Pan */) {
+                result = obj.P;
+            }
+            else if (param === 3 /* Rate */) {
+                result = obj.R;
+            }
+            else if (param === 6 /* Duration */) {
+                if (obj.sn && obj.sn.buffer) {
+                    result = (obj.sn.buffer.duration * Unit) | 0;
                 }
-                case 4 /* CurrentTime */: {
-                    var d = 0.0;
-                    if (obj.buffer && obj.buffer.buffer) ;
-                    return (d * Unit) | 0;
-                }
-                default:
-                    warn(1 /* NotSupported */);
-                    break;
+            }
+            else if (param === 4 /* CurrentTime */) {
+                if (obj.sn && obj.sn.buffer) ;
+            }
+            else {
+                warn(1 /* NotSupported */);
             }
         }
-        return 0;
+        return result;
     }
-    else if (type === 268435456 /* Bus */) {
+    if (type === 268435456 /* Bus */) {
         var obj = _getBus(name);
         if (obj) {
-            switch (param) {
-                case 0 /* State */:
-                    return obj.s;
-                case 1 /* Gain */:
-                    return obj._gain;
-                default:
-                    warn(1 /* NotSupported */);
-                    break;
+            if (param === 0 /* State */) {
+                result = obj.s;
+            }
+            else if (param === 1 /* Gain */) {
+                result = obj.G;
+            }
+            else {
+                warn(1 /* NotSupported */);
             }
         }
-        return 0;
+        return result;
     }
-    else if (type === 536870912 /* Buffer */) {
+    if (type === 536870912 /* Buffer */) {
         var obj = _getBufferObj(name);
         if (obj) {
-            switch (param) {
-                case 0 /* State */:
-                    return obj.s;
-                case 6 /* Duration */: {
-                    var d = 0.0;
-                    if (obj.b) {
-                        d = obj.b.duration;
-                    }
-                    return (d * Unit) | 0;
+            if (param === 0 /* State */) {
+                result = obj.s;
+            }
+            else if (param === 6 /* Duration */) {
+                if (obj.b) {
+                    result = (obj.b.duration * Unit) | 0;
                 }
-                default:
-                    warn(1 /* NotSupported */);
-                    break;
+            }
+            else {
+                warn(1 /* NotSupported */);
             }
         }
-        return 0;
     }
-    return 0;
+    return result;
 }
 /** private helpers **/
 function _countObjectsWithFlags(arr, mask) {
     var cnt = 0;
-    for (var i = 1; i < arr.length; ++i) {
+    var size = len(arr);
+    for (var i = 1; i < size; ++i) {
         var obj = arr[i];
         if (obj && (obj.s & mask) === mask) {
             ++cnt;
