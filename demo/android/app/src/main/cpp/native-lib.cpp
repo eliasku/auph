@@ -11,9 +11,15 @@
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
 
+inline JNIEnv* jniEnv = nullptr;
+inline JNIEnv* getJNIEnv() {
+    return jniEnv;
+}
+
 extern "C" JNIEXPORT
 void JNICALL Java_com_eliasku_AuphTest_MainActivity_start(JNIEnv *env, jclass clazz, jobject activity, jobject assetManager) {
-    auph::setAndroidActivity(env, activity, assetManager);
+    jniEnv = env;
+    auph::setAndroidActivity(getJNIEnv, activity, assetManager);
     auph::init();
 
     const char* path = "mp3/FUNKY_HOUSE.mp3";

@@ -49,6 +49,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             PUBLIC -x objective-c++
             )
     target_link_libraries(${PROJECT_NAME}
+            PUBLIC "-framework Foundation"
             PUBLIC "-framework CoreAudio"
             PUBLIC "-framework AudioToolbox"
             )
@@ -57,6 +58,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
             PUBLIC -x objective-c++
             )
     target_link_libraries(${PROJECT_NAME}
+            PUBLIC "-framework Foundation"
             PUBLIC "-framework AVFoundation"
             PUBLIC "-framework AudioToolbox"
             )
@@ -103,6 +105,7 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
             INTERFACE -x objective-c++
             )
     target_link_libraries(${PROJECT_NAME}
+            INTERFACE "-framework Foundation"
             INTERFACE "-framework CoreAudio"
             INTERFACE "-framework AudioToolbox"
             )
@@ -111,6 +114,7 @@ elseif (${CMAKE_SYSTEM_NAME} MATCHES "iOS")
             INTERFACE -x objective-c++
             )
     target_link_libraries(${PROJECT_NAME}
+            INTERFACE "-framework Foundation"
             INTERFACE "-framework AVFoundation"
             INTERFACE "-framework AudioToolbox"
             )

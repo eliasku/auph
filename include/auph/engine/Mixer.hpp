@@ -25,7 +25,7 @@ void clip(float* dest, uint32_t size) {
 }
 
 template<bool Interpolate, unsigned Channels, typename S, unsigned Divisor>
-static inline MixSample* mixSamples(MixSample* mix,
+inline MixSample* mixSamples(MixSample* mix,
                               const double begin,
                               const double end,
                               const double advance,

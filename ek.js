@@ -22,7 +22,7 @@ function setup(project) {
                 files: ["auph-static.cpp"],
                 flags: "-x objective-c++"
             },
-            xcode_framework: "AudioToolbox"
+            xcode_framework: ["Foundation", "AudioToolbox"]
         },
         macos: {
             xcode_framework: "CoreAudio"

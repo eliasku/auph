@@ -45,7 +45,7 @@ struct StreamMp3 {
     float prev[10]{};
 };
 
-static MixSample* readStreamMp3(MixSample* mix,
+inline MixSample* readStreamMp3(MixSample* mix,
                                 const double begin,
                                 const double end,
                                 const double advance,

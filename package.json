@@ -11,10 +11,11 @@
     "watch": "tsc -w -p web/tsconfig.json & rollup -w -c web/rollup.config.js",
     "build": "tsc -p web/tsconfig.json && rollup -c web/rollup.config.js",
     "build-cmake": "node scripts/build-cmake",
-    "build-demo": "node scripts/build-demo",
     "build-pages": "node scripts/build-demo && node scripts/build-pages",
     "build-node": "node-gyp rebuild",
     "start-node": "cd demo && node node.js",
+    "build-demo": "node scripts/build-demo",
+    "start-demo": "http-server demo -o",
     "release": "changeset publish",
     "version": "changeset version && yarn run update-lock",
     "update-lock": "yarn && git add yarn.lock",
@@ -47,7 +48,8 @@
     "rimraf": "^3.0.2",
     "rollup": "^2.56.3",
     "rollup-plugin-terser": "^7.0.2",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.3",
+    "http-server": "^13.0.2"
   },
   "dependencies": {
     "@ekx/dr-libs": "^0.0.3",

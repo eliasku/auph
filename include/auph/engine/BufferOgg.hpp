@@ -11,7 +11,7 @@ struct StreamOgg {
     float prev[10]{};
 };
 
-static MixSample* readStreamOgg(MixSample* mix,
+inline MixSample* readStreamOgg(MixSample* mix,
                                 const double begin,
                                 const double end,
                                 const double advance,

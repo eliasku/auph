@@ -6,7 +6,7 @@ import android.app.Activity;
 import android.os.Bundle;
 
 import com.eliasku.AuphTest.databinding.ActivityMainBinding;
-import com.eliasku.auph.Auph;
+import ek.Auph;
 
 public class MainActivity extends AppCompatActivity {
 

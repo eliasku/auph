@@ -7,6 +7,8 @@ add_library(${PROJECT_NAME} SHARED
 
 target_include_directories(${PROJECT_NAME}
         PUBLIC ../../../../../../include
+        PUBLIC ../../../../../../node_modules/@ekx/dr-libs/include
+        PUBLIC ../../../../../../node_modules/@ekx/stb/include
         PUBLIC ../../../../../../android/oboe/include
         PRIVATE ../../../../../../android/oboe/src
         )
