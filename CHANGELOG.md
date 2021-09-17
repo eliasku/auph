@@ -1,5 +1,11 @@
 # auph
 
+## 0.1.0
+
+### Minor Changes
+
+- 9d3a2e1: add simple vibrate function
+
 ## 0.0.18
 
 ### Patch Changes
