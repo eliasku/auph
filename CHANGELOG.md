@@ -1,5 +1,16 @@
 # auph
 
+## 0.0.18
+
+### Patch Changes
+
+- d71ab6e: Fix Xcode and Android demo projects
+- cf4d657: fix shutdown
+- 7857053: web: minify driver, remove text messages
+- d71ab6e: Readme instructions for project building
+- 58f6a30: Bump typescript from 4.4.2 to 4.4.3
+- d71ab6e: apple: add missing Foundation framework
+
 ## 0.0.17
 
 ### Patch Changes
