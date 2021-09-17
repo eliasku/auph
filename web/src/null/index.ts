@@ -35,3 +35,7 @@ export function set(name: Name, param: Param, value: u31): void {
 export function get(name: Name, param: u31): u31 {
     return 0;
 }
+
+export function vibrate(duration: u31): u31 {
+    return 1;
+}

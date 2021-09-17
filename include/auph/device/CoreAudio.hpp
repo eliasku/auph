@@ -1,8 +1,8 @@
 #pragma once
 
 #include "AudioDevice.hpp"
-#include <AudioToolbox/AudioToolbox.h>
 #include <TargetConditionals.h>
+#import <AudioToolbox/AudioToolbox.h>
 
 #if TARGET_OS_IOS
 #include <AVFoundation/AVFoundation.h>
@@ -108,6 +108,12 @@ public:
         userData = nullptr;
         onPlayback = nullptr;
         instance = nullptr;
+    }
+
+    static int vibrate(int millis) {
+        (void) (millis);
+        AudioServicesPlaySystemSound(kSystemSoundID_Vibrate);
+        return 0;
     }
 };
 

@@ -21,6 +21,8 @@ export interface IAuph {
     unload(name: Name): void;
 
     stop(name: Name): void;
+
+    vibrate(durationMillis: u31): u31;
 }
 
 /**

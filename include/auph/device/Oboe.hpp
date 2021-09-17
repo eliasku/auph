@@ -235,6 +235,29 @@ public:
         stop();
         instance = nullptr;
     }
+
+    static int vibrate(int millis) {
+        int result = 1;
+        if (_getJNIEnv && _androidActivity) {
+            auto *env = _getJNIEnv();
+            if (env) {
+                jclass cls = env->FindClass("ek/Auph");
+                if (cls) {
+                    jmethodID mid = env->GetStaticMethodID(cls, "vibrate",
+                                                           "(Landroid/app/Activity;I)I");
+                    if (mid) {
+                        result = env->CallStaticIntMethod(cls, mid, _androidActivity, millis);
+                    } else {
+                        AUPH_ALOGE("Error cannot get vibrate() function");
+                    }
+                    env->DeleteLocalRef(cls);
+                } else {
+                    AUPH_ALOGE("Error cannot find Auph class");
+                }
+            }
+        }
+        return result;
+    }
 };
 
 AudioDevice *AudioDevice::instance = nullptr;

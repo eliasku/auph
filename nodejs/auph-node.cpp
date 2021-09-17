@@ -113,6 +113,12 @@ Napi::Value get(const Napi::CallbackInfo& info) {
     return Napi::Number::New(info.Env(), value);
 }
 
+Napi::Value vibrate(const Napi::CallbackInfo& info) {
+    const int durationMillis = _toSMI(info[0], 0);
+    const int status = auph::vibrate(durationMillis);
+    return Napi::Number::New(info.Env(), status);
+}
+
 Napi::Object exportAuph(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "init"), Napi::Function::New(env, init));
     exports.Set(Napi::String::New(env, "shutdown"), Napi::Function::New(env, shutdown));
@@ -123,10 +129,10 @@ Napi::Object exportAuph(Napi::Env env, Napi::Object exports) {
     exports.Set(Napi::String::New(env, "stop"), Napi::Function::New(env, stop));
     exports.Set(Napi::String::New(env, "set"), Napi::Function::New(env, set));
     exports.Set(Napi::String::New(env, "get"), Napi::Function::New(env, get));
+    exports.Set(Napi::String::New(env, "vibrate"), Napi::Function::New(env, vibrate));
     return exports;
 }
 
 }
 
-NODE_API_MODULE(auph, exportAuph
-)
+NODE_API_MODULE(auph, exportAuph)

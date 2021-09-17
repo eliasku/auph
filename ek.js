@@ -13,7 +13,8 @@ function setup(project) {
                 "android/oboe/include"
             ],
             cpp_lib: ["android", "log", "OpenSLES"],
-            android_java: "android/java"
+            android_java: "android/java",
+            android_permission: "android.permission.VIBRATE"
         },
         apple: {
             cpp_flags: {

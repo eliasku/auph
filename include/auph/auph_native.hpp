@@ -358,4 +358,8 @@ void stop(int name) {
     }
 }
 
+int vibrate(int durationMillis) {
+    return AudioDevice::vibrate(durationMillis);
+}
+
 }
