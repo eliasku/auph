@@ -37,13 +37,13 @@
 
 namespace auph {
 
-static jobject _androidAssetManagerRef = nullptr;
-static AAssetManager *_androidAssetManager = nullptr;
-static jobject _androidActivity = nullptr;
+inline jobject _androidAssetManagerRef = nullptr;
+inline AAssetManager *_androidAssetManager = nullptr;
+inline jobject _androidActivity = nullptr;
 
 typedef JNIEnv *(*GetJNIEnv)();
 
-static GetJNIEnv _getJNIEnv = nullptr;
+inline GetJNIEnv _getJNIEnv = nullptr;
 
 void setAndroidActivity(GetJNIEnv getJNIEnv, jobject activity, jobject assetManager) {
     _getJNIEnv = getJNIEnv;

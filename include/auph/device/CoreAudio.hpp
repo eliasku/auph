@@ -32,7 +32,7 @@ AudioAppEventsHandler* _audioAppEventsHandler = nullptr;
 
 namespace auph {
 
-static void audioPlaybackCallback(void* inUserData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer);
+void audioPlaybackCallback(void* inUserData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer);
 
 bool createAudioQueue(AudioQueueRef* outAudioQueue, AudioDevice* device);
 
@@ -155,7 +155,7 @@ bool createAudioQueue(AudioQueueRef* outAudioQueue, AudioDevice* device) {
     return true;
 }
 
-static void audioPlaybackCallback(void* inUserData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer) {
+inline void audioPlaybackCallback(void* inUserData, AudioQueueRef inAQ, AudioQueueBufferRef inBuffer) {
     const auto* device = static_cast<AudioDevice*>(inUserData);
     auto cb = device->onPlayback;
     if (cb != nullptr) {

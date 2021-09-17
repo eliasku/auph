@@ -50,7 +50,7 @@ struct StreamWav {
     float prev[10]{};
 };
 
-static MixSample* readStreamWav(MixSample* mix,
+inline MixSample* readStreamWav(MixSample* mix,
                                 const double begin,
                                 const double end,
                                 const double advance,

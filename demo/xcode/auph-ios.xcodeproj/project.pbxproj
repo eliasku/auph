@@ -32,7 +32,6 @@
 		A94763F026AEED0100EAF28D /* AudioToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AudioToolbox.framework; path = System/Library/Frameworks/AudioToolbox.framework; sourceTree = SDKROOT; };
 		A980DCBF26BD8326009B871A /* CoreAudio.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreAudio.framework; path = System/Library/Frameworks/CoreAudio.framework; sourceTree = SDKROOT; };
 		A9C4B9FE26CE80610020F69D /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../assets; sourceTree = "<group>"; };
-		A9C4BA0126CE80DF0020F69D /* auph */ = {isa = PBXFileReference; lastKnownFileType = folder; path = auph; sourceTree = "<group>"; };
 		A9C4BA0526CE895F0020F69D /* assets */ = {isa = PBXFileReference; lastKnownFileType = folder; name = assets; path = ../assets; sourceTree = "<group>"; };
 		A9EAE5A426B2B3EF001FF76C /* AVFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AVFoundation.framework; path = System/Library/Frameworks/AVFoundation.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
@@ -55,7 +54,6 @@
 			children = (
 				A9C4B9FE26CE80610020F69D /* assets */,
 				A9C4BA0526CE895F0020F69D /* assets */,
-				A980DCA126BD81C1009B871A /* src */,
 				A94763CF26AEEBBC00EAF28D /* auph-ios */,
 				A94763CE26AEEBBC00EAF28D /* Products */,
 				A94763EF26AEED0100EAF28D /* Frameworks */,
@@ -94,15 +92,6 @@
 				A94763F026AEED0100EAF28D /* AudioToolbox.framework */,
 			);
 			name = Frameworks;
-			sourceTree = "<group>";
-		};
-		A980DCA126BD81C1009B871A /* src */ = {
-			isa = PBXGroup;
-			children = (
-				A9C4BA0126CE80DF0020F69D /* auph */,
-			);
-			name = src;
-			path = ../../src;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -323,7 +312,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 696L2V4X5J;
 				HEADER_SEARCH_PATHS = (
-					../../src
+					../../include,
+					"../../node_modules/@ekx/dr-libs/include",
+					"../../node_modules/@ekx/stb/include",
 				);
 				INFOPLIST_FILE = "auph-ios/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -344,7 +335,9 @@
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = 696L2V4X5J;
 				HEADER_SEARCH_PATHS = (
-					../../src
+					../../include,
+					"../../node_modules/@ekx/dr-libs/include",
+					"../../node_modules/@ekx/stb/include",
 				);
 				INFOPLIST_FILE = "auph-ios/Info.plist";
 				LD_RUNPATH_SEARCH_PATHS = (
