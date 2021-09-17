@@ -29,7 +29,10 @@ function set$2(name, param, value) {
 }
 function get$2(name, param) {
     return 0;
-}var Null=/*#__PURE__*/Object.freeze({__proto__:null,init: init$2,shutdown: shutdown$2,load: load$2,loadMemory: loadMemory$2,unload: unload$2,voice: voice$1,stop: stop$2,set: set$2,get: get$2});var TAG = "auph";
+}
+function vibrate$2(duration) {
+    return 1;
+}var Null=/*#__PURE__*/Object.freeze({__proto__:null,init: init$2,shutdown: shutdown$2,load: load$2,loadMemory: loadMemory$2,unload: unload$2,voice: voice$1,stop: stop$2,set: set$2,get: get$2,vibrate: vibrate$2});var TAG = "auph";
 function log(message) {
     {
         console.log(TAG, message);
@@ -734,6 +737,16 @@ function get$1(name, param) {
     }
     return result;
 }
+function vibrate$1(durationMillis) {
+    try {
+        if (navigator.vibrate) {
+            return navigator.vibrate(durationMillis) ? 0 : 1;
+        }
+    }
+    catch (_a) {
+    }
+    return 1;
+}
 /** private helpers **/
 function _countObjectsWithFlags(arr, mask) {
     var cnt = 0;
@@ -745,7 +758,7 @@ function _countObjectsWithFlags(arr, mask) {
         }
     }
     return cnt;
-}var Browser=/*#__PURE__*/Object.freeze({__proto__:null,init: init$1,shutdown: shutdown$1,load: load$1,loadMemory: loadMemory$1,unload: unload$1,voice: voice,stop: stop$1,set: set$1,get: get$1});/** Export Constants only for pre-bundled usage **/
+}var Browser=/*#__PURE__*/Object.freeze({__proto__:null,init: init$1,shutdown: shutdown$1,load: load$1,loadMemory: loadMemory$1,unload: unload$1,voice: voice,stop: stop$1,set: set$1,get: get$1,vibrate: vibrate$1});/** Export Constants only for pre-bundled usage **/
 var SAMPLE_RATE = 5 /* SampleRate */;
 var STATE = 0 /* State */;
 var COUNT = 256 /* Count */;
@@ -781,6 +794,7 @@ var load = _.load;
 var loadMemory = _.loadMemory;
 var unload = _.unload;
 var stop = _.stop;
+var vibrate = _.vibrate;
 function pause(name) {
     if (name === void 0) { name = Mixer; }
     setPause(name, true);
@@ -851,4 +865,4 @@ function getDuration(name) {
 }
 function f2u(x) {
     return (x * Unit) | 0;
-}exports.ACTIVE=ACTIVE;exports.BUFFER=BUFFER;exports.BUS=BUS;exports.BUS_MASTER=BUS_MASTER;exports.BUS_MUSIC=BUS_MUSIC;exports.BUS_SFX=BUS_SFX;exports.BUS_SPEECH=BUS_SPEECH;exports.COUNT=COUNT;exports.LOOP=LOOP;exports.MIXER=MIXER;exports.RUNNING=RUNNING;exports.SAMPLE_RATE=SAMPLE_RATE;exports.STATE=STATE;exports.STREAM=STREAM;exports.VOICE=VOICE;exports.get=get;exports.getBufferStateString=getBufferStateString;exports.getCurrentTime=getCurrentTime;exports.getDuration=getDuration;exports.getGain=getGain;exports.getLoop=getLoop;exports.getMixerStateString=getMixerStateString;exports.getPan=getPan;exports.getPause=getPause;exports.getRate=getRate;exports.init=init;exports.isActive=isActive;exports.isBufferLoaded=isBufferLoaded;exports.load=load;exports.loadMemory=loadMemory;exports.pause=pause;exports.play=play;exports.resume=resume;exports.set=set;exports.setGain=setGain;exports.setLoop=setLoop;exports.setPan=setPan;exports.setPause=setPause;exports.setRate=setRate;exports.shutdown=shutdown;exports.stop=stop;exports.unload=unload;Object.defineProperty(exports,'__esModule',{value:true});return exports;}({}));//# sourceMappingURL=auph.debug.js.map
+}exports.ACTIVE=ACTIVE;exports.BUFFER=BUFFER;exports.BUS=BUS;exports.BUS_MASTER=BUS_MASTER;exports.BUS_MUSIC=BUS_MUSIC;exports.BUS_SFX=BUS_SFX;exports.BUS_SPEECH=BUS_SPEECH;exports.COUNT=COUNT;exports.LOOP=LOOP;exports.MIXER=MIXER;exports.RUNNING=RUNNING;exports.SAMPLE_RATE=SAMPLE_RATE;exports.STATE=STATE;exports.STREAM=STREAM;exports.VOICE=VOICE;exports.get=get;exports.getBufferStateString=getBufferStateString;exports.getCurrentTime=getCurrentTime;exports.getDuration=getDuration;exports.getGain=getGain;exports.getLoop=getLoop;exports.getMixerStateString=getMixerStateString;exports.getPan=getPan;exports.getPause=getPause;exports.getRate=getRate;exports.init=init;exports.isActive=isActive;exports.isBufferLoaded=isBufferLoaded;exports.load=load;exports.loadMemory=loadMemory;exports.pause=pause;exports.play=play;exports.resume=resume;exports.set=set;exports.setGain=setGain;exports.setLoop=setLoop;exports.setPan=setPan;exports.setPause=setPause;exports.setRate=setRate;exports.shutdown=shutdown;exports.stop=stop;exports.unload=unload;exports.vibrate=vibrate;Object.defineProperty(exports,'__esModule',{value:true});return exports;}({}));//# sourceMappingURL=auph.debug.js.map

@@ -8,6 +8,7 @@ export declare const load: (filepath: string, flags: number) => number;
 export declare const loadMemory: (data: Uint8Array, flags: number) => number;
 export declare const unload: (name: number) => void;
 export declare const stop: (name: number) => void;
+export declare const vibrate: (durationMillis: number) => number;
 export declare function pause(name?: AuphMixer | AuphVoice | AuphBuffer | AuphBus): void;
 export declare function resume(name?: AuphMixer | AuphVoice | AuphBuffer | AuphBus): void;
 export declare function play(buffer: AuphBuffer, gain?: number, pan?: number, rate?: number, loop?: boolean, paused?: boolean, bus?: AuphBus): AuphVoice;
