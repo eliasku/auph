@@ -1,5 +1,0 @@
----
-"auph": patch
----
-
-fix shutdown
