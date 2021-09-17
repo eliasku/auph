@@ -28,6 +28,11 @@ public:
         stop();
         instance = nullptr;
     }
+
+    static int vibrate(int millis) {
+        (void)millis;
+        return 1;
+    }
 };
 
 AudioDevice* AudioDevice::instance = nullptr;

@@ -50,5 +50,10 @@ int get(int name, int param) {
     return r;
 }
 
+int vibrate(int durationMillis) {
+    int r = EM_ASM_INT(return auph.vibrate($0), durationMillis);
+    return r;
+}
+
 }
 

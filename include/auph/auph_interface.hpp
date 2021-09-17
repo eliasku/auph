@@ -24,6 +24,8 @@ void set(int name, int param, int value);
 
 int get(int name, int param);
 
+int vibrate(int durationMillis);
+
 }
 
 #include "auph.hpp"

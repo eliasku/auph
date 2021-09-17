@@ -1,10 +1,15 @@
 package ek;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.os.Build;
+import android.os.VibrationEffect;
+import android.os.Vibrator;
 
 import androidx.annotation.Keep;
 
@@ -51,4 +56,32 @@ public class Auph {
 
     @Keep
     native static int restart();
+
+    /**
+     * simple vibration
+     **/
+    private static Vibrator _vibrator;
+
+    @SuppressLint("MissingPermission")
+    @Keep
+    public static int vibrate(final Activity activity, int durationMillis) {
+        if (_vibrator == null && activity != null) {
+            final Context context = activity.getApplicationContext();
+            final int permission = context.checkCallingOrSelfPermission(Manifest.permission.VIBRATE);
+            if (permission == 0 /* PackageManager.PERMISSION_GRANTED */) {
+                _vibrator = (Vibrator) activity.getSystemService(Context.VIBRATOR_SERVICE);
+            }
+        }
+
+        if (_vibrator != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                _vibrator.vibrate(VibrationEffect.createOneShot(durationMillis, VibrationEffect.DEFAULT_AMPLITUDE));
+            } else {
+                _vibrator.vibrate(durationMillis);
+            }
+            return 0;
+        }
+
+        return 1;
+    }
 }

@@ -346,6 +346,16 @@ export function get(name: Name, param: u31): u31 {
     return result;
 }
 
+export function vibrate(durationMillis: u31): u31 {
+    try {
+        if (navigator.vibrate) {
+            return navigator.vibrate(durationMillis) ? 0 : 1;
+        }
+    } catch {
+    }
+    return 1;
+}
+
 /** private helpers **/
 function _countObjectsWithFlags(arr: ({ s: u31 } | null)[], mask: u31): u31 {
     let cnt = 0;

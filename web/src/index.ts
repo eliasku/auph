@@ -27,6 +27,7 @@ export const load = _.load;
 export const loadMemory = _.loadMemory;
 export const unload = _.unload;
 export const stop = _.stop;
+export const vibrate = _.vibrate;
 
 export function pause(name: AuphMixer | AuphVoice | AuphBuffer | AuphBus = Mixer) {
     setPause(name, true);
