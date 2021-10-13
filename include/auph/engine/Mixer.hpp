@@ -107,7 +107,7 @@ void renderVoices(VoiceObj* voices, BusObj* busline, uint32_t voicesCount, MixSa
     const float masterGain = busline[0].get();
     for (uint32_t voiceIndex = 0; voiceIndex < voicesCount; ++voiceIndex) {
         auto& voice = voices[voiceIndex];
-        if (voice.state & Flag_Running) {
+        if ((voice.state & Flag_Running) && voice.data != nullptr && voice.data->reader != nullptr) {
             auto* currentDest = dest;
             const float busGain = busline[voice.bus.id & iMask].get() * masterGain;
 
