@@ -1,5 +1,11 @@
 # auph
 
+## 0.1.1
+
+### Patch Changes
+
+- 4d0d4ba: native: skip voice mix with no data
+
 ## 0.1.0
 
 ### Minor Changes
