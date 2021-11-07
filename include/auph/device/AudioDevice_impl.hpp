@@ -6,6 +6,7 @@
 
 #elif defined(__ANDROID__)
 
+//#define OBOE_NULL
 #include "Oboe.hpp"
 
 #else
