@@ -10,8 +10,12 @@
 #include <stdio.h>
 #include <math.h>
 
+#ifndef OBOE_NULL
+
 // implement oboe-lib:
 #include <oboe-all.cpp>
+
+#endif
 
 //#if defined(NDEBUG)
 //
@@ -63,6 +67,7 @@ void setAndroidActivity(GetJNIEnv getJNIEnv, jobject activity, jobject assetMana
     }
 }
 
+#ifndef OBOE_NULL
 class AudioDevice :
         public oboe::AudioStreamDataCallback,
         public oboe::AudioStreamErrorCallback {
@@ -262,11 +267,14 @@ public:
 
 AudioDevice *AudioDevice::instance = nullptr;
 
+#endif
+
 }
 
-extern "C" JNIEXPORT jint JNICALL Java_ek_Auph_restart(JNIEnv *env, jclass clazz) {
+extern "C" JNIEXPORT JNICALL jint Java_ek_Auph_restart(JNIEnv *env, jclass clazz) {
     (void) env;
     (void) clazz;
+#ifndef OBOE_NULL
     auto *device = auph::AudioDevice::instance;
     if (device) {
         auto *stream = device->audioStream;
@@ -280,6 +288,13 @@ extern "C" JNIEXPORT jint JNICALL Java_ek_Auph_restart(JNIEnv *env, jclass clazz
         return 2;
     }
     return 3;
+#else
+    return 0;
+#endif
 }
+
+#ifdef OBOE_NULL
+#include "Null.hpp"
+#endif
 
 
