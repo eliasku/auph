@@ -1,5 +1,11 @@
 # auph
 
+## 0.1.2
+
+### Patch Changes
+
+- 6b6c34c: add OBOE_NULL option to remove oboe implementation (test build size)
+
 ## 0.1.1
 
 ### Patch Changes
