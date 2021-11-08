@@ -17,7 +17,10 @@
 
 #include <stdlib.h>
 #include <unistd.h>
+
+#ifdef OBOE_ENABLE_LOGGING
 #include <sstream>
+#endif //OBOE_ENABLE_LOGGING
 
 #ifdef __ANDROID__
 #include <sys/system_properties.h>
@@ -71,6 +74,8 @@ int32_t convertFormatToSizeInBytes(AudioFormat format) {
     }
     return size;
 }
+
+#ifdef OBOE_ENABLE_LOGGING
 
 template<>
 const char *convertToText<Result>(Result returnCode) {
@@ -273,6 +278,15 @@ const char *convertToText<ChannelCount>(ChannelCount channelCount) {
         default:                         return "Unrecognized channel count";
     }
 }
+
+#else
+
+template<typename FromType>
+const char *convertToText(FromType) {
+    return "";
+}
+
+#endif //OBOE_ENABLE_LOGGING
 
 std::string getPropertyString(const char * name) {
     std::string result;

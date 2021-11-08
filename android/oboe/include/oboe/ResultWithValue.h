@@ -18,8 +18,11 @@
 #define OBOE_RESULT_WITH_VALUE_H
 
 #include "oboe/Definitions.h"
+
+#ifdef OBOE_ENABLE_LOGGING
 #include <iostream>
 #include <sstream>
+#endif //OBOE_ENABLE_LOGGING
 
 namespace oboe {
 
@@ -136,6 +139,7 @@ private:
     const oboe::Result  mError;
 };
 
+#ifdef OBOE_ENABLE_LOGGING
 /**
  * If the result is `OK` then return the value, otherwise return a human-readable error message.
  */
@@ -148,6 +152,7 @@ std::ostream& operator<<(std::ostream &strm, const ResultWithValue<T> &result) {
     }
    return strm;
 }
+#endif //OBOE_ENABLE_LOGGING
 
 } // namespace oboe
 
