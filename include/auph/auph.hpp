@@ -22,12 +22,12 @@ inline Voice play(Buffer buffer,
 }
 
 inline const char* getMixerStateString(int state) {
-    static const char* names[] = {"closed", "paused", "", "running"};
+    const char* names[] = {"closed", "paused", "", "running"};
     return names[state & 0x3];
 }
 
 inline const char* getBufferStateString(int state) {
-    static const char* names[] = {"free", "loading", "", "loaded"};
+    const char* names[] = {"free", "loading", "", "loaded"};
     return names[state & 0x3];
     //+ ["", " streaming"][(state >>> 2) & 0x1];
 }
