@@ -1,5 +1,13 @@
 # auph
 
+## 0.1.2
+
+### Patch Changes
+
+- 0fa9284: remove static decl
+- c25cb40: add OBOE_NULL option to remove oboe implementation (test build size)
+- d80bc5d: android: optimize oboe build size
+
 ## 0.1.1
 
 ### Patch Changes
